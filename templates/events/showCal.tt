@@ -1,0 +1,182 @@
+<script type="text/javascript">
+	$(function () {
+		// Handle the print button
+		$('.printCal').click(function() {
+			var form =$('#calForm');
+			$(form).attr('target','_blank');
+			$(form).attr('action','showCal.cgi');
+			$('<input type="hidden">').attr({
+				id: 'printCal',
+				name: 'printCal',
+				value: 1
+			}).appendTo(form);
+			var string = $(form).serialize();
+			
+			$(form).submit();
+		});
+	});
+	
+	function checkForm() {
+		var form = $('#calForm');
+		var formchecked = $(".deletecheck:checked");
+		var checkCount = $(formchecked).length;
+		
+		if (checkCount >= 1) {
+			$("#delConfirm").dialog({
+				resizable: false,
+				minheight: 200,
+				width: 500,
+				modal: true,
+				buttons: {
+					"Yes": function() {
+						$(this).dialog( "close" );
+						var myvals = new Array;
+						$.each(formchecked, function(index, val) {
+							myvals.push(val.value);
+						});
+						var delVals = myvals.join(",");
+						if ($('#my_startdate').val() != "") {
+							var xmlhttp = doAjax("doDelete.cgi", {startdate : $('#my_startdate').val(),
+												 enddate : $('#my_enddate').val(),
+												 divs : $('#my_divs').val(), delvals : delVals});
+						} else if ($('#my_casenum').val() != "") {
+							var xmlhttp = doAjax("doDelete.cgi", {casenum : $('#my_casenum').val(),
+												 divs : $('#my_divs').val(), delvals : delVals});
+						} else {
+							var xmlhttp = doAjax("doDelete.cgi", {date : $('#my_date').val(),
+												 divs : $('#my_divs').val(),
+												 delvals : delVals});
+						}
+						var htmlOutput = xmlhttp.responseText;
+						$('#caldiv').html(htmlOutput);
+						$('#calendar').tablesorter({widgets: ['zebra']});
+					},
+				    Cancel: function() {
+				        $(this).dialog( "close" );
+					}
+				}
+			});
+		} else {
+			alert ("No items selected for deletion.");
+		}
+		
+		return false;
+	}
+</script>
+
+<form action="delEvents.cgi" id="calForm" method="post">
+	
+	<div id="delConfirm" title="Confirm Deletion" style="display: none">
+		<span style="font-size: 80%">Delete checked events?</span>
+	</div>
+
+<table class="summary" style="width: 100%; border: 1px solid black; font-size: 80%" id="printCal">
+	<tr>
+		<td class="title">[% data.title %]</td>
+	</tr>
+	<tr>
+		<td>
+			<button type="button" onclick="checkForm();">Delete Selected Events</button>
+
+			<button type="button" class="printCal">Print This Calendar</button>
+		</td>
+	</tr>
+	<tr>
+		<td class="tableholder">
+			<table id="calendar" style="width: 100%">
+				<thead>
+					<tr class="title">
+						<th class="times">
+							Start<br>Time
+						</th>
+						<th class="times">
+							End<br>Time
+						</th>
+						[% IF data.startdate %]
+						<th class="dates">
+							Date
+						</th>
+						[% END %]
+						<th class="casenum">
+							Case #
+						</th>
+						<th class="styles">
+							Case<br/>Style
+						</th>
+						<th class="events">
+							Event
+						</th>
+						<th classs="events">
+							Attorneys
+						</th>
+						<th class="times">
+							Case<br>Division
+						</th>
+						<th class="dates">
+							Date<br>Scheduled
+						</th>
+						<th class="delcheck">
+							Delete
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					[% FOREACH event IN data.events %]
+					<tr>
+						<td class="times">
+							[% event.StartTime %]
+						</td>
+						<td class="times">
+							[% event.EndTime %]
+						</td>
+						[% IF data.startdate %]
+						<td class="dates">
+							[% event.EventDate %]
+						</td>
+						[% END %]
+						<td class="casenum">
+							<a onclick="open_win('/cgi-bin/view.cgi?ucn=[% event.CaseNumber %]&lev=0','casewin');">
+							[% event.CaseNumber %]
+							</a>
+						</td>
+						<td class="styles">
+							[% event.CaseStyle %]
+						</td>
+						<td class="events">
+							[% event.Title %]
+						</td>
+						<td class="events">
+							[% event.Location %]
+						</td>
+						<td class="times">
+							[% event.DivisionID %]
+						</td>
+						<td class="dates">
+							[% event.ScheduledDate %]
+						</td>
+						<td class="delcheck">
+							<input class="deletecheck" type="checkbox" name="delcheck"
+								   value="[% event.EventID %]">
+						</td>
+					</tr>
+					[% END %]
+				</tbody>
+			</table>
+		</td>
+	</tr>
+</table>
+
+<div>
+	<button type="button" onclick="checkForm();">Delete Selected Events</button>
+	[% IF data.startdate %]
+		<input type="hidden" name="startdate" id="my_startdate" value="[% data.startdate %]">
+		<input type="hidden" name="enddate" id="my_enddate" value="[% data.enddate %]">
+	[% ELSIF data.casenum %]
+		<input type="hidden" name="casenum" id="my_casenum" value="[% data.casenum %]">
+	[% ELSE %]
+		<input type="hidden" name="date" id="my_date" value="[% data.date %]">
+	[% END %]
+		<input type="hidden" name="divs" id="my_divs" value="[% data.divs %]">
+</div>
+
+</form>

@@ -1,0 +1,10 @@
+ORDER
+TR - AO FTA Order~tr-ao-fta-order~TR,MO,CO~pay2,pay3,ddtrial2,moregranted,reqforsat,denied,dddays,returntocollections,civilpenalty,moredenied,ddcity~01
+FIELDS
+moregranted~Additional Granted text~~TEXT~75~~~blank
+moredenied~Additional Denied text~~TEXT~75~~~blank
+pay3~Vacate D-6 checkbox~~CHECKBOX
+returntocollections~Clerk Return to Collections and D6~~CHECKBOX
+civilpenalty~Pay civil penalty~~CHECKBOX
+USERTF
+FORM

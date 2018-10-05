@@ -1,0 +1,105 @@
+<script type="text/javascript">
+    $(document).ready(function() {
+        //debugger;
+        // Allow sorting on all columns except booking photo
+        $('#bookingList').tablesorter({
+            widgets: ['zebra','filter'],
+            headers: {3: { sorter: false, filter: false}},
+            widgetOptions: {
+                filter_columnFilters: true,
+                filter_saveFilters: false,
+                filter_reset : '.pbso-filter-reset'
+            }
+        });
+        $('#bookingList').tablesorterPager({container: $("#pbso-pager"), positionFixed: false, size: 100 });
+    });
+</script>
+
+<div>
+    <button class="pbso-filter-reset" type="button">Reset Filters</button>
+</div>
+
+<div id="pbso-pager" class="pager" style="top: 0px">
+    <form>
+        <img src="/images/first.png" class="first"/>
+        <img src="/images/prev.png" class="prev"/>
+        <input type="text" class="pagedisplay"/>
+        <img src="/images/next.png" class="next"/>
+        <img src="/images/last.png" class="last"/>
+        <select class="pagesize">
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100" selected="selected">100 per page</option>
+            <option value="500">500 per page</option>
+            <option value="1000">1000 per page</option>
+        </select>
+    </form>
+</div>
+
+<div class="container" id="output">
+    <table class="summary" style="width: 95%; border: 1px solid black">
+        <tr>
+            <td id="rptname" class="title" style="font-size: 150%">
+                [% data.title %]
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table id="bookingList">
+                    <thead>
+                        <tr class="title">
+                            <th data-placeholder="Part of name">Name</th>
+                            <th class="date filter-select" data-placeholder="DOB">DOB</th>
+                            <th data-placeholder="Age">Age</th>
+                            <th>Booking<br/>Photo</th>
+                            <th class="filter-select" data-placeholder="Select">Jacket<br/>#</th>
+                            <th class="filter-select" data-placeholder="Select">Booking<br/>ID</th>
+                            <th class="date filter-select" data-placeholder="Select">Booking<br/>Date</th>
+                            <th class="date filter-select" data-placeholder="Select">Release<br/>Date</th>
+                            <th data-placeholder="# days Served">Days<br/>Served</th>
+                            <th class="filter-select" data-placeholder="Select">Inmate<br/>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        [% FOREACH row IN data.bookings %]
+                            <tr>
+                                <td style="width: 20%">
+                                    [% row.InmateName %]
+                                </td>
+                                <td style="width: 5%">
+                                    [% row.DOB%]
+                                </td>
+                                <td style="width: 10%; text-align: center">
+                                    [% row.Age %]
+                                </td>
+                                <td style="text-align: center">
+                                    <img src="[% row.PhotoURL %]" style="height: 46px; width: 36px"
+                                         alt="booking photo"/>
+                                </td>
+                                <td style="text-align: center">
+                                    [% row.JacketLink %]
+                                </td>
+                                <td style="text-align: center; width: 4%">
+                                    [% row.BookingLink %]
+                                </td>
+                                <td style="width: 7%; text-align: center">
+                                    [% row.FormattedBookingDate %]
+                                </td>
+                                <td style="width: 7%; text-align: center">
+                                    [% row.ReleaseDate %]
+                                </td>
+                                <td style="text-align: center">
+                                    [% row.DaysServed %]
+                                </td>
+                                <td>
+                                    [% row.Status %]
+                                </td>
+                            </tr>
+                        [% END %]
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>

@@ -1,0 +1,10 @@
+ORDER
+Baker Act Inpatient Placement Report~mh-inpatient-placement-report~MH~edate,etime,facility,reporton,magistrate~01
+#
+FIELDS
+facility~Facility:~~TEXT~50~~~
+reporton~Report on Petition For:~~DROPDOWN~~~Involuntary Inpatient Placement:Continued Involuntary Placement:Appointment of Guardian Advocate:E.C.T.~
+/nocheck
+#
+USERTF
+FORM

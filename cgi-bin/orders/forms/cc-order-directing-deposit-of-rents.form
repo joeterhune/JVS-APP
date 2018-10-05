@@ -1,0 +1,14 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Order Directing Deposit of Rents~cc-order-directing-deposit-of-rents~CC,SC~epdate,depositSum,depositTime,depositDate,ddallcities~01~~~
+#
+FIELDS
+epdate~Ex parte date~~DATE~15~<small>(format you would like to appear on form)</small>
+depositSum~Deposit Amount~~TEXT~50~<small>English and numeric amount</small>~~~
+depositTime~Deposit Time~~TEXT~10~~~~
+depositDate~Deposit Time~~TEXT~40~<small>(format you would like to appear on form)</small>~~~
+#
+#/nocheck
+USERTF
+FORM

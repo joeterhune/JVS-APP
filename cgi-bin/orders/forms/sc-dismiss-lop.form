@@ -1,0 +1,17 @@
+ORDER
+#
+#  ALL divisions may use this form.
+SC - Dismiss for LOP~sc-dismiss-lop~SC~edate,etime,eloc,eaddr,ddallcities~01
+#
+FIELDS
+#hearingdate~Hearing Date~~DATE~40~<small>(format you would like to appear on form)</small>
+#
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~2
+#
+USERTF
+FORM

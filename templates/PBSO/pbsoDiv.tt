@@ -1,0 +1,7 @@
+<div id="pbsodiv">
+	<button class="togglepbso">Hide/Show PBSO Booking Information</button>
+
+    <div id="pbsohistory">
+		FOO
+	</div>
+</div>

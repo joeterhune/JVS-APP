@@ -1,0 +1,13 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Order on Motion for Summary Judgment~ca-order-deny-summary-judgment~CA~action,resetaction,edate,etime,eloc,eaddr,continued,ddallcities~01
+#
+FIELDS
+action~Action~~DROPDOWN~~~Denied:Reset~
+resetaction~Reset?~~DROPDOWN~~~Online:Set Date:Continued~
+continued~Continuation~~TEXT~200~~~
+#
+/nocheck
+USERTF
+FORM

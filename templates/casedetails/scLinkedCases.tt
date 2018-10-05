@@ -1,0 +1,32 @@
+<table class="summary">
+                                                <tr>
+                                                    <td class="title">Cases Related to This Case</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.linkedCases.size == 0 %]
+                                                    <td>No cases are linked to this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="linkedcases_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <td>Case Number</td>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH relcase IN data.linkedCases %]
+                                                                <tr>
+                                                                    <td>
+                                                                    	[% IF relcase.OpenWarrants %] <img src="/asterisk.png" />[% END %]
+                                                                    	<a class="caseLink" data-casenum="[% relcase.ToCaseNumber %]">
+			                                                                [% relcase.ToCaseNumber %]
+			                                                            </a>
+                                                                	</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>

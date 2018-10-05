@@ -1,0 +1,13 @@
+<!-- $Id$ -->
+
+[% IF data.cancelled %]
+<div>
+    <h2>No flag(s) changed.</h2>
+</div>
+[% ELSE %]
+<div>
+    <h2>
+        [% data.added %] [% IF data.added > 1 %]flags were[% ELSE %]flag was[% END %] set.
+    </h2>
+</div>
+[% END %]

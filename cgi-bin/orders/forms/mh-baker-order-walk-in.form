@@ -1,0 +1,10 @@
+ORDER
+Baker Act Walk-In Order~mh-baker-order-walk-in~MH~facility,expdays~01
+#
+FIELDS
+facility~Receiving facility~~TEXT~50~~~
+expdays~Order expires days~~TEXT~4~~~
+/nocheck
+#
+USERTF
+FORM

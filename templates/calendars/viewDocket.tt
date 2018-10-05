@@ -1,0 +1,435 @@
+<script type="text/javascript">
+	var hideProc = false;
+	var keepRefreshing = true;
+	var refreshRunning = false;
+	var runRefresh = true;
+	var abortQuietly = 1;
+	var refreshXhr;
+	
+    $(document).ready(function () {        
+    
+    	$('.datepicker').datetimepicker({
+    		format: 'yyyy-mm-dd',
+            autoclose: true,
+            startView: 2,
+            minView: 2,
+            todayBtn: 'linked',
+        });
+        
+     	$('.timepicker').datetimepicker({
+    		format: 'HH:ii p',
+            autoclose: true,
+            startView: 1,
+            minView: 0,
+            minuteStep: 15,
+            showMeridian: true
+        });
+        
+        $('#day').change(function () {
+            var foo = $(this).val();
+            $('#starttime').attr('disabled',false);
+            $('#starttime').datetimepicker('setStartDate',foo + ' 00:00:00');
+            $('#starttime').datetimepicker('setEndDate',foo + ' 23:59:59');
+        });
+    
+		$('#tdocket').on('click','.expand',function () {
+			var rt_triangle = "/images/right_triangle.png";
+			var dn_triangle = "/images/down_triangle.png";
+			var img = $(this).attr('src');
+			if (img == rt_triangle) {
+				$(this).attr('src',dn_triangle);
+			} else {
+				$(this).attr('src',rt_triangle);
+			}
+			$(this).closest('tr').find('.docketOther').toggle();
+			return true;
+		});
+		
+        $('#tdocket').on('click','.showRecord', function () {
+            casenum = $(this).attr('data-casenum');
+            tabTitle = $(this).attr('data-docname');
+            
+            url = '/cgi-bin/calendars/showCitationRecord.cgi?casenum=' + casenum;   
+            window.open(url);
+            return true;
+        });
+        
+        $('#tdocket').on('click','.showNOH', function () {
+           	casenum = $(this).attr('data-casenum');
+            tabTitle = $(this).attr('data-docname');
+            obj = $(this).attr('data-obj');
+            
+            url = '/cgi-bin/calendars/showNOH.cgi?casenum=' + casenum + '&nohobj=' + obj;   
+            window.open(url);
+            return true;
+        });
+        
+        $('#tdocket').on('click','.showAODF', function () {
+           	casenum = $(this).attr('data-casenum');
+            tabTitle = $(this).attr('data-docname');
+            obj = $(this).attr('data-obj');
+            
+            url = '/cgi-bin/calendars/showAODF.cgi?casenum=' + casenum + '&nohobj=' + obj;   
+            window.open(url);
+            return true;
+        });
+		
+        $('.submit').click(function () {
+            $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+            url = '/cgi-bin/calendars/doDocketSearch.cgi';
+            postData = {day : $('#day').val(), starttime : $('#starttime').val(),endtime : $('#endtime').val(),
+                        courtroom : $('#courtroom').val(), judge : $('#judge').val() }
+            $.ajax({
+                url: url,
+                data: postData,
+                async: true,
+                success: function(data) {
+                    $('#tdocket').html(data.html);
+                    
+                    if ($('#hadTraffic').val()) {
+		                $('.legend').show();
+		            } else {
+		                $('.legend').hide();
+		            }
+		            
+		            $('#trafficDocket').tablesorter({
+			            widthFixed: true,
+			            widgets: ['saveSort', 'zebra', 'filter'],
+			            sortList: [[2,0]],
+			            //theme: 'blue',
+			            widgetOptions : {
+			                // Use the $.tablesorter.storage utility to save the most recent filters
+			                filter_saveFilters : true,
+			                // jQuery selector string of an element used to reset the filters
+			                filter_reset : 'button.tdReset'
+			            }
+			        });
+			        
+			        var pendCount = $('#trafficDocket').find('.Pending').length;
+			        var inProcCount = $('#trafficDocket').find('.InProcess').length;
+			        var procCount = $('#trafficDocket').find('.Processed').length;
+			        var remaining = pendCount + inProcCount;
+			        var total = remaining + procCount;
+			        $('#pendCount').html(remaining + "/" + total);
+			        
+			        $('#trafficDocket').trigger('update');
+			        $('#trafficDocket').trigger('appendCache');
+			        $('input, textarea, select').placeholder();
+                    
+                    doRefresh(1);
+                    $.unblockUI();
+                }
+            });
+            return false;
+        });
+        
+        $('.refresh').click(function () {
+            doRefresh(1);
+        });
+		
+		$('.toggleProc').click(function () {
+			if (hideProc == 0) {
+				hideProc = 1;
+				$('#trafficDocket').find('.Processed').hide();
+			} else {
+				hideProc = 0;
+				$('#trafficDocket').find('.Processed').show();
+			}
+			$('#trafficDocket').trigger('applyWidgetId', ['zebra']);
+		});
+		
+		$('.toggleRefresh').click(function () {
+			runRefresh = !runRefresh;
+			if (runRefresh) {
+				$(this).html("Stop Auto Refresh");
+			} else {
+				$(this).html("Resume Auto Refresh");
+			}
+			return true;
+		});
+		
+		var doSearch = false;
+    
+    	if("[% data.day %]" != ""){
+    		$("#day").val("[% data.day %]");
+    		doSearch = true;
+    	}
+    	
+    	if("[% data.starttime %]" != ""){
+    		$("#starttime").val("[% data.starttime %]");
+    		doSearch = true;
+    	}
+    	
+    	if("[% data.endtime %]" != ""){
+    		$("#endtime").val("[% data.endtime %]");
+    		doSearch = true;
+    	}
+    	
+    	if("[% data.courtroom %]" != ""){
+    		$("#courtroom").val("[% data.courtroom %]");
+    		doSearch = true;
+    	}
+    	
+    	if("[% data.judge %]" != ""){
+    		$("#judge").val("[% data.judge %]");
+    		doSearch = true;
+    	}
+    	
+    	if(doSearch){
+    		$(".submit").click();
+    	}
+    });
+	
+	function doRefresh(doAnyway) {
+		// Before we do anything else, make sure we're within regular business hours - don't
+		// want to run refreshes if a user walks away from an open browser window
+		if (!runRefresh && !doAnyway) {
+			return false;
+		}
+		
+		if (!keepRefreshing && !doAnyway) {
+			// Allow a forced refresh any time
+			return false;
+		}
+		
+		if (refreshRunning) {
+			if (!doAnyway) {
+				// There's already one running and we weren't told to do it anyway. Don't start another.
+				return false;
+			}
+			
+			// Do it anyway.  Stop the existing one.
+			refreshXhr.abort();
+		}
+		
+		var currentTime = new Date();
+		var hours = currentTime.getHours();
+		var weekday = currentTime.getDay();
+		
+		if ((!doAnyway) && ((weekday == 0) || (weekday == 6))) {
+			// Don't autorefresh on weekends
+			keepRefreshing = 0;
+			return false;
+		}
+		
+		if ((!doAnyway) && ((hours < 8) || (hours >= 18))) {
+			// Outside of business hours. Stop refreshing.
+			keepRefreshing = 0;
+			return false;
+		}
+		
+		var eventids = new Array;
+		$('#trafficDocket').find('.eventID').each(function (i,e) {
+			eventids.push($(e).val());
+		});
+		if (eventids.length == 0) {
+			return false;
+		}
+		var events=eventids.join(",");
+        refreshXhr = $.ajax({
+			url: '/cgi-bin/calendars/refreshStatus.cgi',
+			method: 'POST',
+			data: {eventids: events},
+			async: true,
+			success: refreshStatus
+		});
+		refreshRunning = 1;
+		return true;
+	}
+	
+	function refreshStatus (data) {
+		var icpupdate = data;
+		$(icpupdate).each(function (i,e) {
+			var eventid = $(e).attr('EID');
+			var icp = $(e).attr('ICP');
+			var tr = $('#'+eventid);
+            $(tr).find('.icp').html($(e).attr('Status'));
+			if (!$(tr).hasClass(icp)) {
+				$(tr).find('.icp').html(icp);
+				$(tr).removeClass("Pending").removeClass("InProcess").removeClass("Processed").addClass(icp);
+				if (icp == "Processed") {
+					if ((hideProc == 0) && (!$(tr).hasClass("filtered"))){
+						$(tr).show();
+					} else {
+						$(tr).hide();
+					}
+				}
+			}
+		});
+		var pendCount = $('#trafficDocket').find('.Pending').length;
+	    var inProcCount = $('#trafficDocket').find('.InProcess').length;
+	    var procCount = $('#trafficDocket').find('.Processed').length;
+	    var remaining = pendCount + inProcCount;
+	    var total = remaining + procCount;
+	    $('#pendCount').html(remaining + "/" + total);
+		refreshRunning = 0;
+        $('#trafficDocket').trigger('update');
+        $('#trafficDocket').trigger('appendCache');
+        return true;
+	}
+	
+	function countShown () {
+		var counted = 0;
+		
+		$('#trafficDocket').find('.citationRow').each(function (i,e) {
+			if ((!$(e).hasClass("filtered")) && ($e).prop) {
+				counted += 1;
+			}
+		});
+		$('#shownCount').html(counted);
+	}
+			
+</script>
+
+<style type="text/css">
+	tr.Pending.even > td {
+		background-color:#eff5fa;
+	}
+</style>
+
+<div style="padding:1%">
+	<div id="help" style="margin-bottom: 10px">
+		<button name="helpbutton" value="Help"
+	       onclick="popup('help/icmshelp.html','Help')">
+	       Help
+		</button>
+	</div>
+	
+	
+	<form action="doDocketSearch.cgi" id="searchForm" method="post" onsubmit="return false;">
+	    <div>
+	        <div style="position: relative; padding:0.5%;">
+	            <span style="font-weight: bold;">
+	                Date:
+	            </span>
+	            
+	            <div style="position: absolute; left: 100px; top: 0px;">
+	                <input type="text" class="datepicker datefield" name="day" id="day"/>
+	            </div>
+	    	</div>
+	        
+	        <div style="position: relative; padding:0.5%;">
+	            <span style="font-weight: bold;">
+	                Start Time:
+	            </span>
+	            
+	            <div style="position: absolute; left: 100px; top: 0px;">
+	                <input class="timepicker" name="starttime" id="starttime"/>
+	            </div>
+	    	</div>
+			
+			<div style="position: relative; padding:0.5%;">
+	            <span style="font-weight: bold;">
+	                End Time:
+	            </span>
+	            
+	            <div style="position: absolute; left: 100px; top: 0px;">
+	                <input class="timepicker" name="end" id="endtime"/>
+	            </div>
+	    	</div>
+	        
+	        <div style="position: relative; padding:0.5%;">
+	            <span style="font-weight: bold;">
+	                Courtroom:
+	            </span>
+	            
+	            <div style="position: absolute; left: 100px; top: 0px;">
+	                <select id="courtroom" name="courtroom">
+	                    <option value="" selected="selected"></option>
+	                    [% FOREACH courtroom IN data.courtrooms %]
+	                    <option value="[% courtroom.courtroom %]">[% courtroom.courtroom %] ([% courtroom.courthouse %])</option>
+	                    [% END %]
+	                </select>
+	            </div>
+	    	</div>
+	        
+	        <div style="position: relative; padding:0.5%;">
+	            <span style="font-weight: bold">
+	                Judge:
+	            </span>
+	            
+	            <div style="position: absolute; left: 100px; top: 0px;">
+	                <select name="judge" id="judge">
+	                    <option value="" selected="selected"></option>
+	                    [% FOREACH judge IN data.judges %]
+	                    <option value="[% judge.JudgeName %]">[% judge.JudgeName %]</option>
+	                    [% END %]
+	                </select>
+	            </div>
+	        </div>    
+	    </div>
+	    
+	    <div>
+			<div style="float: left">
+				<button style="width: 12em" type="reset" class="docketForm">Clear Form</button>
+				<button style="width: 12em" class="submit docketForm" type="button">Search</button>
+				<br/>
+				<button style="width: 12em" class="tdReset docketForm" type="button">Reset Filters</button>
+				<button style="width: 12em" class="refresh docketForm" type="button">Refresh Status</button>
+				<br/>
+				<button style="width: 12em" class="toggleProc docketForm" type="button">Show/Hide Processed</button>
+				<button style="width: 12em" class="toggleRefresh docketForm" type="button">Stop Auto Refresh</button>
+			</div>
+			
+			<div class="legend" style="display: none">
+				<div style="float: left; margin-left: 10em;">
+					<table style="width: 15em">
+						<tr style="outline: 2px solid; padding: 0px" class="aggressive">
+							<td style="padding: 0px; text-align: center">Aggressive Driving</td>
+						</tr>	
+					</table>
+				</div>
+			
+				<div style="float: none; margin-left: 5em">
+					<table style="width: 15em">
+						<tr style="outline: 2px solid; padding: 0px" class="cdl">
+							<td style="padding: 0px; text-align: center">Commercial DL</td>
+						</tr>	
+					</table>
+				</div>
+			
+				<div style="float: left; margin-left: 10em;">
+					<table style="width: 15em">
+						<tr style="outline: 2px solid; padding: 0px" class="InProcess">
+							<td style="padding: 0px; text-align: center">In-Process Case</td>
+						</tr>	
+					</table>
+				</div>
+			
+				<div style="float: none; margin-left: 5em">
+					<table style="width: 15em">
+						<tr style="outline: 2px solid; padding: 0px" class="Processed">
+							<td style="padding: 0px; text-align: center">Processed Case</td>
+						</tr>	
+					</table>
+				</div>
+				
+				<div style="float: left; margin-left: 10em;">
+					<table style="width: 15em">
+						<tr style="outline: 2px solid; padding: 0px" class="minor">
+							<td style="padding: 0px; text-align: center">Minor</td>
+						</tr>	
+					</table>
+				</div>
+			
+				<div style="float: none; margin-left: 5em">
+					<table style="width: 15em">
+						<tr>
+							<td>&nbsp;</td>
+						</tr>	
+					</table>
+				</div>
+			</div>
+	    </div>
+		
+		<br style="clear: both"/>
+	</form>
+	
+	<div id="tdocket">
+		
+	</div>
+	
+	<div id="hiddenvals"><input type="hidden" id="preloaded" value="0"></div>
+	
+	<br/>
+</div>

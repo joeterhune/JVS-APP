@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+	<html>
+		<head>
+			<title>FOO</title>
+		</head>
+		
+		<body>
+			<div>
+				Below is a listing of the total UMC availability for Division [% data.division %] for the next [% data.days_out %]
+				days.
+				<br/>
+				There are a total of [% data.remaining %] UMC slots available during this period.
+			</div>
+			
+			<br/>
+			
+			<div>
+			<table style="border: 1px solid black">
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Max Slots</th>
+						<th>Scheduled</th>
+						<th>Remaining</th>
+						<!--<th>Exempt</th>-->
+					</tr>
+				</thead>
+				<tbody>
+					[% FOREACH session IN data.sessions %]
+					<tr style="border-bottom: 1px solid">
+						<td style="width: 8em; text-align: center">[% session.SessionDate %]</td>
+						<td style="width: 8em; text-align: center">[% session.MaxSlots %]</td>
+						<td style="width: 8em; text-align: center">[% session.TotalCount %]</td>
+						<td style="width: 8em; text-align: center; [% IF session.Remaining < 0 %]color: red[% END %]">[% session.Remaining %]</td>
+						<!--<td style="width: 8em; text-align: center">[% session.ExemptCount %]</td>-->
+					</tr>
+					[% END %]
+				</tbody>   
+			</table>
+			</div>
+		</body>
+	</html>
+	

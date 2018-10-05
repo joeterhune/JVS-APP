@@ -1,0 +1,12 @@
+\i<b>DONE AND ORDERED</b> in Palm Beach County, Florida, on this <b>______ day of 
+________________, %thisyear%</b>.
+\u
+%esig%
+\m%sig%
+\m<b>%judge%</b>
+\mCircuit Judge
+
+
+Copies provided to:
+%cc%
+%copylist%

@@ -1,0 +1,7 @@
+DATE=
+TITLE1=Calendar for [% IF data.allJudges %]All Judges[% ELSE %]Judge [% data.JudgeName %][% END %]
+TITLE2=[% IF data.start != data.end %][% data.start %] - [% data.end %][% ELSE %][% data.start %][% END %]
+VIEWER=
+FIELDNAMES=Case Number~[% IF data.allJudges %]Judge~[% END %]Law Firm~Case Style~Time~Hearing Type~Date~Conf. Num.
+FIELDTYPES=A~[% IF data.allJudges %]A~[% END %]A~A~D~A~D~A[% FOREACH event IN data.events %]
+<a class="caselink" onclick="open_win('/cgi-bin/bannerview.cgi?ucn=[% event.UCN %]&amp;lev=3','[% event.CaseNumber %]');">[% event.UCN %]</a>~[% IF data.allJudges %][% event.JudgeFullName %]~[% END %][% event.LawFirm %]~[% event.CaseStyle %]~[% event.SchedTime %]~[% event.HearingType %]~[% event.SchedDate %]~[% event.ConfNum %][% END %]

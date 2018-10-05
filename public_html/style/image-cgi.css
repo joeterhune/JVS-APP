@@ -1,0 +1,36 @@
+.image-container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.image-container iframe {
+  height: inherit;
+  width: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.image-spinner {
+  position: absolute;
+  text-align: center;
+  height: inherit;
+  width: inherit;
+  top: 30%;
+}
+
+.image-spinner p {
+  font-family: calibri;
+  padding: 0;
+  margin: 10px;
+}
+
+.image-spinner p.alt {
+  font-size: 0.8em;
+  color: lightgrey;
+}

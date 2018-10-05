@@ -1,0 +1,22 @@
+ORDER
+PCM - Deny as Untimely~crim-order-deny-def-motion-pc-relief~CF~motiondate,finaldate,ddallcities~01~MND
+FIELDS
+# name~description~cookie~type~length~comment~choices~initval
+motiondate~Date of Motion~ICMS_EDATE~DATE~15~<small>(format you would like to appear on form)</small>
+finaldate~Date judgment became final~ICMS_EDATE~DATE~15~<small>(format you would like to appear on form)</small>
+underoath~Motion is not under oath~~CHECKBOX
+noenglish~No English certification~~CHECKBOX
+#
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+#/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

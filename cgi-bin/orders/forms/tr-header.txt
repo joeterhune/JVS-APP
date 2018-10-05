@@ -1,0 +1,10 @@
+\cIN THE COUNTY COURT OF THE FIFTEENTH JUDICIAL CIRCUIT
+\cIN AND FOR PALM BEACH COUNTY, FLORIDA
+
+\mCASE NO.: %casenum%
+
+STATE OF FLORIDA
+vs.
+%defs%
+\iDefendant.
+\u_________________________________________/

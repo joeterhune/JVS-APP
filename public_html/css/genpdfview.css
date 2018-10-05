@@ -1,0 +1,33 @@
+HTML { height: 98% }
+BODY {font-family:Calibri,Arial; font-size:10pt; height: 100% }
+/* overflow:hidden; height:100%; } */
+H2 { color:green; font-weight:bold; font-size: 12pt;}
+H3 { color:green; font-weight:bold; font-size: 11pt; }
+
+TABLE {font-family:Calibri,Arial; font-size:10pt; padding: 3px; border-style: solid; border-width: 1px; border-color: black; border-collapse: collapse }
+TD {font-family:Calibri,Arial; font-size:10pt; padding: 3px; border-style: solid; border-width: 1px; border-color: black; border-collapse: collapse }
+TD.note {font-family:Calibri,Arial; font-size:10pt; padding: 3px; border-style: solid; border-width: 1px; border-color: black; border-collapse: collapse; background-color: yellow }
+TH {font-family:Calibri,Arial; font-size:10pt; padding: 3px; border-style: solid; border-width: 1px; border-color: black; border-collapse: collapse }
+
+
+INPUT.menubtn { vertical-align:top; font-size:11pt; padding: 1px;  font-family: calibri; width:auto; overflow:visible; }
+INPUT.menubtn2 { vertical-align:top; font-size:11pt; padding: 1px;  font-family: calibri; width:auto; overflow:visible; }
+INPUT.pagebtn { vertical-align:top; font-size:11pt; padding: 1px;  font-family: calibri; width:auto; overflow:visible; }
+SPAN.logo {  position:relative; top:-5px; color: #008800;  font-size: 20pt; font-family: calibri; padding:0px; }
+SPAN.notable { vertical-align: top; background-color: #D0FFD0; font-face: calibri; font-size: 12pt; text-decoration: underline; padding: 0px; cursor: pointer; }
+IFRAME { height: 970px }
+SPAN.image { text-decoration:underline;cursor:pointer }
+a {text-decoration: underline; cursor: pointer }
+
+.wfcircle {
+   border-radius: 50%;
+   display: inline-block;
+   margin-right: 5px;
+   width: 13px;
+   height: 13px;
+}
+/*   float: left;  */
+/*   margin-right: 5px; */
+
+.partytype_row {}
+.hide { display: none; }

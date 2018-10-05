@@ -1,0 +1,9 @@
+\cIN THE CIRCUIT COURT OF THE FIFTEENTH JUDICIAL CIRCUIT
+\cIN AND FOR PALM BEACH COUNTY, FLORIDA
+
+\mCASE NO.: %casenum%
+\mCIVIL DIVISION: %division%
+
+%parties%
+______________________________________________/
+

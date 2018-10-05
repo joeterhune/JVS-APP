@@ -1,0 +1,53 @@
+
+                                <div id="othercasediv_[% data.ucn %]" title="Other Case for this Defendant">
+                                <table class="summary">
+                                    <tr>
+                                        <td class="title">Other Cases For This Defendant</td>
+                                    </tr>
+                                    <tr>
+                                        [% IF data.otherCases.size == 0 %]
+                                        <td>No other cases for this defendant</td>
+                                        [% ELSE %]
+                                        <td class="tableholder">
+                                            <table id="othercases_[% data.ucn %]">
+                                                <thead>
+                                                    <tr class="title">
+                                                        <th>Case Number</th>
+                                                        <th style="min-width: 75px">Case<br/>Type</th>
+                                                        <th style="min-width: 75px">Status</th>
+                                                        <th style="min-width: 8em">Select<br/>
+                                                            Select
+                                                            <a class="checkallboxes">All</a> |
+                                                            <a class="uncheckallboxes">None</a>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+				                                <tbody>
+                                                [% FOREACH other IN data.otherCases %]
+                                                    <tr class="[% other.RowClass %]">
+                                                        <td style="text-align: center">
+                                                            <a class="caseLink" data-casenum="[% other.CaseNumber %]">[% other.CaseNumber %]</a>
+															<input type="hidden" class="hiddenCase" value="[% other.CaseNumber %]"/>
+                                                        </td>
+                                                        <td style="text-align: center">[% other.CaseType %]</td>
+                                                        <td style="text-align: center">[% other.CaseStatus %]</td>
+                                                        <td style="text-align: center">
+                                                            <input class="otherCaseCheck" type="checkbox" name="ocselected" value="[% other.CaseNumber %];[% other.CaseID %]"/>
+                                                        </td>
+                                                    </tr>
+                                                [% END %]
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                        [% END %]
+                                    </tr>
+                                </table>
+                            </div>
+
+							[% IF data.otherCases.size > 0 %]
+                            <div style="height: 100%; position: absolute; top: 0px; left: 55%;">
+                                <button id="allCaseDocket_[% data.ucn %]" class="bigugly allCaseDocket" style="position: relative; top: 45%">
+                                    Show Dockets for Selected Cases
+                                </button>
+                            </div>
+                            [% END %]

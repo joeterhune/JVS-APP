@@ -1,0 +1,41 @@
+@page { size: 8.5in 11in;  font-family: "Times New Roman", "Times", serif; font-size: 12pt; so-language: en-US }
+@.header :first{ display:none;}
+body{font-size:12pt; margin-left: 1in !important; margin-right: 1in !important; max-width: 6.5in !important; overflow-wrap: break-word !important; word-wrap:break-all !important; box-sizing: border-box !important; }
+h1,h2,h3,h4 { font-weight:bold;  vertical-align: baseline; padding:0; margin:0 }
+h3{font-size:16px;}
+p { margin: 0.05in 0 0 0; padding: 0px; text-align:justify; }
+p.span { margin: 0.05in 0 0 0; padding: 0px; text-align:justify; }
+ol {margin:20px 0;}
+li p { text-align:justify;}
+div.group{page-break-inside:avoid;}
+div.sigdiv {position: relative; text-align:right; margin:15px 0; }
+img.signature {width: 300px; padding-left: 0px; margin:5px 0}
+div.ind { margin-left: 40px; }
+p.ind , span.ind{text-indent:40px; text-align:justify }
+div.sticker{ margin: 0in !important; }
+div.notice p.ind { font-weight:bold;  font-size:14pt !important; text-indent:40px; text-align:justify; margin-bottom:25px; }
+div.header{text-align:left; color:#555}
+div.header p{margin-bottom:-5px}
+div.footer{text-align:center}
+/* span {color:black !important; } */ 
+p.right, div.right , .right{text-align:right }
+p.left, div.left, .left{text-align:left}
+p.center, div.center , .center{text-align:center; margin:0 auto}
+table.table-bordered{margin:0 -0.25in; font-size:11.5px; page-break-inside : avoid;}
+table.table-bordered td {border:1px solid black;}
+div.large-top{padding-top:2in;}
+div.half{width:45%; margin:2% 2.5%; padding:1% 1.25%; font-size:11px; float:left; page-break-inside : avoid;}
+div.sigTitles{ width:300px; border-top:1px solid black; float:right; }
+div.sigTitles p{ text-align:left; margin-left:20px; display:block;} 
+div.sigTitles:after{clear:both;}
+div.clerk{width:100%; float:left; padding-right:45%;}
+div.clerk p{text-align:left !important;}
+div.h_lft{width:50%; float:left; }
+div.h_lft:after{clear:both;}
+div.boxed{float:right; width:48%; margin-left:2%;} 
+div.clear{clear:both;}
+span.smaller{font-size:10px;}
+#cc_list_table{table-layout: fixed; max-width:6.5in;}
+#cc_list_table td{vertical-align:top; word-wrap:break-word; max-width:2.16in;}
+.caseCaption{width:100% !important; max-width:6.5in !important; }
+img.sigpad-signature {width: 250px; padding-left: 0px; margin:0}

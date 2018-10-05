@@ -1,0 +1,7 @@
+ORDER
+Order Show Cause NOA~ap-show-cause-noa~AP,CA~appealdate,orderdate~01~~~AC,AY
+FIELDS
+appealdate~Date of Appeal~~DATE~15~<small>(format you would like to appear on form)</small>
+orderdate~Date Court entered Order~~DATE~15~<small>(format you would like to appear on form)</small>
+USERTF
+FORM

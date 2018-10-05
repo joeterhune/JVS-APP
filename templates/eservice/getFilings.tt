@@ -1,0 +1,51 @@
+<div style="font-size: 120%; text-align: center; font-weight: bold">
+	Documents filed between [% data.startDate%] and [% data.endDate %] (plus any Pending Queue filings)
+</div>
+
+				<table id="filingTable" class="summary">
+					<thead>
+						<tr class="title">
+							<th data-placeholder="Filing ID">Filing ID</th>
+							<th class="filter-select" data-placeholder="Select">Case Number</th>
+							<th data-placeholder="Part of case style">Case Style</th>
+							<th class="filter-select" data-placeholder="Select">Filing Status</th>
+							<th class="filter-select" data-placeholder="Select">Filing Date</th>
+							<th class="filter-select" data-placeholder="Select">Completion Date</th>
+							<th data-placeholder="Part of status">Status Description</th>
+						</tr>
+					</thead>
+					<tbody>
+						[% FOREACH filing IN data.filings %]
+						<tr id="row-[% filing.filing_id %]">
+							<td class="[% filing.class %]" style="text-align: center">
+								[% IF filing.base64_attachment %]
+									[% filing.filing_id %] 
+									<a href="/viewPdf.php?filing_id=[% filing.filing_id %]" target="_blank">(View)</a>
+								[% ELSE %]
+									[% filing.filing_id %]
+								[% END %]
+								[% IF filing.canResubmit %]
+									<a class="review" data-filingid="[% filing.filing_id %]" data-case="[% filing.clerk_case_id %]"
+                                       [% IF filing.fromWorkflow %]data-workflow-id="[% filing.workflow_id %]"[% END %]title="Review this file and file amended documents">Review</a>
+									<br>
+									<a class="ignore" data-filingid="[% filing.filing_id %]" data-case="[% filing.clerk_case_id %]" title="Mark this status to be ignored in the future">Ignore</a>
+								[% ELSIF filing.status_ignore %]
+									<a class="review" data-filingid="[% filing.filing_id %]" data-case="[% filing.clerk_case_id %]" style="display: none" title="Review this file and file amended documents">Review</a>
+									<br>
+									<a class="restore" data-filingid="[% filing.filing_id %]" data-case="[% filing.clerk_case_id %]" title="Restore this previously ignored filing">Restore</a>
+								[% END %]
+							</td>
+							<td class="[% filing.class %]" style="text-align: center">
+								<a class="caseLink" data-casenum="[% filing.clerk_case_id %]">
+									[% filing.clerk_case_id %]
+								</a>
+							</td>
+							<td class="[% filing.class %]" style="text-align: center">[% filing.case_style %]</td>
+							<td class="[% filing.class %] fileStatus" style="text-align: center">[% filing.filing_status %]</td>
+							<td class="[% filing.class %]" style="text-align: center" title="[% filing.filing_time %]">[% filing.filing_date %]</td>
+							<td class="[% filing.class %]" style="text-align: center" title="[% filing.completion_time %]">[% filing.completion_date %]</td>
+							<td class="[% filing.class %]">[% filing.status_dscr %]</td>
+						</tr>
+						[% END %]
+					</tbody>
+				</table>

@@ -1,0 +1,170 @@
+<div style="padding-left:1%">
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.pbsoSearch').click(function (){
+            name = $.trim($('#pbsoname').val());
+            if (name == "") {
+                $('#dialogSpan').html("Please enter either a name or a jacket ID.");
+                $('#dialogDiv').dialog({
+                    resizable: false,
+                    minheight: 150,
+                    width: 500,
+                    modal: true,
+                    title: 'No Search Terms Entered',
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog( "close" );
+                            return false;
+                        }
+                    }
+                });
+                return false;
+            }
+            mugshots = 0;
+            var foo = $('#mugshots').prop('checked');
+            if ($('#mugshots').prop('checked') == true){
+                mugshots = 1;
+            }
+            custody = $("input[name=custody]:checked").val();
+            tabname = 'pbsosearch_results';
+            tabtitle = 'PBSO Search Results';
+            
+            var postData = {name: name, mugshots: mugshots, custody: custody, show: 1, tabname: tabname};
+            var url="/cgi-bin/PBSO/pbsosearch.cgi";
+            window.location.href = url + "?name=" + name + "&mugshots=" + mugshots + "&custody=" + custody;
+            return false;
+        });
+    });
+</script>
+<br/>
+<form name="theform" method="post" onsubmit="return false;">
+    <input type="hidden" name="types" value="All"/>
+    <input type="hidden" name="referer" value="/index.php"/>
+    
+    <span class="h1">
+        Palm Beach County Sheriff's Office Inmate Lookup
+    </span>
+    
+    <p class="instructions">
+        This page allows you to find Palm Beach Sheriff Office's booking information for a particular person.
+    </p>
+    
+    <table style="border: none">
+        <tr>
+            <td>
+                Name or Jacket #:
+            </td>
+            <td colspan="2">
+                <input type="text" name="name" id="pbsoname" size="30"/>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <input type="checkbox" name="mugshots" id="mugshots" value="1" checked="checked"/>
+                Include Photos
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                Custody Status:
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="all" checked="checked"/>
+            </td>
+            <td>
+                All
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                &nbsp;
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="incustody"/>
+            </td>
+            <td>
+                In Custody
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                &nbsp;
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="inhouse"/>
+            </td>
+            <td>
+                In-House Arrest
+            </td>
+        </tr>
+        
+        
+        <tr>
+            <td>
+                &nbsp;
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="escaped"/>
+            </td>
+            <td>
+                Escaped
+            </td>
+        </tr>
+        
+        <tr>
+            <td>
+                &nbsp;
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="Weekender"/>
+            </td>
+            <td>
+                Weekender
+            </td>
+        </tr>
+        
+        
+        <tr>
+            <td>
+                &nbsp;
+            </td>
+            <td style="width: 1em">
+                <input type="radio" name="custody" value="released"/>
+            </td>
+            <td>
+                Released
+            </td>
+        </tr>
+        
+    </table>
+    
+    <button class="pbsoSearch">Search</button>
+    
+</form>
+
+<br/>
+
+<div style="font-style: italic; font-size: 85%; width: 50%">
+    <p>
+        Enter the name as <span style="font-weight: bold">lastname, firstname middlename</span>--
+        for example, <span style="font-weight: bold">smith, john q</span>. Incomplete names are allowed
+        (just <span style="font-weight: bold">smith</span> for all inmates with the last name of Smith,
+        or <span style="font-weight: bold">smith, j</span> for last name Smith, first initial J.) You can enter the name
+        in uppercase or lowercase.
+    </p>
+    <p>
+        Enter the jacket number as all digits.  Incomplete jacket numbers are allowed.  For example,
+        jacket number <span style="font-weight: bold">1234</span> will return a list of inmates with
+        jackets that begin with those 4 digits.
+    </p>
+    <p>
+        Enter a <span style="font-weight: bold; color: red">*</span> character as the name/jacket to return
+        all inmates.  This is useful when looking for inmates that are in custody, under house arrest,
+        or have escaped.
+    </p>
+</div>
+</div>

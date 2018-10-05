@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+		<title>Delete Case Flags</title>
+		<link rel="stylesheet" type="text/css" href="/icms1.css">
+		<script src="/icms.js" type="text/javascript"></script>
+    </head>
+	
+	<body onload="SetBack('ICMS_[% data.lev %]');">
+		<div id="logo">
+			<a href="/">
+				<img src="/icmslogo.jpg" alt="ICMS">
+			</a>
+			<br>
+			<input type="button" name="Back" value="Back" onclick="GoBack('ICMS_[% data.lev - 2 %]');">
+		</div>
+		
+		[% IF data.cleared == 0 %]
+		<div>
+			<h2>No flag(s) deleted.</h2>
+		</div>
+		[% ELSE %]
+		<div>
+			<h2>
+				[% data.cleared %] [% IF data.cleared > 1 %]flags were[% ELSE %]flag was[% END %] cleared.
+			</h2>
+		</div>
+		[% END %]
+    </body>
+</html>

@@ -1,0 +1,46 @@
+<!-- $Id$ -->
+
+    <div>
+        <div class="h2" style="float: left; width: 50%;">
+            Flag/Case Note Maintenance
+        </div>
+        
+        <div style="float: right">
+            <a class="helpLink" data-context="casenotes">
+                <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+            </a>
+        </div>
+    </div>
+    
+    <br style="clear: both"/>
+    
+    <div class="flagNotesMenu">
+        <table>
+            <tr style="vertical-align: top">
+                <td>
+                    <table class="summary">
+                        <tr>
+                            <td>
+                                <a class="flagnotelink" data-type="addFlag" data-title="Add Flags" href="/casenotes/flag.cgi?ucn=[% data.casenum %]&division=[% data.division %]">
+                                    Add Flags to Case
+                                </a>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td>
+                                <a class="flagnotelink" data-type="addNote" data-title="Add Case Note" href="/casenotes/addnote.cgi?ucn=[% data.casenum %]&division=[% data.division %]">
+                                    Add a Case Note
+                                </a>
+                            </td>
+                        </tr>
+                        
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="flagNotesOperation">
+        
+    </div>

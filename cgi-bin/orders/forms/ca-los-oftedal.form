@@ -1,0 +1,9 @@
+ORDER
+Lack Of Service - Judge Oftedal's Signature~ca-los-oftedal~CA~sdays,ddallcities~01~~~AW
+#
+FIELDS
+sdays~Days from the date of this order:~~DROPDOWN~~~10:15:30:__
+/nocheck
+#
+USERTF
+FORM

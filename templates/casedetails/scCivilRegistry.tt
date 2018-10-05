@@ -1,0 +1,37 @@
+<div id="registry">
+	<table class="summary">
+		<tr>
+			<td colspan="5" class="title">
+				Registry
+			</td>
+		</tr>
+		[% IF data.registry.size > 0 %]
+		<tr>
+        	<td>
+            	<table class="registry">
+                	<thead>
+                    	<tr class="title">
+                        	<th style="width: 7em">Total Deposits</th>
+                        	<th style="width: 7em">Total Deposits Less Clerk Fees</th>
+                        	<th style="width: 7em">Current Balance</th>
+                         </tr>
+                    </thead>
+                    <tbody>
+                    	[% FOREACH reg IN data.registry %]
+                        	<tr>
+                            	<td style="text-align: center">$[% reg.TotalDepositsWithFees %]</td>
+                            	<td style="text-align: center">$[% reg.TotalDeposits %]</td>
+                                <td style="text-align: center">$[% reg.Balance %]</td>
+                        	</tr>
+                    	[% END %]
+                	</tbody>
+            	</table>
+        	</td>
+    	</tr>
+    	[% ELSE %]
+    		<tr>
+    			<td colspan="5">No registry information available.</td>
+    		</tr>
+    	[% END %]
+	</table>
+</div>

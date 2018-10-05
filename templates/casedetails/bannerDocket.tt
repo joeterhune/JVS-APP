@@ -1,0 +1,134 @@
+<script type="text/javascript">
+    $('#docketTable_[% data.ucn %]').ready(function() {
+        // Auto-load any specified documents
+        var imgCount = 0;
+        var initLoad = $.parseJSON('[% data.initDockets %]');
+        var docketItems = $('#dockets_[% data.ucn %]').find('.imageLink');
+        $(initLoad).each(function(i,e) {
+            // Iterate through the docket list for each of the specified types.  When you find the first one that matches the
+            // docket code - which will be the most recent - trigger a click on that link.
+            var doctCode = e.docket_code;
+            $(docketItems).each(function(j,k) {
+                var thisDocket = $(k).data('docketcode');
+                if (thisDocket === doctCode) {
+                    // This is the one!
+                    $(this).trigger('click');
+                    setTimeout(function() {
+                        return false;
+                    }, 200);
+                    imgCount += 1;
+                    return false;
+                }
+            });
+        });
+        // Click the link for the appropriate number of documents
+        setTimeout(function() {
+            var pane = $('#documents_[% data.ucn %]');
+            switch (imgCount) {
+                case 0:
+                    break;
+                case 1:
+                    $(pane).find('.dv-one-pane').trigger('click');
+                    break;
+                case 2:
+                    $(pane).find('.dv-two-pane').trigger('click');
+                    break;
+                case 3:
+                    $(pane).find('.dv-three-pane').trigger('click');
+                    break;
+                default:
+                    $(pane).find('.dv-three-pane').trigger('click');
+                    break;
+            }
+        }, 1000);
+        
+        return true;
+    })
+</script>
+
+<div>
+    <button class="toggleDocket printHide">Hide/Show Docket Information</button>
+    <br/>
+    <button type="button" class="reset printHide">Reset Filters</button>
+</div>
+
+<form action="/cgi-bin/image.cgi" id="docketform_[% data.ucn %]" method="post" onsubmit="target='_blank'">
+    <div id="docketTable_[% data.ucn %]">
+        <table class="summary">
+            <tr>
+                <td class="title">Docket</td>
+            </tr>
+            <tr>
+                [% IF data.dockets.size == 0 %]
+                <td>No docketed items for this case</td>
+                [% ELSE %]
+                <td class="tableholder">
+                    <table id="dockets_[% data.ucn %]">
+                        <thead>
+                            <tr class="title">
+                                <th class="filter-select" data-placeholder="Date" style="width: 6em">Date<br/>Filed</th>
+                                <th class="filter-select" data-placeholder="Date" style="width: 6em">Date<br/>Docketed</th>
+                                <th data-placeholder="Docket #" style="width: 6em">Docket<br>Number</th>
+                                <th class="filter-select" data-placeholder="Filer" style="min-width: 20em">Filer</th>
+                                <th class="filter-select" data-placeholder="Code" style="min-width: 6em">Code</th>
+                                <th data-placeholder="Search Description" style="min-width: 15em">Description</th>
+                                <th data-placeholder="Search Text" style="min-width: 15em">Text</th>
+                                <th class="printHide">PDF Image<br/><input type="submit" class="showmulti" name="showmulti" value="All Selected"/>
+                                    <br/>
+                                    Select
+                                    <a class="checkallboxes">All</a> |
+                                    <a class="uncheckallboxes">None</a>
+                                    <br/>
+                                    <input type="radio" name="pdforder" id="buildDesc_[% data.ucn %]" value="desc"/>Newest first
+                                    <br/>
+                                    <input type="radio" name="pdforder" id="buildAsc_[% data.ucn %]" value="asc"/>Oldest first
+                                </th>
+                                [% IF data.showTif %]
+                                <th class="printHide" style="min-width: 75px">TIF<br/>Image</th>
+                                [% END %]
+                            </tr>
+                        </thead>
+                        <tbody>
+                            [% FOREACH docket IN data.dockets %]
+                            
+                            <tr class="[% docket.RowClass %]" data-docketcode="[% docket.DocketCode %]">
+                                <td class="center">[% docket.FileDate %]</td>
+                                <td class="center">[% docket.EnteredDate %]</td>
+                                <td class="center [% IF docket.ImageNumber != '' %]popup[% END %]">
+                                    [% docket.ImageNumber %]
+                                    [% IF docket.ImageNumber != '' %]<span class="printHide">[% docket.BookLocation %]</span>[% END %]                                                        
+                                </td>
+                                <td class="left">[% docket.FilerName %]</td>
+                                <td class="center">[% docket.DocketCode %]</td>
+                                <td class="left">[% docket.DocketDescription %]</td>
+                                <td class="left">[% docket.DocketText %]</td>
+                                <td class="center printHide">
+                                    [% IF docket.Image == 'Y' %]
+                                    <a class="imageLink" data-casenum="[% data.casenum %]" data-docketcode="[% docket.DocketCode %]" data-ucnobj="[% docket.UCNObj %]" data-docname="[% docket.DocketDescription %]">Image</a>
+                                    <input class="docketCheck" type="checkbox" name="selected" value="[% docket.UCNObj %]"/>
+                                    [% ELSE %]
+                                    <span style="color: red">No Image</span>
+                                    [% END %]
+                                </td>
+                                [% IF data.showTif %]
+                                <td class="center printHide [% IF docket.Image == 'Y' %]popup[% END %]">
+                                    [% IF docket.Image == 'Y' %]
+                                    <a class="popup" href="/cgi-bin/scimage.cgi?ucnobj=[% docket.UCNObj %]&amp;showTif=1"
+                                       onclick="target='_blank'">TIF</a><span>Retrieve single TIF image</span>
+                                    [% ELSE %]
+                                    &nbsp;
+                                    [% END %]
+                                </td>
+                        
+                                [% END %]
+                            </tr>
+                            [% END %]
+                        </tbody>
+                    </table>
+                </td>
+                [% END %]
+            </tr>
+        </table>
+    </div>
+    <input type="hidden" name="casenum" value="[% data.casenum %]"/>
+</form>

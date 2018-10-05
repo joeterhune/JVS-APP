@@ -1,0 +1,28 @@
+		<div>
+			<div id="cal-div-[% data.division %]-pager" class="pager" style="top: 40px">
+				<form>
+					<img src="/images/first.png" class="first"/>
+					<img src="/images/prev.png" class="prev"/>
+					<input type="text" class="pagedisplay"/>
+					<img src="/images/next.png" class="next"/>
+					<img src="/images/last.png" class="last"/>
+					<select class="pagesize">
+						<option value="10">10 per page</option>
+						<option value="25">25 per page</option>
+						<option value="50">50 per page</option>
+						<option value="100">100 per page</option>
+						<option value="500">500 per page</option>
+						<option value="1000">1000 per page</option>
+						<option value="5000">5000 per page</option>
+						<option value="10000">10000 per page</option>
+					</select>
+				</form>
+			</div>
+
+			<div>
+				<button class="cal-div-[% data.division %]-printCal">Print this Calendar</button>
+				<button type="button" name="Export" class="export">Export to Excel</button>
+				<br/>
+				<button type="button" class="cal-div-[% data.division %]-reset">Reset Filters</button>
+				<input type="hidden" name="tmpfile" id="cal-div-[% data.division %]-tmpfile" value="[% data.tmpfile %]"/>
+			</div>

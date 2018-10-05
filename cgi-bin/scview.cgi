@@ -1,0 +1,408 @@
+#!/usr/bin/perl -w
+#
+# scview.cgi - Showcase Case Viewing Function
+#
+
+BEGIN {
+    use lib '/usr/local/icms/bin';
+};
+
+use strict;
+use DBI;
+use CGI;
+use ICMS;
+use Common qw (
+    inArray
+    dumpVar
+    printCell
+    convertDates
+    escapeFields
+    changeDate
+    doTemplate
+    $templateDir
+    prettifyString
+    getUser
+);
+use Casenotes qw (
+    getFlags
+    getNotes
+);
+
+use CGI::Carp qw(fatalsToBrowser);
+use Cwd;
+
+use Showcase qw (
+    @attorneyTypes
+    @ctArray
+    @SCACTIVE
+    convertCaseNumToDisplay
+    getAppellantAddresses
+    getArrests
+    getAttorneys
+    getBonds
+    getCaseUsingLegacyCaseNumber
+    getCaseUsingUCN
+    getCharges
+    getCourtEvents
+    getDefendantAndAddress
+    getDockets
+    getFees
+    getjudgefromdiv
+    getLinkedCases
+    getOtherCases
+    getParties
+    getReopenHistory
+    getSCcasetype
+    getWarrants
+    $db
+);
+
+use Date::Calc qw(:all);
+
+use DB_Functions qw(
+    dbConnect
+    getData
+    getDataOne
+    getScCaseAge
+    inGroup
+    ldapConnect
+    getDbSchema
+    $DEFAULT_SCHEMA
+);
+
+use PBSO2 qw (
+    getBookingHistory
+);
+
+
+#--------------------------------------------------------------------------
+
+
+sub doit {
+    my $info=new CGI;
+
+    my $crimflag=0;
+    print $info->header({-expires => 0, -type => 'text/html'});
+    my $ucn=convertCaseNumToDisplay(clean($info->param("ucn")));
+
+    my $referer_host = (split("\/",$ENV{'HTTP_REFERER'}))[2];
+    
+    my $lev=clean($info->param("lev"));
+    
+    if ($lev eq "") {
+        if ($referer_host ne $ENV{'HTTP_HOST'}) {
+            $lev = 0;
+        } else {
+            $lev=3;
+        }
+    }
+    my $backlev=$lev-1;
+
+    my %data;
+    $data{'ucn'} = $ucn;
+    $data{'lev'} = $lev;
+    $data{'backlev'} = $lev - 1;
+    $data{'caseid'} = $info->param("caseid");
+    
+    my $icmsuser = getUser();
+    
+    my $ldap = ldapConnect();
+    my $secretuser = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
+    my $sealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
+    my $jsealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
+    $data{'odpuser'} = inGroup($icmsuser,'CAD-ICMS-ODPS',$ldap);
+    $data{'notesuser'} = inGroup($icmsuser,'CAD-ICMS-NOTES',$ldap);
+    
+    my $dbh = dbConnect($db);
+    my $schema = getDbSchema($db);
+    
+    my $pbsoconn;
+    my $pbsoFailed = 0;
+    
+    if (!$SKIPPBSO) {
+	eval {
+	    local $SIG{ALRM} = sub { die "timeout\n" };
+	    alarm 2;
+	    $pbsoconn = dbConnect("pbso2",undef,1);
+	    alarm 0;
+	};
+	
+	if ($@) {
+	    if ($@ eq 'timeout') {
+		$pbsoconn = undef;
+		$pbsoFailed = 1;
+	    }
+	}
+	if (!defined($pbsoconn)) {
+	    $pbsoFailed = 1;
+	}
+    }
+
+    my $sccasenum="50-".$ucn;
+
+    my $scucn=$sccasenum;
+    $scucn=~s#-##g;
+
+    my $sclcn=$ucn;
+    $sclcn=~s#-##g;
+    $sclcn=substr($sclcn,0,13)."XX";
+
+    $ucn=$scucn;
+    my $casenum=$sccasenum;
+
+    # Because there is a new format (CaseNumber extension), we might not be
+    # able to find the 'old' cases using that number.
+    # If the case can't be found using the CaseNumber, try the LegacyCaseFormat.
+    
+    my $cucn = getCaseUsingUCN($ucn,$sclcn,$dbh,$schema);
+
+    if (!defined($cucn)) {
+        print "<br/>No  information was found for case number $ucn.\n";
+        $dbh->disconnect;
+        exit(1);
+    }
+    
+    my $sccasenum="50-".$ucn;
+
+    my $scucn=$sccasenum;
+    $scucn=~s#-##g;
+
+    my $sclcn=$ucn;
+    $sclcn=~s#-##g;
+    $sclcn=substr($sclcn,0,13)."XX";
+
+    $ucn=$scucn;
+    my $casenum=$sccasenum;
+    my $caseid = $data{'caseid'};
+
+    # get party data
+
+    my @defendants;
+    if (!$SKIPPBSO) {
+	$pbsoFailed = 1;
+    }
+    
+    getDefendantAndAddress($caseid, $dbh, \@defendants, $pbsoconn,$pbsoFailed, $schema);
+    
+    $data{'defendants'} = \@defendants;
+
+    # TEMPORARY FIX UNTIL CLERK FIXES THIS ISSUE
+    ########
+    if ((defined($defendants[0]->{'CountyID'})) && ($defendants[0]->{'CountyID'} eq '0000000')) {
+		$defendants[0]->{'CountyID'} = undef;
+    }
+    ########
+    my $defjacket = $defendants[0]->{'CountyID'};
+    $data{'MJID'} = $defjacket;
+
+    $data{'parties'} = [];
+    
+    getParties($caseid,$dbh,$data{'parties'},$schema);
+    
+    my $query = qq {
+        select
+            CaseNumber,
+            FileDate,
+            Sealed,
+            Expunged,
+            CourtType,
+            CourtTypeDescription,
+            CaseType,
+            CaseTypeDescription,
+            DivisionName,
+            DivisionID,
+            CurrentJudgeName,
+            CaseStatus,
+            CaseStyle,
+            SpeedyTrialDemandDate,
+            SpeedyTrialDueDate,
+            SpeedyTrialWaivedDate,
+            ReopenDate,
+            DispositionDate,
+            ReopenCloseDate,
+            JudgeAtDisposition,
+            CaseID
+        from
+            $schema.vCase with(nolock)
+        where
+            CaseID = ?
+    };
+    
+    my $caseref = getDataOne($query,$dbh,[$caseid]);
+    
+    $caseref->{'JudgeAtDisposition'} =~ s/^JUDGE//i;
+    $caseref->{'JudgeAtDisposition'} = prettifyString($caseref->{'JudgeAtDisposition'});
+    
+    foreach my $key ("FileDate","SpeedyTrialDemandDate","SpeedyTrialDueDate","SpeedyTrialWaivedDate",
+                     "ReopenDate","DispositionDate","ReopenCloseDate") {
+        $caseref->{$key} = changeDate($caseref->{$key});
+    }
+
+    escapeFields($caseref);
+
+    #
+    #  what should be 'restricted'?
+    #
+    if((!$sealeduser) && (($caseref->{Sealed} eq 'Y') || ($caseref->{'Expunged'} eq 'Y'))) {
+        print "<br/>Case number $ucn is a restricted case.  No information can be provided.\n";
+        exit(1);
+    }
+
+    # showcase casetypes are not always defined in vCase
+    $caseref->{CaseType} = getSCcasetype($caseref->{CourtType},$caseref->{CaseType});
+
+    my $bncasenum = $caseref->{'CaseNumber'};
+    $bncasenum =~s#-##g;
+    $bncasenum = substr $bncasenum,2,15;
+    $data{'bncasenum'} = $bncasenum;
+
+    # don't let users that don't have access to secret cases see them.
+    if(!$secretuser){
+        if(inArray(["AD","AJ","TE","TP","TB"], $caseref->{CaseType})) {
+            print "<br/>Case number $ucn is a restricted case.  No information can be provided.\n";
+            $dbh->disconnect;
+            exit(1);
+        }
+    }
+
+    # set criminal flag based on court code - -
+    if (inArray(\@ctArray, $caseref->{CourtType})) {
+        $crimflag=1;
+        $data{'crimflag'} = 1;
+    }
+    
+    $data{'divjudge'} = prettifyString(getjudgefromdiv($caseref->{DivisionID},$dbh, $schema));
+    $query = qq {
+        select
+            CONVERT(varchar,MAX(EffectiveDate),101) as MaxEffectiveDate
+        from
+            $schema.vDocket with(nolock)
+        where
+            CaseID = ?
+    };
+
+    my $med = getDataOne($query,$dbh,[$caseid]);
+    $caseref->{'LastActivity'} = $med->{'MaxEffectiveDate'};
+    $caseref->{'CaseAge'} = getScCaseAge($caseref,$dbh);
+
+    my $ctanddesc = $caseref->{CaseType};
+    if((defined $caseref->{CaseTypeDescription}) && ($caseref->{CaseTypeDescription} ne '')) {
+        $ctanddesc.=" - $caseref->{CaseTypeDescription}";
+    }
+    
+    $caseref->{'CaseTypeDesc'} = $ctanddesc;
+
+
+    # Do this here so we know before showing the case number if we have
+    # open warrants.
+    my @warrants;
+
+    getWarrants($caseid,$dbh,\@warrants, $schema);
+
+    # Are any of the warrants open?
+    $data{'openWarrants'} = 0;
+    foreach my $warrant (@warrants) {
+        if ($warrant->{Closed} eq "N") {
+            $data{'openwarrants'} = 1;
+            last;
+        }
+    }
+
+    $data{'warrants'} = \@warrants;
+    $data{'caseinfo'} = $caseref;
+    
+    $data{'shortcase'} = $casenum;
+    $data{'shortcase'} =~ s/^50-//g;
+    
+    if (!inArray(\@SCACTIVE,$caseref->{CaseStatus})) {
+        if ($caseref->{'JudgeAtDisposition'} ne $data{divjudge}) {
+            # Only show the disposition judge if different from the current judge.
+            $data{'showDispJudge'} = 1;
+        }
+    }
+    
+    if (($caseref->{CaseStatus} =~ /Reopen/i) && ($caseref->{ReopenDate} ne "")) {
+        $data{'reopened'} = 1;
+    }
+    
+    $data{'attorneys'} = [];
+    getAttorneys($caseid,$dbh,$data{'attorneys'},$schema);
+    
+    my $isProSe = 1;
+    # If there is no PD or Attorney party, then the defendant is pro se
+    foreach my $attorney (@{$data{'attorneys'}}) {
+	if (inArray(['PD','Attorney'],$attorney->{'PartyType'})) {
+	    $isProSe = 0;
+	    last;
+	}
+    }
+    
+    $data{'defendants'}->[0]->{'IsProSe'} = $isProSe;
+
+    $data{'linkedCases'} = [];
+    getLinkedCases($caseid,$dbh,$data{'linkedCases'},$schema);
+
+    $data{'arrests'} = [];
+    getArrests($caseid,$dbh,$data{'arrests'},$schema);
+
+    $data{'bonds'} = [];
+    getBonds($caseid,$dbh,$data{'bonds'},$schema);
+
+    $data{'charges'} = [];
+    getCharges($caseid,$dbh,$data{'charges'},$schema);
+    
+    # Are there citations?
+    foreach my $charge (@{$data{'charges'}}) {
+        if (defined($charge->{'CitationNumber'})) {
+           $data{'hasCitations'} = 1;
+           last;
+        }
+    }
+
+    $data{'fees'} = [];
+    getFees($caseid,$dbh,$data{'fees'},$schema);
+    
+    $data{'flags'} = [];
+    $data{'casenotes'} = [];
+    my $cnconn = dbConnect("icms");
+    #getFlags($casenum,$cnconn,$data{'flags'});
+    #getNotes($casenum,$cnconn,$data{'casenotes'});
+    $cnconn->disconnect;
+    
+    $data{'events'} = [];
+    getCourtEvents($caseid, $dbh, $data{'events'}, $schema);
+    
+    $data{'showTif'} = (($ENV{'HTTP_USER_AGENT'} !~ /mobile/i) && (inGroup(getUser(), "CAD-ICMS-TIF", $ldap)));
+
+    $data{'appellants'} = [];
+    # We've already looked up the parties.  Get the appellants from that list
+    foreach my $party (@{$data{'parties'}}) {
+	if ($party->{PartyTypeDescription} eq "APPELLANT") {
+	    push(@{$data{'appellants'}},$party);
+	}
+    }
+    # And look up the addresses
+    getAppellantAddresses($caseid,$dbh,$data{'appellants'},$schema);
+    
+    $data{'reopens'} = [];
+    getReopenHistory($caseid,$dbh,$data{'reopens'},$schema);
+    
+    $data{'bookingHistory'} = {};
+    $data{'bookingNums'} = [];
+    if (defined($pbsoconn)) {
+		$pbsoconn->disconnect;
+    }
+    
+    $dbh->disconnect;
+    
+    doTemplate(\%data,"$templateDir/casedetails","scCaseDetails.tt",1);
+    
+    undef %data;
+    exit;
+}
+
+
+#
+# MAIN PROGRAM
+#
+doit();

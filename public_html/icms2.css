@@ -1,0 +1,64 @@
+body { font-family:Arial }
+DIV {  }
+.h1a { font-weight:bold; font-size: 140%}
+.h1 { color:green; font-weight:bold; font-size: 120%}
+.h2 { color:green; font-weight:bold; font-size: 100%}
+.h3 { padding-left: 30; font-size: 80% }
+.h4 { font-size: 80% }
+
+.news { border-style: solid; border-width:1; padding-left:5; background-color:#AAFFAA; padding-right:5 }
+.newstitle { color:blue; font-weight:bold; font-size: 80%; }
+.newslink { font-size: 70%; }
+.newsline { padding-left: 30; font-size: 70%; }
+
+.disc { font-size: 75%; width:455; padding-left:5; padding-right: 5; padding-top:5; padding-bottom: 5; font-style:italic; background-color:#DDDDFF; }
+
+.probs { border-style: none; width:340; padding-left:5; background-color:#BBBBFF; padding-right:5; font-size: 70% }
+.probstitle { color:blue; font-weight:bold; font-size: 110%; }
+
+.rptlabel { padding-left: 30; background-color: #EEFFCC; }
+.rptlabel2 { padding-left: 60; }
+.rptnum { padding-left: 10; text-align:right; font-weight:bold; background-color: #EEFFCC }
+.rptnum2 { padding-left: 10; text-align:right; }
+
+.credits { padding-top: 30; font-size: 75%; font-style:italic;  }
+
+table#v1 { font-size: 90% }
+table#v1 td { background-color: #EEFFCC }
+.toprow { background-color: #D0FFD0; font-weight: bold }
+
+
+table#gensumm { }
+table#gensumm tr#title { color:green; background-color: #D0FFD0; font-weight:bold; font-size: 120%}
+table#gensumm td#label1 { padding-left: 30; background-color: #EEFFCC}
+table#gensumm td#data1 { text-align:right; font-weight:bold; background-color: #EEFFCC }
+table#gensumm td#label2 { padding-left: 60; background-color: #EEFFCC}
+table#gensumm td#data2 { text-align:right;  background-color: #EEFFCC }
+
+table#gensumm td#label3 { padding-left: 90; background-color: #EEFFCC}
+table#gensumm td#data3 { text-align:right;  background-color: #EEFFCC }
+table#gensumm td#label4 { padding-left: 120; background-color: #EEFFCC}
+table#gensumm td#data4 { text-align:right;  background-color: #EEFFCC }
+table#gensumm td#label5 { padding-left: 150; background-color: #EEFFCC}
+table#gensumm td#data5 { text-align:right;  background-color: #EEFFCC }
+
+
+
+table#list { font-size:x-small; border-spacing:1px; padding:2; }
+table#list td#rptname { font-size:large; }
+table#list td#sel { background-color:#00FF00; }
+table#list tr#title { background-color:#C8C8FF; color:blue; text-align:center;}
+table#list tr#data { background-color: #C8FFC8; border-color: #C8FFC8 }
+table#list tr#data2 { background-color: #FFC8C8; border-color: #FFC8C8 }
+table#list tr#data3 { background-color: #FF4444; border-color: #FF88FF }
+
+a#list { text-decoration: none; color:blue }
+
+table#summary { background-color:#EEFFCC; font-size: 10pt }
+table#summary tr#title { background-color:#C8C8FF; color:blue; text-align:center;}
+table#summary td#title { background-color:#D0FFD0; color:green; font-weight:bold; font-size: 120%}
+table#summary td#label { font-weight:bold; padding-left:30 }
+table#summary td#note { background-color:#EEEE70 }
+table#summary tr#note { background-color:#EEEE70 }
+table#summary tr#motion { color:red; font-weight: bold; }
+table#summary tr#order { color:blue; font-weight: bold; }

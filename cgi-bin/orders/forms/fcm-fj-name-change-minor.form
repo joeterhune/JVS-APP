@@ -1,0 +1,16 @@
+ORDER
+#
+#  ALL divisions may use this form.
+FCM Final Judgment of Name Change (Minor Children)~fcm-fj-name-change-minor~DR~edate,ddallcities,parents,notified,orig1,new1,orig2,new2,orig3,new3~01
+#
+FIELDS
+parents~Petitioners are Parents~~CHECKBOX
+notified~Petitioners is Parent; Other Parent Notified~~CHECKBOX
+orig1~Child 1 Original Name~~TEXT~80~~~~~
+new1~Child 1 New Name~~TEXT~80~~~~~
+orig2~Child 2 Original Name~~TEXT~80~~~~~
+new2~Child 2 New Name~~TEXT~80~~~~~
+orig3~Child 3 Original Name~~TEXT~80~~~~~
+new3~Child 3 New Name~~TEXT~80~~~~~
+USERTF
+FORM

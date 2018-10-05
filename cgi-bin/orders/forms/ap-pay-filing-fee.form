@@ -1,0 +1,6 @@
+ORDER
+Order to Pay Filing Fee~ap-pay-filing-fee~CA,AP~~01~~~AY,AC
+FIELDS
+appealdate~Date of Appeal~~DATE~15~<small>(format you would like to appear on form)</small>
+USERTF
+FORM

@@ -1,0 +1,21 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Order Special Set Hearing~ca-order-special-set-hearing~CA,CC,DR,SC~motion,timeres,edate,etime,eloc,eaddr,ddallcities~01~
+#
+FIELDS
+motion~Motion Title:~~TEXT~100~~~~
+timeres~Time Reserved:~~TEXT~5~<small>(minutes)</small>~~~
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

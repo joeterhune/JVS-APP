@@ -1,0 +1,209 @@
+<script type="text/javascript">	
+	function checkform (form) {
+		if ($('#evtdate').val() == "") {
+			alert ("Please enter a date for the event.");
+			return false;
+		}
+		var tlength = $('#time_length').val();
+		var ttype = $('input[name=time_type]:radio:checked').val();
+		
+		var evtstart = $('#starthour').val() + ":" + $('#startmin').val();
+		var fullDt = $('#evtdate').val() + " " + evtstart;
+		var startDateObj = Date.parse(fullDt);
+		
+		var endDateObj = startDateObj.clone();
+		
+		if (ttype == "minutes") {
+			endDateObj.addMinutes(tlength);
+		} else {
+			endDateObj.addHours(tlength);
+		}
+		
+		var evtend = endDateObj.toString("HH:mm");
+		
+		if ($('#evtdesc').val() == "") {
+			alert ("Please enter a value for the event description.");
+			return false;
+		}
+		
+		if (($('#starthour').val() == "") || ($('#startmin').val() == "") ||
+			($('#endhour').val() == "") || ($('#endmin').val() == "")) {
+			alert ("Please enter starting and ending times for the event.");
+			return false;
+		}
+		
+		var evtnotes = $('#evtnotes').val();
+		
+		var xmlhttp = doAjax("doAdd.cgi", {casenum : $('#casenum').val(), casestyle : $('#casestyle').val(),
+						 casediv : $('#casediv').val(), evtdesc : $('#evtdesc').val(),
+						 evtdate : $('#evtdate').val(), starttime : evtstart, endtime: evtend,
+						 evtlocation : $('#evt_location').val(), sched_div : $('#sched_div').val(),
+						 evtnotes : $('#evtnotes').val()});
+		var xmlDoc = xmlhttp.responseXML;
+		
+		var eventID = $(xmlDoc).find('event_id').text();
+		
+		if (eventID != undefined) {
+			$('#resultSpan').css('color','green');
+			$('#resultSpan').html("Added successfully")
+			$( '#thisForm' ).each(function(){
+				this.reset();
+			});
+			$('#casestyletext').html('');
+			$('#casestyle').val('');
+			$('#divtext').html('');
+			$('#casediv').val('');
+			$('#btn-submit').attr('disabled',true);
+		} else {
+			$('#resultSpan').css('color','red');
+			$('#resultSpan').html("Addition failed!")
+		}
+		
+		return true;
+	}
+	
+</script>
+
+<form action="doAdd.cgi" method="post" id="thisForm">
+	<table>
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Case Number:
+			</td>
+			<td>
+				<input type="text" name="casenum" id="casenum" onchange="validateCase($(this));">
+					
+					<button style="left: 0px;" onclick="return false;">Look Up</button>
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Case Style:
+			</td>
+			<td>
+				<span id="casestyletext"></span>
+				<input type="hidden" id="casestyle" name="casestyle">
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Division:
+			</td>
+			<td>
+				<div style="position: relative">
+				<span id="divtext" style="float: left"></span>
+				<input type="hidden" id="casediv" name="casediv">
+				[% IF data.divs == "AllDivs" %]
+					<div style="position: absolute; left: 150px; margin: 0px;">
+					<span style="font-weight: bold; float: left">
+						Schedule Division:
+					</span>
+					<input type="text" name="sched_div" id="sched_div"
+						   style="width: 30px;">
+					</div>
+				[% ELSE %]
+					<input type="hidden" name="sched_div" id="sched_div">
+				[% END %]
+				</div>
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Event Date:
+			</td>
+			<td>
+				<input type="text" id="evtdate" name="evtdate" class="datepicker">
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Start Time:
+			</td>
+			<td>
+				<select id="starthour" name="starthour" style="width: 100px">
+					<option value="" selected="selected">Start Hour</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+					<option value="11">11</option>
+					<option value="12">12</option>
+					<option value="13">1</option>
+					<option value="14">2</option>
+					<option value="15">3</option>
+					<option value="16">4</option>
+					<option value="17">5</option>
+				</select>
+				
+				<select id="startmin" name="startmin" style="width: 100px">
+					<option value="" selected="selected">Start Minute</option>
+					<option value="00">00</option>
+					<option value="15">15</option>
+					<option value="30">30</option>
+					<option value="45">45</option>
+				</select>
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Hearing Length:
+			</td>
+			<td>
+				<input type="text" style="width: 40px" name="time_length" id="time_length">
+				<input type="radio" name="time_type" id="time_min" value="minutes" checked="checked">Minutes
+				<input type="radio" name="time_type" id="time_hrs" value="hours">Hours
+			</td>
+		</tr>
+
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Event Description:
+			</td>
+			<td>
+				<input type="text" id="evtdesc" name="evtdesc" style="width: 500px">
+			</td>
+		</tr>
+		
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Attorney Info:
+			</td>
+			<td>
+				<input type="text" id="evt_location" name="evt_location" style="width: 500px">
+			</td>
+		</tr>
+
+		<tr>
+			<td style="text-align: right; font-weight: bold; width: 200px;">
+				Notes:
+			</td>
+			<td>
+				<textarea id="evtnotes" name="evtnotes" rows="3" cols="100"></textarea>
+			</td>
+		</tr>
+		
+		<tr>
+			<td>&nbsp;</td>
+		</tr>
+		
+		<tr>
+			<td>
+				&nbsp;
+			</td>
+			<td>
+				<button type="button" id="btn-submit" disabled="disabled"
+						onclick="checkform('thisForm')">Submit</button>
+				<button type="reset">Reset Form</button>
+			</td>
+		</tr>
+		
+	</table>
+</form>
+
+<div id="resultDiv">
+	<span style="color: green" id="resultSpan">&nbsp;</span>
+</div>

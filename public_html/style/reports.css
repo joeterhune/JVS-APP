@@ -1,0 +1,96 @@
+/* filters */
+.tablesorter-filter {
+    width: 95%;
+    height: inherit;
+    margin: 4px;
+    padding: 4px;
+    background-color: #fff;
+    border: 1px solid #bbb;
+    color: #333;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-transition: height 0.1s ease;
+    -moz-transition: height 0.1s ease;
+    -o-transition: height 0.1s ease;
+    transition: height 0.1s ease;
+}
+
+td.caseLink {
+    min-width: 14em;
+    width: 14em;
+    max-width: 14em;
+    text-align: center
+}
+
+td.caseStyle {
+    min-width: 15em;
+    max-width: 25em;
+    text-align: left
+}
+
+td.smallNum {
+    min-width: 4em;
+    text-align: center;
+}
+
+td.date {
+    width: 9em;
+    text-align: center;
+}
+
+td.leftAlign {
+    text-align: left;
+}
+
+td.shortText {
+    width: 8em;
+}
+
+td.dateCol {
+    text-align: center;
+    width: 6em;
+    min-width: 6em;
+}
+
+td.smallNum {
+    text-align: center;
+    width: 4em;
+}
+
+td.medNum {
+    text-align: center;
+    min-width: 5em;
+    width: 5em;
+}
+
+td.yesno {
+    text-align: center;
+    min-width: 4em;
+    width: 4em;
+}
+
+td.category {
+    text-align: left;
+    width: 6em;
+    min-width: 6em;
+}
+
+td.divCol{
+    width: 5em;
+    min-width: 5em;
+    max-width: 4em;
+    text-align: center;
+}
+
+td.caseNote {
+    min-width: 15em;
+    max-width: 25em;
+    text-align: left;
+}
+
+td.eventCode {
+    min-width 10em;
+    max-width: 10em;
+    text-align: center;
+}

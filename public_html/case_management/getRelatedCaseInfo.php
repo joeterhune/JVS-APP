@@ -1,0 +1,98 @@
+<?php 
+
+require_once("../php-lib/common.php");
+require_once("../php-lib/db_functions.php");
+require_once("Smarty/Smarty.class.php");
+
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
+
+$case_number = $_REQUEST['case_number'];
+
+$config = simplexml_load_file($icmsXml);
+$sc_db = (string)$config->{'showCaseDb'};
+
+$dbh = dbConnect($sc_db);
+$schema = getDbSchema($sc_db);
+
+$case_number = trim($case_number);
+$case_number = cleanCN($case_number);
+//Let's get the case ID first
+if(substr($case_number, 0, 4) == "50"){
+	$regex = '/^50-[0-9]{4}-[A-Z]{2}-[0-9]{6}-[A-Z]{4}-[A-Z]{2}$/';
+	if (preg_match($regex, $case_number)) {
+    	$where = " CaseNumber = '$case_number'";
+    }
+    else{
+    	$case_number = str_replace("-", "", $case_number);
+    	$where = " UCN LIKE '%$case_number%' ";
+    }
+}
+else{
+  	$case_number = str_replace("-", "", $case_number);
+  	$regex = '/^[0-9]{4}[A-Z]{2}[0-9]{6}$/';
+  	if (preg_match($regex, $case_number)) {
+	    $where = " LegacyCaseNumber = '$case_number' OR UCN LIKE '50$case_number%' ";
+	}
+	else{
+		$where = " LegacyCaseNumber LIKE '%$case_number%' OR UCN LIKE '%$case_number%'";
+   	}
+}
+
+$query = " 	SELECT c.CaseNumber AS ToCaseNumber,
+				c.CaseType,
+				c.CaseStatus,
+				CONVERT(varchar, c.FileDate, 101) as FileDate,
+				c.CaseStyle,
+				DivisionID,
+				c.CaseID
+			FROM
+				$schema.vCase c with(nolock)
+			WHERE $where";
+
+if(!empty($case_number)){
+	$caseRow = getDataOne($query, $dbh, array("case_number" => $case_number));
+	echo "<tr><td><a href=\"/cgi-bin/case/search.cgi?name=" . $caseRow['ToCaseNumber'] . "\" target=\"_blank\">" . $caseRow['ToCaseNumber'] . "</a></td><td>" . $caseRow['CaseType'] . "<td>" . $caseRow['CaseStatus'] . "</td><td>" . $caseRow['FileDate'] . "</td><td>" . $caseRow['CaseStyle'] . "<td>" . $caseRow['DivisionID'] . "</td><td><select class=\"partiesHere\" name=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "[]\" id=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "\" multiple> </td></tr>";
+}
+else{
+	echo "Error";	
+}
+
+function cleanCN ($ucn){
+	$casenum = strtoupper($ucn);
+
+	# Strip leading "50" and any dashes.
+	$casenum = preg_replace("/-/","",$casenum);
+	$casenum = preg_replace("/^50/","",$casenum);
+
+	if (preg_match("/^(\d{1,6})(\D\D)(\d{0,6})(.*)/", $casenum, $matches)) {
+		$year = $matches[1];
+		$type = $matches[2];
+		$seq = $matches[3];
+		$suffix = $matches[4];
+
+		# If we have a 2-digit year, adjust it (we'll use 60 as the split point)
+		if ($year < 100) {
+			if ($year > 60) {
+				$year = sprintf("19%02d", $year);
+			} else {
+				$year = sprintf("20%02d", $year);
+			}
+		}
+
+		# If it's a Showcase code, prepend the 50 - they're all SC codes now!
+		$year = sprintf("50-%04d", $year);
+		if (preg_match("/(\D\D\D\D)(\D\D)/",$suffix,$smatches)) {
+			$suffix = sprintf("%s-%s", $smatches[1], $smatches[2]);
+			$retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
+		}
+		
+		if ((empty($suffix)) || ($suffix == ''))  {
+			return sprintf("%s-%s-%06d", $year, $type, $seq);
+		} else {
+			return sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
+		}
+    }
+}

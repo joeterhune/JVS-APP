@@ -1,0 +1,6 @@
+ORDER
+Order Closing Brief Schedule~ap-crim-order-close-brief-schedule~AP~appealdate~01~~~AC,AY
+FIELDS
+appealdate~Date of Appeal~~DATE~15~<small>(format you would like to appear on form)</small>
+USERTF
+FORM

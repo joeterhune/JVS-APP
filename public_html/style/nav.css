@@ -1,0 +1,131 @@
+/* Main Navigation */
+#nav {
+    position:relative;
+    width:620px;
+    margin:0;
+    margin-top:0px;
+    padding:0px;
+}
+ 
+ul#navigation {
+    margin:0px auto;
+    position:relative;
+    float:left;
+    border-left:0px solid #c4dbe7;
+    border-right:1px solid #c4dbe7;
+}
+ 
+ul#navigation li {
+    display:inline;
+    font-size:12px;
+    font-weight:bold;
+    margin:0;
+    padding:0;
+    float:left;
+    position:relative;
+    border-top:1px solid #c4dbe7;
+    border-bottom:2px solid #c4dbe7;
+}
+ 
+ul#navigation li a {
+    padding:1px 5px 3px 5px;
+    color:#616161;
+    text-decoration:none;
+    display:inline-block;
+    background: green;
+	color: white;
+ 
+    -webkit-transition:color 0.2s linear, background 0.2s linear;
+    -moz-transition:color 0.2s linear, background 0.2s linear;
+    -o-transition:color 0.2s linear, background 0.2s linear;
+    transition:color 0.2s linear, background 0.2s linear;
+}
+ 
+ul#navigation li a:hover {
+    background:#f8f8f8;
+    color:#282828;
+}
+ 
+ul#navigation li a.first {
+    border-left: 0 none;
+}
+ 
+ul#navigation li a.last {
+    border-right: 0 none;
+}
+ 
+ul#navigation li:hover > a {
+    background:#fff;
+}
+
+ Drop-Down Navigation 
+ul#navigation li:hover > ul
+{
+    /*visibility:visible*/;
+	display: block;
+    opacity:1;
+}
+
+ 
+ul#navigation ul, ul#navigation ul li ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+/*the next 2 styles are very important,
+being the ones which make the drop-down to stay hidden */
+    /*visibility:hidden;
+    opacity:0;*/
+	display: none;
+    position: absolute;
+    z-index: 99999;
+    width:200px;
+    background:#f8f8f8;
+    box-shadow:1px 1px 3px #ccc;
+	
+/* css3 transitions for smooth hover effect */
+    -webkit-transition:opacity 0.2s linear, visibility 0.2s linear;
+    -moz-transition:opacity 0.2s linear, visibility 0.2s linear;
+    -o-transition:opacity 0.2s linear, visibility 0.2s linear;
+    transition:opacity 0.2s linear, visibility 0.2s linear;
+}
+ 
+ul#navigation ul#all_counts {
+    top: 0px;
+    left: 21px;
+	width: 210px;
+}
+ul#navigation ul#jail {
+    /*top: -84px;*/
+    left: 21px;
+	width: 140px;
+}
+ul#navigation ul#inactive {
+    /*top: -110px;*/
+    left: 21px;
+	width: 150px;
+}
+ 
+ul#navigation ul li ul {
+    top: 0;
+    left: 181px; /* strong related to width:200px; from above */
+}
+ 
+ul#navigation ul li {
+    clear:both;
+    width:100%;
+    border:0 none;
+    border-bottom:1px solid #c9c9c9;
+}
+ 
+ul#navigation ul li a {
+    background:none;
+    padding:5px 5px;
+    color:#616161;
+    text-shadow:1px 1px 0px #fff;
+    text-decoration:none;
+    display:inline-block;
+    border:0 none;
+    float:left;
+    clear:both;
+    width:200px;
+}

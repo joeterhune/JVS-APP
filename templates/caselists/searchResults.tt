@@ -1,0 +1,259 @@
+		<script type="text/javascript">
+            $(document).ready(function () {
+                var pane = $('#[% data.searchID %]');
+                
+                $(pane).find('.listTable').bind('filterEnd', function () {
+                    countRows(pane);
+                });
+                
+                $(pane).find('.listTable').tablesorter ({
+                    widgets: ['zebra','filter'],
+                    [% IF data.charges %]sortList: [[1,0],[7,1]][% ELSE %]sortList: [[1,0],[6,1]][% END %],
+                    [% IF data.photos %]headers: {2: {sorter: false, filter: false}},[% END %]
+                    widgetOptions: {
+                        filter_columnFilters: true,
+                        filter_saveFilters: false,
+                        filter_reset : '.reset'
+                    }
+                });
+                
+                $('.export').click(function () {
+                    var xmlfile = $.trim($('#tmpfile').val());
+                    if (xmlfile != "") {
+                        window.open('/cgi-bin/export-xml.cgi?xmlfile=' + xmlfile);
+                        return true;
+                    }
+                    return true;
+                });
+
+                $(pane).find('.listTable').tablesorterPager({container: $(".[% data.searchID %]-pager"), positionFixed: false, size: 100 });
+                
+                var xmlfile = $.trim($('.tmpfile').val());
+                var cookieVal = $(location).attr('href');
+                if ($('#noTmp').val()) {
+                    cookieVal += "?tmpfile=" + xmlfile;
+                }
+                $.cookie("ICMS_2", cookieVal);
+                
+                $('input, textarea').placeholder();
+                $(pane).find('.listTable').first().trigger('update');
+                return true;
+            });
+            
+            function countRows(pane) {
+                // Count the rows displayed, and show it in the table header.
+                var displayedEvents = 0;
+                var listTable = $(pane).find('.listTable').first();
+                var rows = $(listTable).find('.eventRow');
+                $(listTable).find('.eventRow').each(function (i,e) {
+                    if ($(e).css('display') != 'none') {
+                        displayedEvents += 1;
+                    }
+                });
+                
+                var rowWord = " Rows";
+                if (displayedEvents == 1) {
+                    rowWord = " Row"
+                }
+                $(pane).find('.eventcount').html(displayedEvents + rowWord);
+            }
+        </script>
+
+        <div id="[% data.searchID %]" style="padding-top:1%">
+
+            <div class="buttondiv">
+                <button name="Export" class="export" title="Export to Excel">Export</button>
+                &nbsp;&nbsp;&nbsp;
+                <input type="hidden" id="tmpfile" class="tmpfile" value="[% data.tmpfile %]"/>
+                [% IF data.noTmp %]<input type="hidden" class="noTmp" value="[% data.noTmp %]"/>[% END %]
+                &nbsp;&nbsp;&nbsp;
+                <button type="button" class="reset" title="Reset Filters">Reset Filters</button>
+            </div>
+            
+            <div id="[% data.searchID %]-pager" class="[% data.searchID %]-pager pager tablesorter-pager">
+                <form>
+                    <img class="first disabled" alt="first" src="/images/first.png"/>
+                    <img class="prev disabled" alt="prev" src="/images/prev.png"/>
+                    <input class="pagedisplay" type="text"/>
+                    <img class="next disabled" alt="next" src="/images/next.png"/>
+                    <img class="last disabled" alt="last" src="/images/last.png"/>
+                    <select class="pagesize">
+                        <option value="10">10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                        <option value="500">500 per page</option>
+                        <option value="1000">1000 per page</option>
+                        <option value="5000">5000 per page</option>
+                        <option value="10000">10000 per page</option>
+                    </select>
+                </form>
+            </div>
+            
+            <div class="rptdiv">
+                <table class="summary" style="width: 100%; font-size: 9pt">
+                    <tr>
+                        <td class="rptname title" style="font-size: 150%" >
+                            [% data.dTitle %] <span class="eventcount">&nbsp;</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <table style="width: 100%" class="listTable">
+                                <thead>
+                                    <tr class="title">
+                                        <th class="sel filter-select" data-placeholder="Sel" style="max-width: 5em">
+                                            Open<br/>
+                                            Warrant?
+                                        </th>
+                                    
+                                        <th class="sel" data-placeholder="Part of Name">
+                                            Name
+                                        </th>
+                                        
+                                        [% IF data.photos %]
+                                        <!-- Only show photo column if selected -->
+                                        <th class="sel">
+                                            Photo
+                                        </th>
+                                        [% END %]
+                                        
+                                        <th class="sel datecol filter-select" data-placeholder="DOB">
+                                            DOB
+                                        </th>
+                                        
+                                        <th class="sel" data-placeholder="Age">
+                                            Age
+                                        </th>
+                                        
+                                        <th class="sel filter-select" data-placeholder="Select">
+                                            Party Type
+                                        </th>
+                                        
+                                        <th class="sel" style="width: 15em" data-placeholder="Part of case #">
+                                            Case #
+                                        </th>
+                                        
+                                        [% IF data.charges %]
+                                        <th style="width: 15em" data-placeholder="Part of Charge">
+                                            Charges
+                                        </th>
+                                        [% END %]
+                                        
+                                        <th class="sel datecol filter-select" data-placeholder="Sel">
+                                            File
+                                            <br/>
+                                            Date
+                                        </th>
+                                        
+                                        <th class="sel datecol filter-select" data-placeholder="Sel">
+                                            Last
+                                            <br/>
+                                            Activity
+                                        </th>
+                                        
+                                        <th class="sel filter-select" style="max-width: 4em" data-placeholder="Sel">
+                                            Div
+                                        </th>
+                                        
+                                        <th class="sel filter-select" style="max-width: 4em" data-placeholder="Sel">
+                                            Type
+                                        </th>
+                                        
+                                        <th class="sel filter-select" data-placeholder="Sel">
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+                                
+                                <tbody style="text-align: center">
+                                	[% IF data.cases.size %]
+	                                    [% FOREACH case IN data.cases %]
+	                                    <tr class="eventRow">
+	                                        <td>
+	                                            [% IF case.OpenWarrants %]<img src="/asterisk.png" alt="Y"/>Y[% ELSE %]N[% END %]
+	                                        </td>
+	                                        <td style="text-align: left">
+	                                            [% case.Name %]
+	                                        </td>
+	                                        [% IF data.photos %]
+	                                        <td>
+	                                            [% case.Photo %]
+	                                        </td>
+	                                        [% END %]
+	                                        <td class="datecol">
+	                                            [% case.DOB %]
+	                                        </td>
+	                                        <td>
+	                                            [% case.AGE %]
+	                                        </td>
+	                                        <td>
+	                                            [% case.PartyTypeDescription %]
+	                                        </td>
+	                                        
+	                                        <td>
+	                                            <a href="/cgi-bin/search.cgi?name=[% case.CaseNumber %]">[% case.CaseNumber %]</a>
+	                                        </td>
+	                                        
+	                                        [% IF data.charges %]
+	                                        <td style="text-align: left">
+	                                            <ul>
+	                                                [% FOREACH charge IN case.Charges %]
+	                                                <li>[% charge.CourtStatuteDescription %]</li>
+	                                                [% END %]
+	                                            </ul>
+	                                            
+	                                        </td>
+	                                        [% END %]
+	                                        
+	                                        <td class="datecol">
+	                                            [% case.FileDate %]
+	                                        </td>
+	                                        <td class="datecol">
+	                                            [% case.LACTIVITY %]
+	                                        </td>
+	                                        <td>
+	                                            [% case.DivisionID %]
+	                                        </td>
+	                                        <td>
+	                                            [% case.CaseType %]
+	                                        </td>
+	                                        <td>
+	                                            [% case.CaseStatus %]
+	                                        </td>
+	                                    </tr>
+	                                    [% END %]
+	                            	[% ELSE %]
+	                            		<tr class="eventRow">
+		                        			<td colspan="11">No cases found.</td>
+		                        		</tr>
+	                            	[% END %]
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </table>    
+            </div>
+            
+            <div id="[% data.searchID %]-pager" class="[% data.searchID %]-pager pager tablesorter-pager" style="top: 40px;">
+                <form>
+                    <img class="first disabled" alt="first" src="/images/first.png"/>
+                    <img class="prev disabled" alt="prev" src="/images/prev.png"/>
+                    <input class="pagedisplay" type="text"/>
+                    <img class="next disabled" alt="next" src="/images/next.png"/>
+                    <img class="last disabled" alt="last" src="/images/last.png"/>
+                    <select class="pagesize">
+                        <option value="10">10 per page</option>
+                        <option value="25">25 per page</option>
+                        <option value="50">50 per page</option>
+                        <option value="100">100 per page</option>
+                        <option value="500">500 per page</option>
+                        <option value="1000">1000 per page</option>
+                        <option value="5000">5000 per page</option>
+                        <option value="10000">10000 per page</option>
+                    </select>
+                </form>
+            </div>
+            
+        </div>
+

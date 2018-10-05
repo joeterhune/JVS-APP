@@ -1,0 +1,196 @@
+<script type="text/javascript">
+    function ignoreRow (data) {
+        var json = data;
+        var filingid = json.filingid;
+        var row = $('#row-' + filingid);
+        $(row).find('td').each(function(i,e) {
+            $(e).removeClass('pqueue');
+        });
+        // Hide the review link for ignored filings
+        $(row).find('.review').hide();
+        // And change the "ignore" to "restore"
+        var ignore = $(row).find('.ignore').first();
+        $(ignore).removeClass('ignore').addClass('restore').attr('title',"Restore this previously ignored filing").html('Restore');
+        return true;
+    };
+    
+    function restoreRow (data) {
+        var json = data;
+        var filingid = json.filingid;
+        var row = $('#row-' + filingid);
+        var fileStatus = $(row).find('td.fileStatus').text();
+        if (fileStatus != 'Correction Queue') {
+            // Really shouldn't be any of these, but just in case.
+            
+            // Only allowed to ignore Pending Queue
+            $(row).find('.restore').remove();
+            return true;
+        }
+        $(row).find('td').each(function(i,e) {
+            $(e).addClass('pqueue');
+        });
+        // Hide the review link for ignored filings
+        $(row).find('.review').show();
+        // And change the "ignore" to "restore"
+        var ignore = $(row).find('.restore').first();
+        $(ignore).removeClass('restore').addClass('ignore').attr('title',"Mark this status to be ignored in the future").html('Ignore');
+        return true;
+    };
+    
+    
+    $(document).ready(function() {
+    
+        $(".datepicker").datepicker({
+            showOn: "both",
+            minDate: '04/14/2015',
+            buttonImageOnly: true,
+            buttonText: "Select date",
+            format: 'mm/dd/yyyy',
+            buttonImage: "/style/images/calendar.gif",
+            autoclose: true,
+            todayHighlight: true,
+            todayBtn: 'linked',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-80:+0"
+        });
+        
+        $(document).on('click','.review',function() { 
+            var filingid = $(this).data('filingid');
+            var casenum = $(this).data('case');
+            var wfId = $(this).data('workflowId');
+            
+            if (wfId == undefined) {
+            	window.location.href = "/cgi-bin/eservice/eService.cgi?case=" + casenum + "&filingid=" + filingid + "&efileCheck=1&clerkFile=1";
+            } else {             
+            	window.location.href = "/orders/preview.php?fromWF=1&ucn=" + casenum + "&docid=" + wfId + "&filingId=" + filingid;
+            }
+            return true;
+        });	
+        
+        $(document).on('click','.ignore',function() { 
+            var filingid = $(this).data('filingid');
+            var casenum = $(this).data('case');
+            var url = "/cgi-bin/eservice/ignoreFiling.cgi";
+            var postData = {filingID: filingid, casenum: casenum, ignore: 1};
+            $.ajax({
+                url: url,
+                data: postData,
+                async: true,
+                success: ignoreRow
+            });
+            return true;
+        });
+        
+        $(document).on('click','.restore',function() { 
+            var filingid = $(this).data('filingid');
+            var casenum = $(this).data('case');
+            var url = "/cgi-bin/eservice/ignoreFiling.cgi";
+            var postData = {filingID: filingid, casenum: casenum, ignore: 0};
+            $.ajax({
+                url: url,
+                data: postData,
+                async: true,
+                success: restoreRow
+            });
+            return true;
+        });
+        
+        $(document).on('click','.search',function() { 
+            var start = $('#startDate').val();
+            var end = $('#endDate').val();
+            var postData = {};
+            if ((start != "") && (end != "")){
+                postData= {startDate: start, endDate: end};
+            }
+            $.ajax({
+            	cache: false,
+                url: '/cgi-bin/eservice/getFilings.cgi',
+                data: postData,
+                async: true,
+                success: showFilings
+            });
+        })
+
+        $('.search').trigger('click');
+    });
+    
+    function showFilings(data) {
+        $('#filingTableDiv').html(data.html);
+        $('#filingTable').tablesorter ({
+            widgets: ['zebra','filter'],
+            
+            widgetOptions: {
+                filter_columnFilters: true,
+                filter_saveFilters: false,
+                filter_reset : '.reset'
+            }
+        });
+        $('input, textarea').placeholder();
+        
+        $('#filingTable').tablesorterPager({
+	    	container: '#filingsPager', 
+	        positionFixed: false, 
+	        size: 100 
+	     });
+    }
+</script>
+<style type="text/css">
+	.ui-datepicker-title{
+		color:#000000;
+	}
+</style>
+<div id="filings" class="container responsive">
+    <div class="h1" style="text-align: left; margin-top: 10px; font-weight: bold">
+        Portal Filings by [% data.userInfo.givenName %] [% data.userInfo.sn %]
+    </div>
+    
+    <br class="clear"/>
+    <p style="text-align: center">
+    	E-filed documents that have not yet been processed by the Clerk  will display a Filing Status of "Pending Filing" and can be viewed by clicking the (View) hyperlink next to the Filing ID.
+		Once a document has been docketed by the Clerk, the Filing Status will change to "Filed" and the document can be viewed in the "Docket" section on the case details page.
+    </p>
+    <br class="clear"/>
+    
+    <div style="text-align: center">
+        <span style="font-weight: bold">Show filings between</span>
+        <input class="datepicker" id="startDate" name="startDate"/>
+        and
+        <input class="datepicker" id="endDate" name="endDate"/>
+        <button class="search">Search</button>
+    </div>
+    
+    <div id="printopts">
+        <div style="float: left">
+            <button type="button" class="reset">Reset Filters</button>
+        </div>
+        <div id="filingsPager" class="pager" style="top: 40px">
+            <form>
+                <img src="/images/first.png" class="first"/>
+                <img src="/images/prev.png" class="prev"/>
+                <input type="text" class="pagedisplay"/>
+                <img src="/images/next.png" class="next"/>
+                <img src="/images/last.png" class="last"/>
+                <select class="pagesize">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                    <option value="500">500 per page</option>
+                    <option value="1000">1000 per page</option>
+                    <option value="5000">5000 per page</option>
+                    <option value="10000">10000 per page</option>
+                </select>
+            </form>
+        </div>
+
+
+    </div>	
+    
+    <div id="filingTableDiv">				
+    </div>
+    
+    <div id="filingHiddenVars"></div>
+    
+</div>
+

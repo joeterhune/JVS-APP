@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>Easy-Cal</title>
+		<script src="../javascript/jquery.js"></script>
+		<script src="../javascript/easycal.js"></script>
+		<link rel="stylesheet" type="text/css" href="style/easycal.css"/>
+	</head>
+	
+	<body style="width: 1200px">
+		<div id="divisions">
+			[% IF data.divisions.size > 1 %]
+			Select Division:
+			<select name="division" id="division"
+					onchange="document.getElementById('hearingtype').disabled=0;">
+				<option value="" selected="selected">Select Division</option>
+				[% FOREACH division IN data.divisions %]
+				<option value="[% division %]">[% division %]</option>
+				[% END %]
+			</select>
+			[% ELSE %]
+			Division [% data.divisions.0 %]
+			<input type="hidden" name="division" id="division" value="[% data.divisions.0 %]"/>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					$("#hearingtype").prop('disabled',false);
+				});
+			</script>
+			[% END %]
+		</div>
+			
+		<br/>
+		
+		
+	
+		
+		<div id="enterHearing" class="major">
+			<span class="h3">Enter Hearing Details:</span>
+			<button id="hideEnter">Hide</button>
+			<button id="showEnter">Show</button>
+			
+			<script>
+				$("#hideEnter").click(function() {
+					$("#eventInner").hide("fast");
+				});
+				$("#showEnter").click(function() {
+					$("#eventInner").show("fast");
+				});
+			</script>
+			
+			<div id="eventInner">
+			<form id="eventForm" action="#" method="post" accept-charset="UTF-8">	
+				<div class="row">
+					<label>Court Event Type:</label>
+					
+					<div class="selectdiv">
+						<select name="hearingtype" id="hearingtype" disabled="disabled"
+								onchange="document.getElementById('year').disabled=0;">
+							<option value="" selected="selected">Select Hearing Type</option>
+							[% FOR hearingType IN data.hearingTypes %]
+							<option value="[% hearingType.hearing_type_id %]">[% hearingType.hearing_type_desc %]</option>
+							[% END %]
+						</select>
+					</div>
+				</div>
+				
+				<div class="row">
+					<label>Hearing Date:</label>
+					
+					<div class="selectdiv">
+						<select name="year" id="year" disabled="disabled" onchange="setMonth();">
+							<option value="" selected="selected">Select Year</option>
+							[% i = data.year %][% WHILE i <= (data.yearsout + data.year) %]<option value="[% i %]">[% i %]</option>[% i = i + 1 %][% END %]
+						</select>
+					</div>
+					
+					<div class="selectdiv">
+						<select name="month" id="month" disabled="disabled"
+								onchange="validateDate(document.getElementById('year').value, this.value, undefined);">
+							<option value="" selected="selected">Select Month</option>
+							[% FOR month IN data.months %]
+							<option value="[% month.monthnum %]">[% month.monthname %]</option>
+							[% END %]
+						</select>
+					</div>
+					
+					<div class="selectdiv" id="daydiv">
+						<select name="day" id="day" disabled="disabled" onchange="return false;">
+							<option value="" selected="selected">Select Day</option>
+						</select>
+					</div>
+					
+					<div class="selectdiv" id="weekday">
+						&nbsp;
+					</div>
+				</div>
+				
+				<div id="starttime" class="row">
+					<label>Start Time:</label>
+					
+					<div class="selectdiv">
+						<select name="starthour" id="starthour" disabled="disabled"
+								onchange="document.getElementById('startmin').disabled=0;">
+							<option value="" selected="selected">Select Hour</option>
+							<option value="08">08</option>
+							<option value="09">09</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+							<option value="13">01</option>
+							<option value="14">02</option>
+							<option value="15">03</option>
+							<option value="16">04</option>
+						</select>
+					</div>
+					
+					<div class="selectdiv">
+						<select name="startmin" id="startmin" disabled="disabled"
+								onchange="document.getElementById('endhour').disabled=0;">
+							<option value="" selected="selected">Select Minute</option>
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+					</div>
+				</div>
+				
+				<div id="endtime" class="row">
+					<label>End Time:</label>
+					
+					<div class="selectdiv">
+						<select name="endhour" id="endhour" disabled="disabled"
+								onchange="checkTime(document.getElementById('starthour').value, this.value, undefined, undefined);">
+							<option value="" selected="selected">Select Hour</option>
+							<option value="08">08</option>
+							<option value="09">09</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+							<option value="13">01</option>
+							<option value="14">02</option>
+							<option value="15">03</option>
+							<option value="16">04</option>
+						</select>
+					</div>
+					
+					<div class="selectdiv">
+						<select name="endmin" id="endmin" disabled="disabled"
+								onchange="checkUniqueTime('eventForm'); checkTime(document.getElementById('starthour').value, document.getElementById('endhour').value, document.getElementById('startmin').value, this.value); document.getElementById('caseyear').disabled=0;">
+							<option value="" selected="selected">Select Minute</option>
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+					</div>
+				</div>
+				
+				<div id="case" class="row">
+					<label>Case Information:</label>
+					
+					<div class="selectdiv">
+						<select name="caseyear" id="caseyear" disabled="disabled"
+								onchange="updateCaseTypes(document.getElementById('division').value,'casetypediv');document.getElementById('casetype').disabled=0; document.getElementById('caseseq').disabled=0; document.getElementById('caseseq').value='';">
+							<option value="" selected="selected">Case Year</option>
+							[% i = data.year %]
+							[% WHILE i >= data.earliest %]
+							<option value="[% i %]">[% i %]</option>
+							[% i = i - 1 %]
+							[% END %]
+						</select>
+					</div>
+					
+					<div class="selectdiv" id="casetypediv">
+						<select name="casetype" id="casetype" disabled="disabled"
+								onchange="document.getElementById('caseseq').disabled=0;">
+							<option value="" selected="selected">Type</option>
+							[% FOR casetype in data.caseTypes %]
+							<option value="[% casetype %]">[% casetype %]</option>
+							[% END %]
+						</select>
+					</div>
+					
+					<div id="caseseqdiv" class="selectdiv">
+						<input type="text" name="caseseq" id="caseseq" disabled="disabled"
+							   value="Case Sequence"
+							   onchange="getStyle(this.value,document.getElementById('caseyear').value,document.getElementById('casetype').value,document.getElementById('division').value);"/>
+					</div>
+				</div>
+				
+				<div class="row">
+					<label>Case Style:</label>
+						<div id="casestylediv">
+							<span id="casestylesel">&nbsp;</span>
+						</div>
+				</div>
+				
+				
+				<div id="lawfirm" class="row">
+					<label>Law Firm:</label>
+					
+					<div id="lfirm">
+						<input type="text" id="lf_name" name="lf_name" size="50" maxlength="100"
+							   title="Enter Law Firm Name" disabled="disabled"
+							   onkeypress="return disableEnterKey(event);"
+							   onchange="document.getElementById('formSubmit').disabled=0;">
+					</div>
+				</div>
+				
+				<div>
+					<button type="button" id="formSubmit" disabled="disabled"
+							onclick="validateForm('eventForm');">Submit</button>
+				</div>
+			</form>
+			</div>
+		</div>
+
+
+		<div id="showDate" class="major">
+			<span class="h3">Show Date:</span>
+			<button id="hideShow">Hide</button>
+			<button id="showShow">Show</button>
+		
+			<script>
+				$("#hideShow").click(function() {
+					$("#showInner").hide("fast");
+				});
+				$("#showShow").click(function() {
+					$("#showInner").show("fast");
+				});
+			</script>
+			
+			<form action="#" method="post" onsubmit="return false;">
+			<div id="showInner" style="border: 3px solid purple;">
+				<div class="row">
+					<label>Hearing Date:</label>
+					
+					<div class="selectdiv">
+						<select name="year" id="showyear" disabled="disabled" onchange="setMonth();">
+							<option value="" selected="selected">Select Year</option>
+							[% i = data.year %][% WHILE i <= (data.yearsout + data.year) %]<option value="[% i %]">[% i %]</option>[% i = i + 1 %][% END %]
+						</select>
+					</div>
+					
+					<div class="selectdiv">
+						<select name="month" id="showmonth" disabled="disabled"
+								onchange="validateDate(document.getElementById('year').value, this.value, undefined);">
+							<option value="" selected="selected">Select Month</option>
+							[% FOR month IN data.months %]
+							<option value="[% month.monthnum %]">[% month.monthname %]</option>
+							[% END %]
+						</select>
+					</div>
+					
+					<div class="selectdiv" id="daydiv">
+						<select name="day" id="showday" disabled="disabled" onchange="return false;">
+							<option value="" selected="selected">Select Day</option>
+						</select>
+					</div>
+					
+					<div class="selectdiv" id="weekday">
+						&nbsp;
+					</div>
+				</div>
+			</div>
+			</form>
+		</div>
+		<br/>
+	</body>
+ </html>

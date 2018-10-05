@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.blockUI.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.widgets.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.pager.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
+        <script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.placeholder.js"></script>
+		<script src="/icms.js" type="text/javascript"></script>
+		<script src="/javascript/main.js" type="text/javascript"></script>
+		<script src="/javascript/ajax.js" type="text/javascript"></script>
+		<link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap.min.css"/>
+		<link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap-datetimepicker.css"/>
+		<link rel="stylesheet" type="text/css" href="/icms1.css?1.1" />
+		<link rel="stylesheet" type="text/css" href="/style/calendars.css?1.1" />
+
+		<title>
+			[% data.title %]
+		</title>
+	</head>
+
+	<body [% IF data.lev %]onload="SetBack('ICMS_[% data.lev %]');"[% END %]>
+		<div class="container">
+		<div id="logo">
+			<a href="/"><img class="img-responsive" src="/icmslogo.jpg" alt="ICMS"
+								  style="border: 0px" /></a>
+		</div>
+
+		<div id="help" style="margin-bottom: 10px">
+			<button name="helpbutton" value="Help"
+					onclick="popup('help/icmshelp.html','Help')">
+				Help
+			</button>
+		</div>

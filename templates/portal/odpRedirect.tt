@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Page Title</title>
+    <link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap.css"/>
+    <link href="https://e-services.co.palm-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
+    <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+    <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        $(document).ready (function() {
+            
+            $('#docDiv').on('click','.efile',function () {
+                $('#dialogSpan').html("Press \"OK\" to confirm filing this form in the portal.");
+                $('#dialogDiv').dialog({
+                    resizable: false,
+                    minheight: 150,
+                    width: 500,
+                    modal: true,
+                    title: 'Preparing to e-File',
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog( "close" );
+                            $('#fileForm').submit();
+                            return false;
+						},
+                        "Cancel": function() {
+                            $(this).dialog( "close" );
+                            return false;
+                        }
+					}
+				});
+            });
+        });
+        
+    </script>
+    
+    <div id="dialogDiv">
+		<span id="dialogSpan" style="font-size: 80%"></span>
+	</div>
+    
+    <div id="docDiv" class="container">
+        <div>
+            <iframe style="width: 800px; height: 800px" id="pdf1" class="pdf" src="/Viewer.js/#/[% data.pdf %]"></iframe>
+        </div>
+
+        [% IF data.eFileInfo %]
+        <div>
+            Submit to State e-Filing Portal?
+            <button class="efile">Submit</button>
+            <form id="fileForm" action="/cgi-bin/portal/portalFile.pl" method="post">
+                <input type="hidden" name="ucn" value="[% data.UCN %]"/>
+                <input type="hidden" name="casenum" value="[% data.CaseNumber %]"/>
+                <input type="hidden" name="pdf" value="[% data.pdf %]"/>
+                <input type="hidden" name="division" value="[% data.DivisionID %]"/>
+                <input type="hidden" name="formname" value="[% data.FormName %]"/>
+                <input type="hidden" name="dbtype" value="[% data.DBtype %]"/>
+                <input type="hidden" name="docketDesc" value="[% data.docketDesc %]"/>
+                <input type="hidden" name="docketGroup" value="[% data.docketGroup %]"/>
+            </form>
+        </div>
+        [% END %]
+    </div>
+
+    </body>
+</html>

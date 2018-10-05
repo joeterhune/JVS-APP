@@ -1,0 +1,52 @@
+<table class="summary" style="width: 100%">
+	<tr>
+		<td id="rptname" class="title" style="font-size: 150%">
+			Case Notes Search Division [% data.division %], Note Dates [% data.dates %] - [% data.casecount %] Rows
+		</td>
+	</tr>
+	<tr>
+		<td>
+			[% IF data.outCases.size %]
+			<table id="listTable" style="font-size: 90%; width: 100%;">
+				<thead>
+					<tr class="title">
+						<th>Case #</th>
+						<th>Div</th>
+						<th>Name</th>
+						<th>Initial<br>File</th>
+						<th>Age</th>
+						<th>Last<br>Activity</th>
+						<th>Type</th>
+						<th>Status</th>
+						<th>Flags</th>
+						<th>Notes</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					[% FOREACH case IN data.outCases %]
+					<tr>
+						<td style="width: 15%; text-align: center">
+							<a onclick="open_win('/cgi-bin/[% IF case.CaseNumber.match('^50-') %]scview[% ELSE %]bannerview[% END %].cgi?ucn=[% case.CaseNumber %]&amp;lev=0','foo');">
+								[% case.CaseNumber %]
+							</a>
+						</td>
+						<td style="width: 5%; text-align: center">[% case.DivisionID %]</td>
+						<td style="width: 15%">[% case.CaseStyle %]</td>
+						<td style="width: 6%; text-align: center;">[% case.FileDate %]</td>
+						<td style="width: 5%; text-align: center">[% case.CaseAge %]</td>
+						<td style="width: 6%; text-align: center">[% case.LastActivityDate %]</td>
+						<td style="width: 5%; text-align: center">[% case.CaseType %]</td>
+						<td style="width: 6%; text-align: center">[% case.CaseStatus %]</td>
+						<td style="width: 15%">[% case.FlagDescriptions %]</td>
+						<td style="width: 24%">[% case.Notes %]</td>
+					</tr>
+					[% END %]
+				</tbody>
+			</table>
+			[% ELSE %]
+			No flagged cases were found with your selected criteria.
+			[% END %]
+		</td>
+	</tr>
+</table>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SpreadsheetDef>
+    <RowHeight>85</RowHeight>
+    <RepeatRows>
+        <Start>0</Start>
+        <End>5</End>
+    </RepeatRows>
+    <HeaderRow>5</HeaderRow>
+    
+    <!-- Should we strip the leading "50"? -->
+    <Show50>0</Show50>
+    
+    <TopMargin>.5</TopMargin>
+    <BottomMargin>.5</BottomMargin>
+    <SideMargins>.5</SideMargins>
+    
+    <HeaderImage>
+        <ImageFile>/var/www/html/case/images/CourtAdmin_logo.bmp</ImageFile>
+        <ImageRow>0</ImageRow>
+        <XOffset>400</XOffset>
+        <YHeight>100</YHeight>
+    </HeaderImage>
+    
+    <DftHeaderFormat>
+        <bold>1</bold>
+        <underline>1</underline>
+        <color>red</color>
+        <text_wrap>1</text_wrap>
+        <size>16</size>
+    </DftHeaderFormat>
+    
+    <DftRowFormat>
+        <align>left</align>
+        <text_wrap>1</text_wrap>
+        <valign>top</valign>
+        <align>center</align>
+        <bottom>1</bottom>
+        <size>16</size>
+    </DftRowFormat>
+    
+    <SheetHeaderFormat>
+        <bold>1</bold>
+        <center_across>1</center_across>
+        <size>18</size>
+    </SheetHeaderFormat>
+    
+    <Column>
+        <Name>Law Firm</Name>
+        <Position>1</Position>
+        <Field>LawFirm</Field>
+        <Alignment>left</Alignment>
+        <Width>30</Width>
+    </Column>
+    
+    <Column>
+        <Name>Time</Name>
+        <Position>2</Position>
+        <Field>StartTime</Field>
+        <Alignment>left</Alignment>
+        <Width>14</Width>
+        <RowFormat>
+            <text_wrap>1</text_wrap>
+            <valign>top</valign>
+            <align>center</align>
+            <bottom>1</bottom>
+            <size>14</size>
+        </RowFormat>
+    </Column>
+    
+    <Column>
+        <Name>Length (mins)</Name>
+        <Position>3</Position>
+        <Field>TimeAllotted</Field>
+        <Alignment>left</Alignment>
+        <Width>18</Width>
+        <RowFormat>
+            <text_wrap>1</text_wrap>
+            <valign>top</valign>
+            <align>center</align>
+            <bottom>1</bottom>
+            <size>14</size>
+        </RowFormat>
+    </Column>
+    
+    <Column>
+        <Name>Case Number</Name>
+        <Position>4</Position>
+        <Field>CaseNumber</Field>
+        <Alignment>left</Alignment>
+        <Width>20</Width>
+        <RowFormat>
+            <text_wrap>1</text_wrap>
+            <color>blue</color>
+            <underline>1</underline>
+            <valign>top</valign>
+            <align>center</align>
+            <bottom>1</bottom>
+            <size>14</size>
+        </RowFormat>
+    </Column>
+    
+    <Column>
+        <Name>Case Style</Name>
+        <Position>5</Position>
+        <Field>CaseStyle</Field>
+        <Alignment>left</Alignment>
+        <Width>40</Width>
+    </Column>
+    
+    <Column>
+        <Name>Motion Type</Name>
+        <Position>6</Position>
+        <Field>Motion</Field>
+        <Alignment>left</Alignment>
+        <Width>60</Width>
+    </Column>
+    
+    <Column>
+        <Name>Attorney Name</Name>
+        <Position>7</Position>
+        <Field>AttorneyName</Field>
+        <Alignment>left</Alignment>
+        <Width>60</Width>
+    </Column>
+    
+    <Column>
+        <Name>Canceled</Name>
+        <Position>8</Position>
+        <Field>isCanceled</Field>
+        <Alignment>left</Alignment>
+        <Width>12</Width>
+    </Column>
+    
+</SpreadsheetDef>

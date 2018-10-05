@@ -1,0 +1,14 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Foreclosure Trial Order - No Embedded Signature~ca-foreclosure-trial-order-no-sig~CA~edate,etime,courtroom,timetype,reserved~01~~~AW
+#
+FIELDS
+courtroom~Courtroom~~TEXT~20~~~
+timetype~Reservation type?~~DROPDOWN~~~hour:minute
+reserved~How many?~~TEXT~10~~~
+
+#
+/nocheck
+USERTF
+FORM

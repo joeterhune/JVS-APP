@@ -1,0 +1,157 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" name="stylin" href="/case/icms1.css">
+<script src="/case/icms.js" language="javascript" type="text/javascript"></script>
+<script language="javascript" type="text/javascript">
+function toggleMe(a){
+  var e=document.getElementById(a);
+  if(!e)return true;
+  if(e.style.display=="none"){
+    e.style.display="block"
+  } else {
+    e.style.display="none"
+  }
+  return true;
+}</script>
+
+<style type="text/css">
+input.btn {
+	color:black;
+    font: 90% helvetica,sans-serif;
+    background-color:#cccccc;
+    border:1px solid;
+}
+</style>
+
+
+<title>ICMS Help</title>
+</head>
+<body>
+
+<div align="center"><img src=/case/icmslogo.jpg></div>
+
+<div class=newstitle>ICMS Help Page</div>
+
+<div class=newsline>
+
+The Integrated Case Management System allows you to search for cases or pull up case reports for a given judge or division.
+<br/><br/>Note that sealed cases are excluded from all searches.
+
+</div><p>
+
+<div class=newstitle>Circuit-Wide Search</div>
+
+<div class=newsline>
+
+Use this to search all of the online case records in the 15th Judicial Circuit. You can search by an individual person's name, a business name, a case number,
+or a citation number.   
+<p>
+When doing a name search, you can opt to search for "SOUNDEX" names by selecting the "'Sounds Like' Name Search" box.  A soundex search will search for names that 
+may be spelled differently, but sound the same.
+<p>
+Indicate the name is a business name by selecting the "Business Names Only" box.  When a business name search is conducted, first names are not used in the search.  The matching will be done on the entire entered string as the business name.  
+<p>
+Select "All Party Search" to conduct a search for most parties other than attorneys and court personnel.  Here is a complete <a href="allparty.html">list...</a>
+<p>
+This search normally excludes parties that are attorneys.  If you are interested in finding cases for a particular attorney, select the "Attorney Party Search" box.  
+All other party types are excluded from an attorney party search.
+<p>
+If you only want to include Defendants, select the "Defendant Party Search" box.  This search only looks for party type: DFT.
+<p>
+A booking photo is generally available for any person who has been booked by the Palm Beach Sheriff's Office.  Check "Show Booking Photos" to include them in the results.
+<p>
+If you want to exclude closed and inactive cases from your search, select the "Active Cases Only" box. 
+&nbsp;&nbsp;<a href="inactive.html">More...</a>
+
+<p>If you'd like to see all the charges listed in the results, check the "Show Charge Information" box.  Doing this will increase the number of results since the charges are listed for each found item.  For instance, if you are doing a name search and include charges, you will see one line for each charge with that name.  If a person has 10 charges, there will be 10 rows. 
+
+<p>
+<input type=button onClick="return toggleMe('NameFormats')" value='Show/Hide Name Formats' class="btn">
+<div id='NameFormats' style='display:none'>
+<br/>
+<b>Enter names in any of these formats:</b>
+
+<table id="v1">
+<tr><td class="toprow">Format<td>Comments
+<tr><td>Last<td>Last name only search.  
+<tr><td>Last, First&nbsp;&nbsp;&nbsp;<td>A comma separates the last and first names.  
+<tr><td>First Last<td>A blank space separates the first and last names.
+<tr><td>Last*<br/>
+        Last*, First<br/>
+        First Last*<br/>
+        <td>Use an * character at the end of the Last name to do a wildcard search on any of the formats.
+<tr><td>Business Name or Business Name*<td>Enter either an exact name or enter some of the name, followed by an * to do a wildcard search. 
+</table>
+
+<a href="namesearch.html">More...</a>
+<p>
+</div>
+
+<p>
+<input type=button onClick="return toggleMe('CaseFormats')" value='Show/Hide Case Number Formats' class="btn">
+<div id='CaseFormats' style='display:none'>
+<br/>
+<b>Enter case numbers in any of these formats:</b>
+
+<table id="v1">
+<tr><td class="toprow">Format<td>Comments
+<tr><td>Year-Type-Number-Suffix<td>Hyphens indicate an exact case number search.<br\>
+Provide the suffix only when looking for a case that has one.
+<tr><td>YearTypeNumberSuffix<td>Entering case information without hyphens allows you to enter abbreviated years and numbers when looking for a list of case numbers. 
+<tr><td>YearTypeNumber*<td>Use an * character at the end of the number to find any cases that begin with the entered number. 
+</table>
+<a href="numbersearch.html">More...</a>
+<p>
+</div>
+
+<p>
+<input type=button onClick="return toggleMe('CitationFormats')" value='Show/Hide Citation Number Formats' class="btn">
+<div id='CitationFormats' style='display:none'>
+<br/>
+<b>Enter citation numbers in either of these formats:</b>
+
+<table id="v1">
+<tr><td class="toprow">Format<td>Comments
+<tr><td>Number<td>Exact citation number search.
+<tr><td>Number*<td>Use an * character at the end of the number to find any citations that begin with the entered number. 
+</table>
+<p>
+</div>
+
+<p>
+<b>Flagged Case Search</b> allows you to quickly find cases that have been flagged in a particular way.
+<p>
+<b>PBSO Search</b> allows you to access data directly from the Palm Beach Sheriff's Office.  
+
+</div><p>
+
+<div class=newstitle>Circuit and County Judge Reports</div>
+
+<div class=newsline>
+
+To see the cases and divisions assigned to a circuit or county judge, choose the judge's name from the drop-down menu and click on the View button.
+
+</div>
+
+<p><div class=newstitle>Division Reports</div>
+
+<div class=newsline>
+
+To see all the  cases for a specific division, choose the division's name from the drop-down menu and click on the View button.  You can also do this by selecting the all criminal or all civil divisions links, then choosing the desired division from the list.
+
+</div>
+
+<p><div class=newstitle>Additional Help</div>
+
+<div class=newsline>
+
+For additional Help information, please email:  cad-icmshelp@pbcgov.org.
+
+</div>
+
+
+
+</body>
+
+</html>
+

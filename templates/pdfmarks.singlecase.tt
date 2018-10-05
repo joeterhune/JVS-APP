@@ -1,0 +1,6 @@
+[ /Title (Virtual Casefile - Case [% case %])  /Author (ICMS)  /DOCINFO pdfmark
+[ /View [/Fit] /Page 1 /PageMode /UseOutlines /DOCVIEW pdfmark
+[ /Count [% documents.size %] /View [/Fit] /Title ([% case %]) /OUT pdfmark
+[% FOREACH doc IN documents -%]
+        [ /Page [% doc.page %] /View [/Fit] /Title ([% doc.code %] ([% doc.date %])) /OUT pdfmark
+[% END -%]

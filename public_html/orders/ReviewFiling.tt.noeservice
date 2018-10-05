@@ -1,0 +1,119 @@
+<BulkReviewFilingRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:oasis:names:tc:legalxml-courtfiling:wsdl:WebServiceMessagingProfile-Definitions-4.0">
+    <ReviewFilingRequestMessage xmlns:i="http://niem.gov/niem/appinfo/2.0" xmlns:j="http://niem.gov/niem/domains/jxdm/4.0" xmlns:ecf="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CommonTypes-4.0" xmlns:appellate="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:AppellateCase-4.0" xmlns:fsrsp="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:FilingStatusResponseMessage-4.0" xmlns:niem-xsd="http://niem.gov/niem/proxy/xsd/2.0" xmlns:domestic="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:DomesticCase-4.0" xmlns:juvenile="urn:oascaseis:names:tc:legalxml-courtfiling:schema:xsd:JuvenileCase-4.0" xmlns:citation="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CitationCase-4.0" xmlns:civil="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CivilCase-4.0" xmlns:reviewcb="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:ReviewFilingCallbackMessage-4.0" xmlns:s="http://niem.gov/niem/structures/2.0" xmlns:nc="http://niem.gov/niem/niem-core/2.0" xmlns:criminal="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CriminalCase-4.0">        
+        <CoreFilingMessage xmlns="urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CoreFilingMessage-4.0">
+            <nc:DocumentPostDate>
+                <nc:DateTime>[% data.filetime %]</nc:DateTime>
+            </nc:DocumentPostDate>
+            <nc:DocumentSubmitter>
+                <ecf:EntityPerson s:id="FILER">
+                    <nc:PersonName>
+                        <nc:PersonGivenName>[% data.firstname %]</nc:PersonGivenName>
+                        <nc:PersonSurName>[% data.lastname %]</nc:PersonSurName>
+                        <nc:PersonFullName>[% data.firstname %] [% data.lastname %]</nc:PersonFullName>
+                    </nc:PersonName>
+                    <nc:PersonOtherIdentification>
+                        <nc:IdentificationID>[% data.logonname %]</nc:IdentificationID>
+                        <nc:IdentificationCategoryText>FLEPORTAL_LOGONNAME</nc:IdentificationCategoryText>
+                    </nc:PersonOtherIdentification>
+                    <nc:PersonOtherIdentification>
+                        <nc:IdentificationID>[% data.password %]</nc:IdentificationID>
+                        <nc:IdentificationCategoryText>FLEPORTAL_PASSWORD</nc:IdentificationCategoryText>
+                    </nc:PersonOtherIdentification>
+                    <nc:PersonOtherIdentification>
+                        <nc:IdentificationID>[% data.bar_id %]</nc:IdentificationID>
+                        <nc:IdentificationCategoryText>BAR_NUMBER</nc:IdentificationCategoryText>
+                    </nc:PersonOtherIdentification>
+
+<ecf:PersonAugmentation>
+   <nc:ContactInformation>
+      <nc:ContactEmailID>[% data.email %]</nc:ContactEmailID>
+   </nc:ContactInformation>
+</ecf:PersonAugmentation>
+
+                </ecf:EntityPerson>
+            </nc:DocumentSubmitter>
+
+
+<ecf:SendingMDELocationID>
+   <nc:IdentificationID>EIGHT JUDICIAL CIRCUIT COURT</nc:IdentificationID>
+   <nc:IdentificationCategoryText>FLEPORTAL</nc:IdentificationCategoryText>
+</ecf:SendingMDELocationID>
+
+<ecf:SendingMDEProfileCode>urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:WebServicesMessaging-2.0</ecf:SendingMDEProfileCode>
+
+            <[% data.case_type %]:Case>
+                <nc:CaseTitleText>[% data.CaseStyle %]</nc:CaseTitleText>
+                <nc:CaseTrackingID>[% data.UCN %]</nc:CaseTrackingID>
+                <nc:CaseTrackingID s:id="ucn">[% data.UCN %]</nc:CaseTrackingID>
+                <j:CaseAugmentation>
+                    <j:CaseCourt>
+                        <nc:OrganizationIdentification>
+                            <nc:IdentificationID>[% data.county_id %]</nc:IdentificationID>
+                            <nc:IdentificationCategoryText>FLEPORTAL_ORGANIZATION</nc:IdentificationCategoryText>
+                        </nc:OrganizationIdentification>
+                        <nc:OrganizationIdentification>
+                            <nc:IdentificationID>[% data.court_type_id %]</nc:IdentificationID>
+                            <nc:IdentificationCategoryText>FLEPORTAL_ORGANIZATION_UNIT</nc:IdentificationCategoryText>
+                        </nc:OrganizationIdentification>
+                        <nc:OrganizationIdentification>
+                            <nc:IdentificationID>[% data.judicial_circuit %]</nc:IdentificationID>
+                            <nc:IdentificationCategoryText>JUDICIAL_CIRCUIT_ID</nc:IdentificationCategoryText>
+                        </nc:OrganizationIdentification>
+                        <nc:OrganizationName>[% data.county %]</nc:OrganizationName>
+                        <nc:OrganizationUnitName>[% data.court_type_name %]</nc:OrganizationUnitName>
+                        <j:CourtName>[% data.county %] [% data.court_type_name %]</j:CourtName>
+                    </j:CaseCourt>
+                </j:CaseAugmentation>
+         <ecf:CaseAugmentation>
+            <nc:LanguageCode xsi:nil="true" />
+         </ecf:CaseAugmentation>
+            </[% data.case_type %]:Case>
+            
+            <FilingLeadDocument s:id="DOC00001">
+                <nc:DocumentApplicationName>[% data.doc_info.FilingLeadDocument.file_type %]</nc:DocumentApplicationName>
+                <nc:DocumentDescriptionText>[% data.doc_info.FilingLeadDocument.file_desc %]</nc:DocumentDescriptionText>
+                <nc:DocumentDescriptionText s:id="DocumentGroup">[% data.doc_info.FilingLeadDocument.doc_group %]</nc:DocumentDescriptionText>
+                <nc:DocumentDescriptionText s:id="DocumentType">[% data.doc_info.FilingLeadDocument.doc_type %]</nc:DocumentDescriptionText>
+                <nc:DocumentSequenceID>1</nc:DocumentSequenceID>
+                <ecf:DocumentRendition>
+                    <ecf:DocumentRenditionMetadata>
+                        <nc:DocumentApplicationName>[% data.doc_info.FilingLeadDocument.file_type %]</nc:DocumentApplicationName>
+                        <nc:DocumentFileControlID>[% data.doc_info.FilingLeadDocument.file_name %]</nc:DocumentFileControlID>
+                        <ecf:DocumentAttachment s:id="ATT00001">
+                            <nc:BinaryBase64Object>[% data.doc_info.FilingLeadDocument.encodedBase64 %]</nc:BinaryBase64Object>
+                            <nc:BinarySizeValue>[% data.doc_info.FilingLeadDocument.binary_size %]</nc:BinarySizeValue>
+                            <ecf:AttachmentSequenceID>1</ecf:AttachmentSequenceID>
+                        </ecf:DocumentAttachment>
+                    </ecf:DocumentRenditionMetadata>
+                </ecf:DocumentRendition>
+            </FilingLeadDocument>
+            
+            [% count = 0 %]
+            [% WHILE count < data.doc_info.FilingConnectedDocuments.size %]
+            [% doc = data.doc_info.FilingConnectedDocuments.$count %]
+            <FilingConnectedDocument s:id="DOC0000[% count %]">
+                <nc:DocumentApplicationName>[% doc.file_type %]</nc:DocumentApplicationName>
+                <nc:DocumentDescriptionText>[% doc.file_desc %]</nc:DocumentDescriptionText>
+                <nc:DocumentDescriptionText s:id="DocumentGroup">[% doc.doc_group %]</nc:DocumentDescriptionText>
+                <nc:DocumentDescriptionText s:id="DocumentType">[% doc.doc_type %]</nc:DocumentDescriptionText>
+                <nc:DocumentSequenceID>1</nc:DocumentSequenceID>
+                <ecf:DocumentRendition>
+                    <ecf:DocumentRenditionMetadata>
+                        <nc:DocumentApplicationName>[% doc.file_type %]</nc:DocumentApplicationName>
+                        <nc:DocumentFileControlID>[% doc.file_name %]</nc:DocumentFileControlID>
+                        <ecf:DocumentAttachment s:id="ATT0000[% count + 1 %]">
+                            <nc:BinaryBase64Object>[% doc.encodedBase64 %]</nc:BinaryBase64Object>
+                            <nc:BinarySizeValue>[% doc.binary_size %]</nc:BinarySizeValue>
+                            <ecf:AttachmentSequenceID>[% count + 1 %]</ecf:AttachmentSequenceID>
+                        </ecf:DocumentAttachment>
+                    </ecf:DocumentRenditionMetadata>
+                </ecf:DocumentRendition>
+            </FilingConnectedDocument>
+            [% count = count + 1 %]
+            [% END %]
+        </CoreFilingMessage>
+        
+
+    </ReviewFilingRequestMessage>
+</BulkReviewFilingRequest>
+

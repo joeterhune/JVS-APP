@@ -1,0 +1,32 @@
+#mask {
+	position:absolute; left: 0; top: 0;
+	z-index:9000;
+	background-color:#000;
+	display:none;
+}
+#login_form { 
+	position:absolute; left: 0; top: 0;
+	width:200px;
+	height: 120px;
+	display: none; 
+	z-index:9999;
+	padding:22px;
+	background-color: white;
+	text-align: center;
+	font-size: 8pt;
+}
+#login_form .close { 
+	float: right; 
+	font-weight: bold; 
+	font-size: 12pt; 
+	font-face: serif; 
+	border: 2px solid black; 
+	height: 14px; 
+	width: 14px; 
+	margin-right: -20px; 
+	margin-top: -20px; 
+}
+#login_form .close:hover { cursor: pointer; }
+#login_form h3 { margin: 4px; }
+#login_form label { display: inline-block; width: 5em; font-size: 8pt;}
+.login { float: right; width: 200px; border: 1px solid #aaa; background-color: #efefef; padding: 3px; text-align: center; font-size: 8pt;}

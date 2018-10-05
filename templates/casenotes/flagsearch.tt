@@ -1,0 +1,146 @@
+<script type="text/javascript">
+    var abortQuietly = 1;
+    var requestAborted = 0;
+    $(document).ready(function(){        
+        $(document).on('click','.urlcase',function () {
+            ucn = $(this).attr('data-ucn');
+            url = "/cgi-bin/search.cgi?name=" + ucn + "&lev=0";
+            open_win(url, 'foo');
+        });
+        
+        $('.sortButton').click(function () {
+            $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><p>Applying Sorting</p>', fadeIn: 0});
+            setTimeout(function(){
+                $('#flagrpt-pager').show();
+                $('#flagrpt-listTable').tablesorter({widgets: ['zebra']});
+                $('#flagrpt-listTable').tablesorterPager({container: $("#flagrpt-pager"), positionFixed: false, size: 100 });
+                $('#flagrpt-listTable').find('input').placeholder();
+                $.unblockUI();
+            }, 100);
+        });
+        
+        postData = {division: "[% data.division %]"};
+        startDate = "[% data.startDate %]";
+        if ((startDate != undefined) && (startDate != '')) {
+            postData.startDate = startDate;
+        }
+        endDate = "[% data.endDate %]";
+        if ((endDate != undefined) && (endDate != "")) {
+            postData.endDate = endDate;
+        }
+        postData.flagTypes = "[% data.flagTypes %]";
+        postData.active = "[% data.activeCases %]";
+        
+        $('#generating').html('Generating your report...');
+        $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><p>Looking Up Flagged Cases</p><p>(Click gray area to abort)</p>', fadeIn: 0});
+        var xmlhttp = $.ajax({
+            url: '/cgi-bin/casenotes/lookupFlags.cgi',
+            async: true,
+            data: postData,
+            success: showDisplay
+        });
+        $('.blockOverlay').attr('title','Click to unblock').click(function () {
+            $.unblockUI();
+            $('#generating').html('Request canceled at user request.');
+            requestAborted = 1;
+            xmlhttp.abort();
+            return false;
+        }); 
+        return true;
+    });
+    
+    function showDisplay (data) {
+        $.unblockUI();
+        
+        if (data.html == undefined) {
+            json = $.parseJSON(data);
+        } else {
+            json = data;
+        }
+        
+        //if (requestAborted) {
+        //    $('#generating').html('Search aborted at user request');
+        //    return false;
+        //}
+        
+        $('#generating').html('');
+        $('#mainOutput').html(json.html);
+        
+        var rowCount = $('.caseRow').length;
+        
+        if (rowCount <= 1000) {
+            $('#flagrpt-pager').show();
+            $('#flagrpt-listTable').tablesorter({
+                widgets: ['zebra','filter'],
+                widgetOptions: {
+                    filter_columnFilters: true,
+                    filter_saveFilters: false,
+                    filter_reset : '.flag-filter-reset'
+                }
+            });
+            $('#flagrpt-listTable').tablesorterPager({container: $("#flagrpt-pager"), positionFixed: false, size: 100 });
+            $('#flagrpt-listTable').bind('filterEnd', function () {
+                countRows('flagrpt-listTable', 'flagrpt-rowcount');
+            });
+            $('#flagrpt-listTable').find('input').placeholder();
+        } else {
+            string = '<p>The search returned a large number of rows (' + rowCount + '). ';
+            string += 'Sorting this number of cases in your browser can take a long time, so the column sorting ';
+            string += 'has been disabled.</p><p>You can enable sorting by clicking the "Enable Sort" button above, ';
+            string += 'or you can export the results into Excel (with the "Export" button) and sort them there.</p>';
+            showDialog('Sorting Disabled',string);
+            $('.sortButton').show();
+        }    
+        return true;
+    }
+</script>
+
+<div class="container-fluid" id="fullBody">
+        
+    <div id="buttondiv">
+        <form action="/cgi-bin/casenotes/lookupFlags.cgi" method="post">
+            <div id="hiddenvals" style="display: none">
+                <input type="hidden" name="toexcel" value="1">
+                <input type="hidden" name="division" id="division" value="[% data.division %]">
+                <input type="hidden" name="flagTypes" id="flagTypes" value="[% data.flagTypes %]">
+                [% IF data.startDate %]
+                <input type="hidden" name="startDate" id="startDate" value="[% data.startDate %]">
+                <input type="hidden" name="endDate" id="endDate" value="[% data.endDate %]">
+                [% END %]
+                [% IF data.activeCases %]
+                <input type="hidden" name="active" id="active" value="[% data.activeCases %]">
+                [% END %]
+            </div>				
+            <br/>	
+            <input type="submit" name="Export" value="Export"/>
+            <button class="flag-filter-reset" type="button">Reset Filters</button>
+            <br/><br/>
+            <button type="button" class="sortButton" style="display: none">Enable Sorting</button>
+        </form>
+        
+    </div>
+
+    <div style="position: relative" id="outputDiv">
+        <div id="flagrpt-pager" class="pager" style="top: 0px; display: none">
+            <form>
+                <img src="/images/first.png" class="first"/>
+                <img src="/images/prev.png" class="prev"/>
+                <input type="text" class="pagedisplay"/>
+                <img src="/images/next.png" class="next"/>
+                <img src="/images/last.png" class="last"/>
+                <select class="pagesize">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100" selected="selected">100 per page</option>
+                    <option value="500">500 per page</option>
+                    <option value="1000">1000 per page</option>
+                </select>
+            </form>
+        </div>
+    
+        <div id="mainOutput" style="width: 99%">
+            <span id="generating"></span>
+        </div>
+    </div>
+</div>

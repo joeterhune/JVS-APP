@@ -1,0 +1,142 @@
+<script type="text/javascript">
+
+$(document).ready(function () {
+    $('.gosearch').click(function () {
+        sd = $('#startDate').val();
+        ed = $('#endDate').val();
+        startDate = undefined;
+        endDate = undefined;
+        postData = {show: 1, tabName: 'flagSearchReport'};
+        if (sd != '') {
+            startDate = new Date(sd);
+            postData.startDate = sd;
+        }
+        
+        if (ed != '') {
+            endDate = new Date(ed);
+            postData.endDate = ed;
+        }
+        
+        if (endDate < startDate) {
+            alert("The start date must be before or equal to the end date.");
+            return false;
+        }
+        
+        flagTypes = new Array;
+        
+        $('#flagtype :selected').each(function(i,e) {
+            flagTypes.push($(e).val());
+        });
+        
+        postData.flagType = flagTypes.join(",");
+        postData.division = $('#division').val();
+	    if ($("#active").is(":checked")) {
+	    	postData.activeCases = 1;
+	    }
+        
+        var url = "/cgi-bin/casenotes/flagsearch.cgi";
+        var count = 0;
+        for (var key in postData) {
+        	if(count < 1){
+        		url += "?" + key + "=" + postData[key];
+        	}
+        	else{
+        		url += "&" + key + "=" + postData[key];
+        	}
+        	count++;
+        }
+
+	    window.location.href = url;
+        return true;
+    });
+    
+    $(".datepicker").datepicker({
+        showOn: "both",
+        buttonImage: "/style/images/calendar.gif",
+        buttonImageOnly: true,
+        changeMonth: true,
+        changeYear: true,
+        dateFormat: "yy-mm-dd",
+        maxDate: "+0"
+    });
+});
+</script>
+
+<div class="container-fluid">
+	<div>
+		<div class="h1" style="text-align: left; margin-top: 10px; font-weight: bold">
+			Search Flagged Cases
+		</div>
+
+		<span class="instructions">
+			Select one or more flags (hold &lt;CTRL&gt; to select multiple).  If "All" is selected, the search will search for all flags,
+			regardless of other flag selections.
+		</span>
+	</div>
+		
+	<form id="flaggedcases" method="post" action="" onsubmit="return false;">
+		<div>
+			<span class="h1">Show</span>
+			<select name="flagtype" id="flagtype"  multiple="multiple" size="[% data.showCount %]">
+				<option value="all" selected="selected">
+					All
+				</option>
+				[% FOREACH flagtype IN data.flagtypes %]
+					<option value="[% flagtype.flagtype %]">
+						[% flagtype.dscr %]
+					</option>
+				[% END %]
+			</select>
+			
+			<span class="h1">&nbsp;flagged cases for division&nbsp;</span>
+			<select name="division" id="division" multiple="multiple" size="[% data.showCount %]">
+				<option value="all" selected="selected">
+					All
+				</option>
+				[% FOREACH divname IN data.divisions %]
+					<option value="[% divname.division_id %]">[% divname.division_id %]</option>
+				[% END %]
+			</select>
+		</div>
+
+		<div>
+			<div style="margin-bottom: 0px">
+				<span class="h1">Flagged Dates</span>
+			</div>
+
+			<div style="margin-bottom: 0px">
+				<input type="radio" name="flagdate" id="alldates" value="all" checked="checked">
+					<span>
+						All
+					</span>
+			</div>
+
+			<div>
+				<div style="float: left;">
+					<input type="radio" name="flagdate" id="daterange" value="range">
+					<span style="margin-right: 20px;">
+						Range
+					</span>
+				</div>
+
+				<div>
+					<input type="text" name="startDate" class="datepicker range"
+						   id="startDate" onchange="$('#daterange').attr('checked','checked')"
+						   onfocus="$('#daterange').attr('checked','checked');">
+
+				    through
+
+					<input type="text" name="endDate" class="datepicker range"
+						   id="endDate" onchange="$('#daterange').attr('checked','checked')"
+						   onfocus="$('#daterange').attr('checked','checked');">
+				</div>
+			</div>
+			<input type="checkbox" name="active" id="active" checked="checked"/><span> Active Cases Only</span>	
+		</div>
+
+		<div>
+			<button class="gosearch">Search</button>
+		</div>
+
+    </form>
+</div>

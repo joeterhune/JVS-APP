@@ -1,0 +1,69 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Pretrial Sheet~cc-pretrial-sheet~CC,SC~natpretrial,nattrial,natmotion,natother,otherreason,served,unexecuted,noproof,pltnames,dftnames,plaintiff,pattorney,pnoappear,defendant,dattorney,dnoappear,djplaintiff,fjudgmentmerits,sjudgmentplaintiff,agreedjudgment,liadam,liaonly,damonly,pwitness,dwitness,principal,interest,interestfrom,attyfees,courtcosts,expertadvised,expert,testimonyfrom,defonly,defhearing,lop,lopdate,settled,settledate,contserv,contsettle,counterclaim,claimdays,pltcont,defcont,motion,movant,grantdeny,motiontext,prepcourt,prepclerk,prepcounsel,prepparties,exchdays,exhwit,exhdocs,npwit,rocp~01~~~
+#
+FIELDS
+natpretrial~Pre-trial~~CHECKBOX
+nattrial~Trial~~CHECKBOX
+natmotion~Motion~~CHECKBOX
+natother~Other~~CHECKBOX
+trial~Pre-trial~~CHECKBOX
+otherreason~Other type~~TEXT~15~~~~
+served~Service Served~~CHECKBOX
+unexecuted~Service Unexecuted~~CHECKBOX
+noproof~No Proof of Service~~CHECKBOX
+pltnames~Plaintiff Names~~TEXT~150~~~~
+dftnames~Defendant Names~~TEXT~150~~~~
+plaintiff~Plaintiff Appeared~~CHECKBOX
+pattorney~Plaintiff's Attorney Appeared~~CHECKBOX
+pnoappear~No Appearance for Plaintiff~~CHECKBOX
+defendant~Defendant Appeared~~CHECKBOX
+dattorney~Defendant's Attorney Appeared~~CHECKBOX
+dnoappear~No Appearance for Defendant~~CHECKBOX
+djplaintiff~Default Final Judgment for Plaintiff~~CHECKBOX
+fjudgmentmerits~Final Judgment for Plaintiff/Defendant on Merits~~CHECKBOX
+sjudgmentplaintiff~Summary Judgment for Plaintiff~~CHECKBOX
+agreedjudgment~Agreed Judgment for Plaintiff/Defendant~~CHECKBOX
+principal~Judgment Principal~~TEXT~15~~~~
+interest~Judgment Interest~~TEXT~15~~~~
+interestsource~Interest From~~TEXT~30~~~~
+attyfees~Attorney Fees~~TEXT~15~~~~
+courtcosts~Court Costs~~TEXT~15~~~~
+liadam~Liability and Damages~~CHECKBOX
+liaonly~Liability Only~~CHECKBOX
+damonly~Damages Only~~CHECKBOX
+pwitness~Plaintiff Witnesses~~CHECKBOX
+dwitness~Defendant Witnesses~~CHECKBOX
+expertadvised~Probable Need for Expert~~CHECKBOX
+expert~Expert~~TEXT~30~~~~
+testimonyfrom~Sworn Testimony From~~TEXT~100~~~~
+defaultonly~Default Only~~CHECKBOX
+defhearing~Default Hearing Date~~DATE~15~<small>(format you would like to appear on form)</small>
+lop~Dismiss - Lack of Prosecution~~CHECKBOX
+lopdate~LOP Date~~DATE~15~<small>(format you would like to appear on form)</small>
+settled~Dismiss - Case Settled~~CHECKBOX
+settledate~Settled Date~~DATE~15~<small>(format you would like to appear on form)</small>
+contserv~Continue pending proper service~~CHECKBOX
+contsettle~Continue pending settlement~~CHECKBOX
+counterclaim~Defendant Granted Counterclaim~~CHECKBOX
+claimdays~Days to File Counterclaim~~TEXT~5~~~~
+pltcont~Continue at Plaintiff Request~~CHECKBOX
+defcont~Continue at Defendant Request~~CHECKBOX
+motion~Motion~~TEXT~50~~~~
+movant~Movant~~DROPDOWN~~~:Plaintiff:Defendant~
+grantdeny~Motion Granted/Denied~~DROPDOWN~~~:granted:denied~
+motiontext~Motion Reason Text~~TEXT~100~~~~
+prepcourt~Order Prepared By Court~~CHECKBOX
+prepclerk~Order Prepared By Clerk~~CHECKBOX
+prepcounsel~Order Prepared By Counsel~~CHECKBOX
+prepparties~Order Prepared By Parties~~CHECKBOX
+exchdays~Days to Exchange Discovery~~TEXT~5~~~~
+exhwit~Exchange Witnesses~~CHECKBOX
+exhdocs~Exchange Docs~~CHECKBOX
+npwit~Non-Party Witnesses May Testify by Phone or Affidavit~~CHECKBOX
+rocp~Rules of Civil Procedure Apply~~CHECKBOX
+#
+/nocheck
+USERTF
+FORM

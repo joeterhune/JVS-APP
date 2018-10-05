@@ -1,0 +1,6 @@
+ORDER
+TR - Community Service Order ~tr-commservice~TR,MO,CO~dddisp,canserv,srvhours,fineamt,stillpay,costs,viapbc,vianp,hoursbycb,costsbycb,duedate,d6cb,vfcb,ddcity,ddtrsig~01
+FIELDS
+duedate~Due date~~TEXT~15
+USERTF
+FORM

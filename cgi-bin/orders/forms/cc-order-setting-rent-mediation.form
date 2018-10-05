@@ -1,0 +1,11 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Order Setting Mandatory Rent Mediation~cc-order-setting-rent-mediation~CC,SC~edate,etime,courtroom,eaddr,ddallcities~01~~~
+#
+FIELDS
+courtroom~Courtroom:~~TEXT~25~~~~
+#
+#/nocheck
+USERTF
+FORM

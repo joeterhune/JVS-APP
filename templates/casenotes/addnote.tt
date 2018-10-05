@@ -1,0 +1,68 @@
+<!-- $Id$ -->
+
+    <div class="h2">
+        Add a Case Note
+    </div>
+
+    <form class="theform" name="theform" method="post" action="/casenotes/addnote2.cgi" enctype="multipart/form-data">
+        <div style="display: table">
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Case Number
+                </div>
+                <div style="display: table-cell">
+                    <input type="text" readonly="readonly" name="casenum" size="30" value="[% data.casenum %]">
+                </div>
+            </div>
+
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Userid
+                </div>
+                <div style="display: table-cell">
+                    <input type="text" name="user" readonly="readonly" size="8" value="[% data.user %]">
+                </div>
+            </div>
+            
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Date
+                </div>
+                <div style="display: table-cell">
+                    <input type="text" name="date" readonly="readonly" size="8" value="[% data.today %]">
+                </div>
+            </div>
+            
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Private 
+                </div>
+                <div style="display: table-cell">
+                    <input type="checkbox" name="private" value="1">
+                </div>
+            </div>
+
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Note
+                </div>
+                <div style="display: table-cell">
+                    <textarea name="note" style="height: 200px; width: 500px"></textarea>
+                </div>
+            </div>
+            
+            <div style="display: table-row">
+                <div style="display: table-cell">
+                    Attachment
+                </div>
+                <div style="display: table-cell">
+                    <input type="file" name="annotation"/>
+                </div>
+            </div>
+            
+            <input type="hidden" name="division" value="[% data.division %]">
+        </div>
+        
+        <button class="noteSubmit">Submit Note</button>&nbsp;&nbsp;&nbsp;
+        <button class="noteCancel">Cancel</button>
+    </form>

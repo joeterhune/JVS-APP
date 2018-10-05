@@ -1,0 +1,97 @@
+<script type="text/javascript">
+
+	$('#docketTable_[% data.ucn %]').on('click','.showmulti', function(event) {   
+        $('#docketform_[% data.ucn %]').submit();
+        return false;
+    });
+</script>
+                    
+                    <div>
+                        <button class="toggleDocket printHide" title="Toggle Docket Display">Hide/Show Docket Information</button>
+                        <br/>
+                        <button type="button" class="reset printHide" title="Reset Filters">Reset Filters</button>
+                    </div>
+
+                    <form action="/cgi-bin/multiImage.cgi" id="docketform_[% data.ucn %]" method="post" onsubmit="target='_blank'">
+                    <input type="hidden" name="caseid" id="caseid" value="[% data.CaseID %]"/>
+                    <div class="docketTable" id="docketTable_[% data.ucn %]" title="Case Progress Docket">
+                    <table class="summary">
+                        <tr>
+                            <td class="title">Docket</td>
+                        </tr>
+                        <tr>
+                            [% IF data.dockets.size == 0 %]
+                            <td>No docketed items for this case</td>
+                            [% ELSE %]
+                            <td class="tableholder">
+                                <table id="dockets_[% data.ucn %]">
+                                    <thead>
+                                        <tr class="title">
+                                            <th class="filter-select dateCol" data-placeholder="Date" >Date<br/>Filed</th>
+                                            <th class="filter-select" data-placeholder="Date" style="width: 6em">Date<br/>Docketed</th>
+                                            <th data-placeholder="Sequence">Sequence<br/>Number</th>
+                                            <th class="filter-select" data-placeholder="Filer">Filer</th>
+                                            <th class="filter-select" data-placeholder="Code">Code</th>
+                                            <th data-placeholder="Search Description">Description</th>
+                                            <th data-placeholder="Search Text">Text</th>
+                                            <th class="printHide">PDF Image<br/>
+                                                <button type="button" class="showmulti">All Selected</button>
+                                                <input type="hidden" name="showmulti" value="1"/>
+                                                <input type="hidden" name="tab" class="tabname"/>
+                                                <br/>Select
+                                                <a class="checkallboxes">All</a> |
+                                                <a class="uncheckallboxes">None</a>
+                                                <br/>
+                                                <input type="radio" name="pdforder" id="buildDesc_[% data.ucn %]" value="desc"/>Newest first
+                                                <br/>
+                                                <input type="radio" name="pdforder" id="buildAsc_[% data.ucn %]" value="asc"/>Oldest first
+                                            </th>
+                                            [% IF data.showTif %]
+                                            <th class="printHide">TIF<br/>Image</th>
+                                            [% END %]
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    [% FOREACH docket IN data.dockets %]
+                                        <tr class="[% docket.RowClass %]" data-docketcode="[% docket.DocketCode %]">
+                                            <td class="center">[% docket.EffectiveDate %]</td>
+                                            <td class="center">[% docket.EnteredDate %]</td>
+                                            <td class="center [% IF docket.SeqPos != '' %]popup[% END %]">
+                                                [% docket.SeqPos %]
+                                                [% IF docket.SeqPos != '' %]<span>[% docket.BookLocation %]</span>[% END %]
+                                            </td>
+                                            <td class="left">[% docket.FilerName %]</td>
+                                            <td class="center">[% docket.DocketCode %]</td>
+                                            <td class="left">[% docket.DocketDescription %]</td>
+                                            <td class="left" style="word-break:break-word;">[% docket.DocketText %]</td>
+                                            <td class="center printHide">
+                                                [% IF docket.Image == 'Y' %]
+                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-casenum="[% docket.CaseNumber %]" data-ucnobj="[% docket.UCNObj %]"
+                                                    data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]">Image</a>
+                                                &nbsp; &nbsp;
+                                                <input class="docketcheck" type="checkbox" name="selected" value="[% docket.UCNObj %]"/>
+                                                [% ELSE %]
+                                                <span style="color: red">No Image</span>
+                                                [% END %]
+                                            </td>
+                                            [% IF data.showTif %]
+                                            <td class="center printHide [% IF docket.Image == 'Y' %]popup[% END %]">
+                                                [% IF docket.Image == 'Y' %]
+                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-casenum="[% docket.CaseNumber %]" data-ucnobj="[% docket.UCNObj %]"
+                                                    data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]" data-showTif="1">TIF</a>
+                                                [% ELSE %]
+                                                &nbsp;
+                                                [% END %]
+                                            </td>
+                                            [% END %]
+                                        </tr>
+                                    [% END %]
+                                    </tbody>
+                                </table>
+                            </td>
+                            [% END %]
+                        </tr>
+                    </table>
+                    </div>
+                    </form>
+                                

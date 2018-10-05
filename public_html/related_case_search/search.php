@@ -1,0 +1,270 @@
+<?php
+
+require_once("../php-lib/common.php");
+require_once("../php-lib/db_functions.php");
+require_once("Smarty/Smarty.class.php");
+require_once("../workflow/wfcommon.php");
+
+checkLoggedIn();
+
+include "../icmslib.php";
+include "../caseinfo.php";
+
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
+
+$dbh = dbConnect("icms");
+$user = $_SESSION['user'];
+
+$myqueues = array($user);
+$queueItems = array();
+$sharedqueues = array();
+
+getSubscribedQueues($user, $dbh, $myqueues);
+getSharedQueues($user, $dbh, $sharedqueues);
+$allqueues = array_merge($myqueues,$sharedqueues);
+$wfcount = getQueues($queueItems,$allqueues,$dbh);
+
+$ucn = getReqVal('ucn');
+
+createTab($ucn, "/cgi-bin/case/search.cgi?name=" . $ucn, 1, 1, "cases",
+		array(
+			"name" => "Related Case Search",
+			"active" => 1,
+			"close" => 1,
+			"href" => "/case/related_case_search/search.php?ucn=" . $ucn . '&searchTheseParties=' . urlencode(getReqVal('searchTheseParties')),
+			"parent" => $ucn
+		)
+);
+
+$parties = json_decode(urldecode(getReqVal('searchTheseParties')), true);
+
+function showcaseSearch($parties){
+	
+	foreach($parties as $key => $p){
+		$parties[$key]['first_name'] = preg_replace("/[^\\w- ]/", '', $parties[$key]['first_name']);
+		$parties[$key]['middle_name'] = preg_replace("/[^\\w- ]/", '', $parties[$key]['middle_name']);
+		$parties[$key]['last_name'] = preg_replace("/[^\\w- ]/", '', $parties[$key]['last_name']);
+	}
+	
+	$dbh = dbConnect("showcase-prod");
+	$schema = getDbSchema("showcase-prod");
+	
+	//Get first party's cases
+	$query = "  SELECT TOP 1000 CaseID
+				FROM $schema.vAllParties 
+				WHERE 1 = 1 
+				-- Active = 'Yes'
+				-- AND (Discharged IS NULL OR Discharged = 0)
+				-- AND (CourtAction IS NULL OR CourtAction NOT LIKE 'Disposed%')";
+	
+	if(!empty($parties[0]['first_name'])){
+		$query .= "
+				AND FirstName = '" . trim($parties[0]['first_name']) . "'";
+	}
+	if(!empty($parties[0]['middle_name'])){
+		$query .= "
+				AND MiddleName LIKE '" . trim($parties[0]['middle_name']) . "%'";
+	}
+	if(!empty($parties[0]['last_name'])){
+		$query .= "
+				AND LastName = '" . trim($parties[0]['last_name']) . "'";
+	}
+	if(!empty($parties[0]['dob'])){
+		$query .= "
+				AND DOB = '" . trim($parties[0]['dob']) . "'";
+	}
+	
+	if(empty($parties[0]['last_name'])){
+		return array();
+	}
+	
+	$startRes = array();
+	$newStartRes = array();
+	getData($startRes, $query, $dbh);
+	
+	if(count($startRes) > 0){
+		foreach($startRes as $s){
+			$newStartRes[] = $s['CaseID'];
+		}
+		
+		if(count($newStartRes) > 1){
+			$caseList = implode(", ", $newStartRes);
+		}
+		else{
+			$caseList = $newStartRes[0];
+		}
+	}
+	
+	$combinedRows = array();
+	$finalList = array();
+	$partyCount = count($parties);
+	if($partyCount > 1){
+		for($i = 1; $i < $partyCount; $i ++){
+			//foreach($newStartRes as $key => &$s){
+				$query = "  SELECT DISTINCT CaseID
+					FROM $schema.vAllParties 
+					WHERE CaseID IN (" . $caseList . ")
+					-- AND Active = 'Yes'
+					-- AND (Discharged IS NULL OR Discharged = 0)
+					-- AND (CourtAction IS NULL OR CourtAction NOT LIKE 'Disposed%')";
+	
+				if(!empty($parties[$i]['first_name'])){
+					$query .= "
+							AND FirstName = '" . trim($parties[$i]['first_name']) . "'";
+				}
+				if(!empty($parties[$i]['middle_name'])){
+					$query .= "
+							AND MiddleName LIKE '" . trim($parties[$i]['middle_name']) . "%'";
+				}
+				if(!empty($parties[$i]['last_name'])){
+					$query .= "
+							AND LastName = '" . trim($parties[$i]['last_name']) . "'";
+				}
+				if(!empty($parties[$i]['dob'])){
+					$query .= "
+						AND DOB = '" . trim($parties[$i]['dob']) . "'";
+				}		
+	
+				getData($combinedRows, $query, $dbh);
+				
+				if(count($combinedRows) > 0){
+					foreach($combinedRows as $s){
+						$finalList[] = $s['CaseID'];
+					}
+				
+					if(count($finalList) > 1){
+						$caseList = implode(", ", $finalList);
+					}
+					else{
+						$caseList = $finalList[0];
+					}
+				}
+	
+				//if($row['COUNT'] == 0){
+					//unset($newStartRes[$key]);
+				//}
+			//}
+		}
+	}
+	
+	$startRes = array();
+	if(count($combinedRows) > 0){
+		foreach($combinedRows as $s){
+			$startRes[] = $s['CaseID'];
+		}
+	}
+	else{
+		foreach($newStartRes as $s){
+			$startRes[] = $s;
+		}
+	}
+	
+	if(count($startRes) > 1){
+		$cases = implode(", ", $startRes);
+	}
+	else{
+		$cases = $startRes[0];
+	}
+	
+	if(count($cases) > 0){
+		$query = " SELECT
+			UPPER(p.LastName) AS LastName,
+			UPPER(p.FirstName) AS FirstName,
+			UPPER(p.MiddleName) AS MiddleName,
+			c.UCN,
+			c.CaseNumber,
+			CONVERT(varchar,c.FileDate,101) as FileDate,
+			ISNULL(c.CaseType,'&nbsp;') as CaseType,
+			c.CaseStatus,
+			p.PartyTypeDescription,
+			CASE when p.DOB is NULL
+				THEN '&nbsp;'
+				ELSE CONVERT(varchar,p.DOB,101)
+			END as DOB,
+			ISNULL(c.DivisionID,'&nbsp;') as DivisionID,
+			c.CaseID";
+		
+		$query .= " FROM $schema.vAllParties  p with(nolock)
+				INNER JOIN $schema.vCase c with(nolock) 
+					on c.CaseID = p.CaseID";
+		
+		$query .= " WHERE p.CaseID IN ($cases)";
+		
+		$query .= " AND ( ( ";
+		foreach($parties as $p){
+			if(!empty($p['first_name'])){
+				$query .= "
+					p.FirstName = '" . trim($p['first_name']) . "' AND ";
+			}
+			if(!empty($p['middle_name'])){
+				$query .= "
+					p.MiddleName LIKE '" . trim($p['middle_name']) . "%' AND ";
+			}
+			if(!empty($p['last_name'])){
+				$query .= "
+					 p.LastName = '" . trim($p['last_name']) . "'";
+			}
+			if(!empty($p['dob'])){
+				$query .= "
+					AND p.DOB = '" . trim($p['dob']) . "'";
+			}
+		
+			if(count($parties) > 1 && ($p != end($parties))){
+				$query .= " ) OR ( ";
+			}
+		}
+		
+		$query .= ") ) ";
+		
+		$query .= "
+			order by
+			p.LastName,
+			p.FirstName,
+			p.MiddleName,
+			c.UCN";
+		
+		$scPartyRes = array();
+		getData($scPartyRes, $query, $dbh);
+	}
+
+	return $scPartyRes;
+						
+}
+
+if(!empty($parties)){
+	$allParties = showcaseSearch($parties);
+	
+	if(!empty($allParties)){
+		$dbh = dbConnect("showcase-prod");
+		foreach($allParties as $key => $ap){
+			
+			$checkWarrantsQuery = "	SELECT COUNT(*) as WarrCount
+									FROM $schema.vWarrant
+									WHERE CaseID = :case_id
+									AND Closed = 'N'";
+				
+			$warRow = getDataOne($checkWarrantsQuery, $dbh, array("case_id" => $ap['CaseID']));
+			if($warRow['WarrCount'] > 0){
+				$allParties[$key]['HasWarrant'] = "Yes";
+			}
+			else{
+				$allParties[$key]['HasWarrant'] = "No";
+			}
+		}
+	}
+}
+else{
+	$allParties = "";
+}
+
+$smarty->assign('parties', $allParties);
+$smarty->assign('tab', getReqVal('tab'));
+
+$smarty->assign('wfCount', $wfcount);
+$smarty->assign('active', "cases");
+$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->display('top/header.tpl');
+echo $smarty->fetch('related_case_search/searchResults.tpl');

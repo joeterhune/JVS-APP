@@ -1,0 +1,43 @@
+ORDER
+#
+#  ALL divisions may use this form.
+FCM Status Order on Notice for Trial~fcm-status-order-notice-trial~DR~process,answer,noticessn,filedssn,mustfilessn,flfaf,filedflfaf,mustfileflfaf,flfafsd,filedflfafsd,msa,parentclass,completedpec,mustcompletepec,uccjea,parentplan,childsupport,military,mediation,noticedate,showdilsearch,dilsearch,tempcust,whichparent~01~MND
+#
+FIELDS
+process~Process of Service~~CHECKBOX
+answer~Answer~~CHECKBOX
+noticessn~Notice of SSN~~CHECKBOX
+filedssn~Who filed SSN~~DROPDOWN~~~Respondent has not:Petitioner has not:Petitioner and Respondent have not:Husband and Wife have not
+mustfilessn~Who must file SSN~~DROPDOWN~~~Respondent:Petitioner:Petitioner and Respondent:Husband and Wife
+flfaf~Family Law Financial Affidavit~~CHECKBOX
+filedflfaf~Who filed Financial Affidavit~~DROPDOWN~~~Respondent has not:Petitioner has not:Petitioner and Respondent have not
+mustfileflfaf~Who must file Financial Affidavit~~DROPDOWN~~~Respondent:Petitioner:Petitioner and Respondent
+flfafsd~Financial Affidavit in Simplified Dissolution~~CHECKBOX
+filedflfafsd~Who filed Financial Affidavit in Simplified Dissolution~~DROPDOWN~~~Neither Party Has:Husband has not:Wife has not
+msa~MSA in Simplified Dissolution~~CHECKBOX
+parentclass~Parent Education~~CHECKBOX
+completedpec~Who completed Parent Education Class~~DROPDOWN~~~Respondent has not:Petitioner has not:Petitioner and Respondent have not
+mustcompletepec~Who must complete Parent Education Class~~DROPDOWN~~~Respondent:Petitioner:Petitioner and Respondent
+uccjea~UCCJEA~~CHECKBOX
+parentplan~Parenting Plan~~CHECKBOX
+childsupport~Child Support Guidelines~~CHECKBOX
+military~Affidavit of Military Service~~CHECKBOX
+mediation~Mediation~~CHECKBOX
+noticedate~Date of Notice for Trial~ICMS_EDATE~DATE~15~<small>(format you would like to appear on form)</small>
+showdilsearch~Diligent Search~~CHECKBOX
+dilsearch~Date of Diligent Search~ICMS_EDATE~DATE~15~<small>(format you would like to appear on form)</small>
+tempcust~Temporary Custody - Parent Consent~~CHECKBOX
+whichparent~Which parent(s)~~DROPDOWN~~~Father:Mother:Father and Mother:
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

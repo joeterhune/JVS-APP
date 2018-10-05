@@ -1,0 +1,74 @@
+#!/usr/bin/perl 
+#
+# getrevised...derived from wmunpack @ ctech...
+# revised for revise@icmsdev by fred buhl, 12/18/12
+#
+use File::Copy;
+use DateTime;
+use strict;
+
+#
+# MAIN PROGRAM
+#
+my $SRCDIR="/var/www/icmsdata/workflow/revised";
+my $DESTDIR="/var/www/icmsdata/workflow/documents";
+umask 022;
+# unpack the e-mail
+my $ts=`date +getrevised-run-%y-%m-%d-%H-%M-%S`;
+my $whoami=`whoami`;
+open OFILE,">>$SRCDIR/getrevised.log" or die "Nope!";
+print OFILE "**".$ts;
+print OFILE "running as $whoami\n";
+`munpack -f -C $SRCDIR`;
+print OFILE "past munpack $SRCDIR\n";
+chdir $SRCDIR;
+my @list=<*>;
+foreach my $fname (@list) {
+   if ($fname=~/log$/) { next; }
+   my($num,$distpart,$suffix)=split '\.',$fname;
+   if ($fname=~/dist/) {  # a file to upload
+       if ($fname=~/zip$/i) { # a COMPRESSED file to upload
+	   print OFILE "compressed file: $fname\n";
+           # these are really just docx files...
+	   print OFILE unlink "$DESTDIR/$num.dist.docx";
+           print OFILE `/bin/cp $fname  $DESTDIR/$num.dist.docx`;
+       } elsif ($fname=~/doc$|docx$|pdf$/i) { # a doc or PDF file to upload
+	   print OFILE "regular file: $fname\n";
+           $suffix=~tr/A-Z/a-z/;
+           print OFILE "unlink old file: $DESTDIR/$num.dist.$suffix: ";;
+           print OFILE unlink "$DESTDIR/$num.dist.$suffix";
+           print OFILE "\n";
+           print OFILE "copy new file $fname $DESTDIR/$num.dist.$suffix: ";
+           print OFILE `/bin/cp $SRCDIR/$fname $DESTDIR/$num.dist.$suffix`;
+           copy("$SRCDIR/$fname","$DESTDIR/$num.dist.$suffix") or print OFILE "Copy to $DESTDIR/$num.dist.$suffix failed!";
+           print OFILE "\n";
+           print OFILE `/bin/chmod g+w $DESTDIR/$num.dist.$suffix`;
+           print OFILE `/bin/chown revise.www-data $DESTDIR/$num.dist.$suffix`;
+           unlink "$DESTDIR/$num.dist.pdf";  # delete the old pdf dist version of this file...
+           unlink "$DESTDIR/$num.pdf";  # delete the old pdf version of this file...
+           if (-e "$DESTDIR/$num.data") {
+	       unlink "$DESTDIR/$num.data";
+	   }
+           unlink $fname;
+           if ($suffix ne "pdf") { # make a dist pdf for this file
+	       print OFILE "suffix=$suffix; making PDF of $num.dist.$suffix\n";
+	       print STDERR "[$ts] getrevised libreoffice run...\n";
+              `/usr/bin/libreoffice --headless -convert-to pdf $DESTDIR/$num.dist.$suffix -outdir $DESTDIR`;
+              print OFILE `/bin/chmod g+w $DESTDIR/$num.dist.pdf`;
+              print OFILE `/bin/chown revise.www-data $DESTDIR/$num.dist.pdf`;
+	   }
+           # now revert the database and the signed copy.
+           `/usr/bin/php /var/www/icms/workflow/revert.php $num`;
+           # and wipe any pngs for the pages..
+           `/bin/rm /var/www/icmsdata/tmp/$num*.png`;
+       } else {
+           print OFILE "unknown file type for $fname...deleting\n";
+           unlink $fname;
+       }
+   }
+}
+print OFILE "**run completed***\n";
+close OFILE;
+
+
+

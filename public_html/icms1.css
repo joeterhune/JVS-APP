@@ -1,0 +1,447 @@
+body {
+	font-family:Arial;
+}
+/*DIV {*/
+/*	margin-bottom: 20px;*/
+/*}*/
+.h1a { font-weight:bold; font-size: 140%}
+.h1 { color:blue; font-weight:bold; font-size: 120%}
+.h2 { color:blue; font-weight:bold; font-size: 100%}
+.h3 { padding-left: 30px; font-size: 80% }
+.h4 { font-size: 80% }
+td.textinput {
+    line-height: .5em;
+}
+.textinput div {
+	margin-top: 0px;
+	margin-bottom: 3px;
+	font-size: small;
+}
+td.spacer {
+    width:10px;
+    border: 1px solid;
+}
+.news {
+    border-style: solid;
+    border-width:1px;
+    padding-left:5px;
+    background-color:#AAFFAA;
+    padding-right:5px
+}
+.newstitle { color:blue; font-weight:bold; font-size: 80%; }
+.newslink { font-size: 70%; }
+.newsline {
+    padding-left: 30px;
+    font-size: 70%;
+}
+.disc {
+    font-size: 75%;
+    width:455px;
+    padding-left:5px;
+    padding-right: 5px;
+    padding-top:5px;
+    padding-bottom: 5px;
+    font-style:italic;
+    background-color:#DDDDFF;
+}
+.probs {
+    border-style: none;
+    width:340px;
+    padding-left:5px;
+    background-color:#BBBBFF;
+    padding-right:5px;
+    font-size: 70%
+}
+.probstitle {
+    color:blue;
+    font-weight:bold;
+    font-size: 110%;
+}
+.rptlabel {
+    padding-left: 30px;
+}
+.rptlabel2 {
+    padding-left: 60px;
+}
+.rptnum {
+    padding-left: 10px;
+    text-align:right;
+    font-weight:bold;
+}
+.rptnum2 {
+    padding-left: 10px;
+    text-align:right;
+}
+.credits {
+    padding-top: 30px;
+    font-size: 75%;
+    font-style:italic;
+}
+table#v1 {
+    font-size: 90%
+}
+table#v1 td {
+    background-color: #EEFFCC
+}
+.toprow {
+    background-color:
+    #D0FFD0; font-weight: bold
+}
+table.list {
+    font-size:x-small;
+    border-spacing:1px;
+    padding:2px;
+}
+table.list h2 {
+	color:blue;
+	font-weight:bold;
+	font-size: 100%
+}
+table.list td.rptname {
+    font-size:large;
+}
+table.list td.sel {
+    background-color:#00FF00;
+}
+table.list tr.title {
+    background-color:#C8C8FF;
+    color:blue;
+    text-align:center;
+}
+table.list tr.data {
+    background-color: #C8FFC8;
+    border-color: #C8FFC8
+}
+table.list tr.data2 {
+    background-color: #FFC8C8;
+    border-color: #FFC8C8
+}
+table.list tr.data3 {
+    background-color: #FF4444;
+    border-color: #FF88FF
+}
+table.list td {
+	padding-right: 10px;
+}
+a.list {
+    text-decoration: none;
+    color:blue
+}
+table.summary {
+    background-color:#EEFFCC;
+    font-size: 10pt;
+}
+table.summary td {
+	padding-right: 5px;
+	padding-left: 5px;
+	vertical-align: top;
+}
+table.summary td.tableholder {
+	padding-right: 0px;
+	padding-left: 0px;
+	vertical-align: top;
+}
+table.summary tr.title {
+    background-color:#C8C8FF;
+    color:blue;
+    text-align:center;
+}
+table.summary tr.title th{
+    background-color:#C8C8FF;
+    color:blue;
+    text-align:center;
+}
+table.summary td.title{
+	min-width: 200px;
+    background-color:#D0FFD0;
+    color:green;
+    font-weight:bold;
+    font-size: 120%;
+}
+table.summary td.label {
+	color: black;
+    font-weight:bold;
+    padding-left:2em;
+	font-size: 90%;
+	vertical-align: middle;
+}
+table.summary td.note {
+    background-color:#EEEE70
+}
+table.summary td.center {
+	text-align: center;
+}
+table.summary td.vcenter {
+	text-align: center;
+	vertical-align: middle;
+	border: 1px solid black;
+}
+table.summary td.left {
+	text-align: left;
+}
+table.summary td.right {
+	text-align: right;
+}
+table.summary tr.note {
+    background-color:#EEEE70
+}
+table.summary tr.note2 {
+    background-color:#C0FFC0
+}
+table.summary tr.even {
+    background-color:#EEFFCC
+}
+table.summary tr.odd {
+    background-color:#C0FFC0
+}
+table.summary tr.motion {
+    color:blue;
+}
+table.summary tr.order {
+    color:red;
+}
+table.summary tr.judgment {
+    color: #E68A00;
+}
+table.summary tr.notice {
+    color: #A34262;
+}
+table.summary tr.vop {
+    color: #ED07E5;
+}
+table.summary tr.petition {
+	color: green;
+}
+table.summary a {
+	text-decoration: underline;
+	color:blue;
+	cursor: pointer;
+}
+table.summary a:visited {
+	text-decoration: underline;
+	cursor: pointer;
+	color:#9900CC;
+}
+table.summary th {
+	font-weight: normal;
+}
+table.summary ul {
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin: 0px;
+}
+table.summary button.eservice {
+}
+table.chargedetail {
+	width: 100%;
+	border: 2px solid black;
+}
+table.chargedetail th {
+	border: 1px solid black;
+	text-align: center;
+	width: 15%;
+}
+table.chargedetail td {
+	border: 1px solid black;
+	text-align: left;
+	width: 15%;
+}
+table.chargedetail .arrest  {
+	min-width: 8em !important;
+    max-width: 8em !important;
+}
+/*
+table.chargedetail td.arrest {
+	border: 1px solid purple;
+	text-align: left;
+	width: 15%;
+}
+*/
+table.chargedetail .charges {
+	/*border: 1px solid black;
+	text-align: center;*/
+	/*width: 45%;*/
+    min-width: 20em !important;
+    max-width: 20em !important;
+}
+/*table.chargedetail td.charges {
+	border: 1px solid black;
+	text-align: left;
+	min-width: 45%;
+}
+*/
+table.chargedetail .icms {
+	/*border: 1px solid black;
+	text-align: center;*/
+	width: 25%;
+}
+table.chargedetail .pbsocase {
+	/*border: 1px solid black;
+	text-align: center;*/
+	width: 15%;
+}
+span.sealedCase {
+	color: red;
+	font-weight: bold;
+}
+span.protectedCase {
+	color: blue;
+	font-weight: bold;
+}
+/* Popup class for showing text when a mouse hovers over a link */
+a.popup {
+	position:relative;
+	z-index:24;
+	color:#0000FF;
+	text-decoration:underline;
+}
+a.popup:visited {
+	position:relative;
+	z-index:24;
+	color:#9900CC;
+	text-decoration:underline;
+}
+a.popup:hover {
+	z-index:25;
+	background-color:#FFCCD8
+}
+a.popup span {
+	display:none;
+}
+a.popup:hover span {
+	display:block;
+	position:absolute;
+	top:-50px; left:-50px;
+	width:100px;
+	padding:3px;
+	border:1px solid #000000;
+	background-color:yellow; color:#000;
+}
+/* Popup class for showing text when a mouse hovers over a link */
+td.popup {
+	position:relative;
+	z-index:24;
+}
+td.popup:visited {
+	position:relative;
+	z-index:24;
+}
+td.popup:hover {
+	z-index:25;
+	background-color:#FFCCD8
+}
+td.popup span {
+	display:none;
+}
+td.popup:hover span {
+	display:block;
+	position:absolute;
+	top:-50px; left:-50px;
+	width:100px;
+	padding:3px;
+	border:1px solid #000000;
+	background-color:yellow; color:#000;
+}
+a.caselink {
+	position:relative;
+	z-index:24;
+	color:#0000FF;
+	text-decoration:underline;
+	cursor: pointer;
+}
+a.caselink:visited {
+	position:relative;
+	z-index:24;
+	color:#9900CC;
+	text-decoration:underline;
+	cursor: pointer;
+}
+span.error {
+	color: red;
+	text-align: center;
+}
+.pagetitle {
+	text-align: center;
+	font-size: 150%;
+}
+.form-group{margin-bottom:5px;}
+.form-horizontal .control-label{padding-top:2px; text-align:left;}
+button.bigugly{
+    clear:both;
+    /*margin-left:40px;*/
+    margin-bottom:20px;
+    width:250px;
+    height:auto;
+    background:green;
+    text-align:center;
+    line-height:25px;
+    color:#FFFFFF;
+    vertical-align:middle;
+}
+button.bigugly span {
+	width: inherit;
+	font-size: 18px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+button.lessugly{
+	background-color:#C8C8FF;
+    color:blue;
+    text-align:center;
+    clear:both;
+    /*margin-left:40px;*/
+    margin-bottom:20px;
+    width:250px;
+    height:auto;
+    text-align:center;
+	/*line-height:25px;*/
+    vertical-align:middle;
+}
+button.lessugly span {
+	width: inherit;
+	color: blue;
+	font-size: 120%;
+	/*font-size: 18px;*/
+	/*padding-left: 5px;*/
+	/*padding-right: 5px;*/
+}
+th.tablesorter-header {
+    background-image: url(images/bg.gif);
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+th.tablesorter-headerAsc {
+    background-image: url(images/asc.gif);
+    background-color: #3399FF;
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+th.tablesorter-headerDesc {
+    background-image: url(images/desc.gif);
+    background-color: #3399FF;
+    background-position: right center;
+    background-repeat: no-repeat;
+}
+th.sorter-false {
+	background-image: none;
+}
+div.tablesorter-header-inner {
+	margin-bottom: 0px;
+	padding:0px 15px;
+}
+table.grid {
+	border: 1px solid black;
+}
+table.grid td,th{
+	padding: 3px;
+	border: 1px solid;
+}
+tr.address td.inputcol{
+	width: 15em;
+}
+.flagIcon{
+    background: url(images/flag-red2.gif) no-repeat 0px 0px;
+	margin-left:30%;
+}

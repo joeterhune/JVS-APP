@@ -1,0 +1,127 @@
+                    <div>
+                        <button class="togglePBSO printHide" title="Toggle PBSO History Display">Hide/Show PBSO Booking Information</button>
+                    </div>
+
+                    <table class="summary pbsoHistoryTable" style="border: 10px outset black" id="PBSOTable_[% data.ucn %]" title="PBSO Booking History">
+                        <tr>
+                            <td colspan="6" class="title">
+                                All PBSO Booking Information for this Defendant - Jacket [% data.MJID %] - <span class="[% data.bookingHistory.CustodyClass %]">[% data.bookingHistory.Custody %]</span>
+                            </td>
+                        </tr>
+                        <tr class="title" style="vertical-align: middle; border: 1px solid black">
+                            <th class="vcenter" style="width: 8%">
+                                Booking Date
+                            </th>
+                            <th class="vcenter" style="width: 8%">
+                                Release Date
+                            </th>
+                            <th class="vcenter" style="width: 8%">
+                                Days<br/>Served
+                            </th>
+                            <th class="vcenter">
+
+                                Photo<br/>
+                                Height/Weight/Age
+                            </th>
+                            <th class="vcenter">
+                                PBSO Booking #
+                            </th>
+                            <th class="vcenter" style="max-width: 50%">
+                                Case Information
+                            </th>
+                        </tr>
+                        [% FOREACH bookingID IN data.bookingNums %]
+                        <tr>
+                            <td class="vcenter">
+                                <input type="hidden" class="bookingID" value="[% bookingID %]"/>
+                                [% data.bookingHistory.Bookings.$bookingID.BookingDate %]
+                            </td>
+                            <td class="vcenter">
+                                [% data.bookingHistory.Bookings.$bookingID.ReleaseDate %]
+                            </td>
+                            <td class="vcenter">
+                                [% data.bookingHistory.Bookings.$bookingID.Served %]
+                            </td>
+                            <td class="vcenter">
+                                <a href="[% data.bookingHistory.Bookings.$bookingID.InmatePhoto %]">
+                                    <img alt="booking photo" src="[% data.bookingHistory.Bookings.$bookingID.InmatePhoto %]"
+                                         style="border: none; width: 36px; height: 46px"/>
+                                </a>
+                                <br/>
+                                [% data.bookingHistory.Bookings.$bookingID.HeightFeet %]' [% data.bookingHistory.Bookings.$bookingID.HeightInches %]"
+                                &nbsp;/&nbsp;[% data.bookingHistory.Bookings.$bookingID.Weight %]
+                                &nbsp;/&nbsp;[% data.bookingHistory.Bookings.$bookingID.AgeAtBooking %]
+                            </td>
+
+                            <td class="vcenter">
+                                <a class="pbsoview">
+                                    [% bookingID %]
+                                </a>
+                            </td>
+
+                            <td class="vcenter">
+                                <table class="chargedetail">
+                                    <thead>
+                                        <tr>
+                                            <th class="arrest">
+                                                Arrest Date
+                                            </th>
+                                            <th class="charges">
+                                                Charges
+                                            </th>
+                                            <th class="icmscase">
+                                                JVS Case #<br/>
+                                                (Status)
+                                            </th>
+                                            <th class="refcase">
+                                                PBSO Case #
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        [% FOREACH pbsocase IN data.bookingHistory.Bookings.$bookingID.PBSOCases %]
+                                        <tr>
+                                            <td class="vcenter arrest">
+                                                [% pbsocase.value.ArrestDate %]
+                                            </td>
+                                            <td class="vcenter charges" style="text-align: left">
+                                                <ul>
+                                                [% FOREACH charge IN pbsocase.value.Charges %]
+                                                    <li>
+                                                        [% charge.value %]
+                                                    </li>
+                                                [% END %]
+                                                </ul>
+                                            </td>
+                                            <td class="vcenter icmscase">
+                                                [% IF pbsocase.value.ICMSCase.CaseNumber %]
+                                                <a class="caseLink" data-casenum="[% pbsocase.value.ICMSCase.CaseNumber %]">[% pbsocase.value.ICMSCase.CaseNumber %]</a>
+                                                <br/>
+                                                ([% pbsocase.value.ICMSCase.CaseStatus %])
+                                                [% ELSE %]
+                                                &nbsp;
+                                                [% END %]
+                                            </td>
+                                            <td class="vcenter refcase">
+                                                [% pbsocase.key %]
+                                            </td>
+                                        </tr>
+                                        [% END %]
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    [% END %]
+                    <tr>
+                        <td colspan="2" style="border: 1px solid black; text-align: right">
+                            Total Days Served
+                            [% IF data.bookingHistory.CustodyClass == "incustody" %]
+                            <span class="[% data.bookingHistory.CustodyClass %]">So far</span>
+                            [% END %]
+                        </td>
+                        <td style="border: 1px solid black; text-align: center">
+                            [% data.bookingHistory.TotalServed %]
+                        </td>
+                        <td colspan="3" style="border: 1px solid black">&nbsp;</td>
+                    </tr>
+                    </table>

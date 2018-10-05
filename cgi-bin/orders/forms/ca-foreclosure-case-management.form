@@ -1,0 +1,14 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Foreclosure Case Management Order~ca-foreclosure-case-management~CA~appeared,reason,edate,etime,courtroom~01~~~AW
+#
+FIELDS
+appeared~Who Appeared?~~DROPDOWN~~~Neither Party:Both Parties:Plaintiff:Defendant~
+reason~Issue~~DROPDOWN~~~Failure to file motion for default:Failure to file notice of dropping:Failure to set hearing~
+courtroom~Courtroom~~TEXT~20~~~
+
+#
+/nocheck
+USERTF
+FORM

@@ -1,0 +1,69 @@
+<div class="container eserviceDiv">
+	<div class="fullPageDiv">
+		<div>
+            <div style="float: right">
+                <a class="helpLink" data-context="eservice">
+                    <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+                </a>
+            </div>
+            
+            <div class="h2" style="text-align: center">
+                [% data.title %]
+            </div>
+        </div>
+        
+        <div class="legend well" style="text-align: center; margin-top: 2em">
+        	<p style="color: red">
+				This is a listing of all current e-Service addresses for this case.  Addresses that are set in the portal
+				but have been suppressed on the e-Service page are NOT listed.
+			</p>
+				
+		    <p class="localSvc">
+				Email addresses in this color are defined in the Circuit's e-Service system.
+			</p>
+				
+			<p class="fromSc">
+				Email addresses in this color have been added from the Clerk's system.
+			</p>
+				
+			<p class="portal">
+				Email addresses in this color have been imported from the State's e-Filing
+				portal.
+			</p>
+				
+			<p class="addlAddr">
+				Email addresses in this color have been added in the "Add'l Recipients" section of the e-Service page.
+			</p>
+				
+			<p style="color: purple">
+	        	Email addresses in this color are divisional addresses for agencies (SA, PD, ORCC) that are
+	            represented on this case.
+            </p>
+		</div>
+				
+		<div>
+			<label>Case Number:</label>  [% data.UCN %]
+		</div>
+				
+		<div>
+			<label>Case Style:</label>  [% data.CaseStyle %]
+		</div>
+				
+		<div style="margin-top: 1em">
+			[% IF data.serviceAddresses.size %]
+			<div style="font-weight: bold">
+				Addresses
+			</div>
+			[% FOREACH addr IN data.serviceAddresses %]
+				<div class="[% addr.class %]">
+					[% addr.email_addr %]
+				</div>
+			[% END %]
+			[% ELSE %]
+			<p style="color: red; font-weight: bold">
+				No e-Service addresses are defined for this case.
+			</p>
+			[% END %]
+		</div>	
+	</div>
+</div>

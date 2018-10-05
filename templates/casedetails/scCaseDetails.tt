@@ -1,0 +1,1270 @@
+[% INCLUDE top/header.tt %]
+<script src="/javascript/casenotes/notesAndFlags.js?1.6" type="text/javascript"></script>
+<script src="/javascript/casedetails.js?1.7" type="text/javascript"></script>
+<script src="/javascript/casedetails/utils.js?1.5" type="text/javascript"></script>
+<div style="padding-left:1%">
+            <script type="text/javascript">
+            $(document).ready(function() {
+                        $('#fullOtherCaseDiv_[% data.ucn %]').on("click", ".allCaseDocket", function () {
+                        var cases = new Array;
+                    var case_ids = new Array;
+                    $('#othercases_[% data.ucn %]').find('.otherCaseCheck:checked').each(function (i,e) {
+                    	var value = $(e).val().split(';');
+                        cases.push(value[0]);
+						case_ids.push(value[1]);
+                    });
+					
+                    if (cases.length == 0) {
+                        $('#dialogSpan').html("Please select one or more cases to view.");
+                        $('#dialogDiv').dialog({
+                            resizable: false,
+                            minheight: 150,
+                            width: 500,
+                            modal: true,
+                            title: 'No Cases Selected',
+                            buttons: {
+                                "OK": function() {
+                                    $(this).dialog( "close" );
+                                    return false;
+                                }
+                            }
+                        });
+                        
+                        return false;
+                    }
+                    
+                    var casenum = "[% data.ucn %]";
+                    var query = cases.join();
+					var query2 = case_ids.join();
+                    var url = "/cgi-bin/scAllCaseDockets.cgi";
+                    window.location.href = url + "?casenums=" + query + "&caseids=" + query2 + "&casenum=" + casenum;
+                    return false;
+				});
+				
+                scGetAsync('[% data.ucn %]', '[% data.caseinfo.CaseNumber %]', '[% data.MJID %]', '[% data.caseinfo.CaseType %]', '[% data.caseinfo.CaseID %]');
+				
+                $("table thead th:eq(6)").data("sorter", false);
+                $('#attorneys_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#charges_[% data.ucn %]').tablesorter({widgets: ['zebra'], headers: {0: {sorter: false}}});
+                $('#sentences_[% data.ucn %]').tablesorter({widgets: ['zebra'], headers: {0: {sorter: false}}});
+                $('#events_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#bonds_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#related_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#arrests_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#warrants_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#reopens_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#citations_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                
+                $('#docketdiv_[% data.ucn %]').on("click", ".showmulti", function () {
+                    if ($('#docketform_[% data.ucn %]').find("input[type=checkbox]:checked").length == 0) {
+                        $('#dialogSpan').html("Please select one or more items to view.");
+                        $('#dialogDiv').dialog({
+                            resizable: false,
+                            minheight: 150,
+                            width: 500,
+                            modal: true,
+                            title: 'No Items Selected',
+                            buttons: {
+                            	"OK": function() {
+                            		$(this).dialog( "close" );
+                            		return false;
+                            	}
+                            }
+                        });
+                        return false;
+                    }
+                    // Set the pdforder cookie
+                    var pdfradio = $("input[name='pdforder']:checked");
+                    var pdforder = $(pdfradio).val();
+                    $.cookie("pdforder", $(pdfradio).val(), { expires: new Date(2999, 12, 31, 23, 59, 59)});
+                    
+                    return true;
+                });
+                
+                $('#pbsodiv_[% data.ucn %]').on("click", ".pbsoview",function () {
+                    var bookingID = $(this).parent().parent().find('.bookingID').first().val();
+                    var url = "/cgi-bin/pbsobview.cgi?jacket=" + $('#mjid_[% data.ucn %]').val() + "&booking=" + bookingID + "&lev=" + $('#nextlev').val() + "&ucn=[% data.ucn %]";
+                    window.location.replace(url);
+                    return true;
+                });
+                
+                $(document).on('click','.docLink', function(e) {
+	                e.preventDefault();
+	                // Handle clicking on the document name.
+	                var ucn = $(this).data('casenum');
+	                var docid = $(this).data('docid');
+	                var is_order = $(this).data('is_order');
+	                window.location.href = "/orders/preview.php?fromWF=1&ucn=" + ucn + "&docid=" + docid + "&isOrder=" + is_order;
+	            });
+	            
+	            $(document).on("click", ".showAllDocs", function () {
+	            	$.each($('#otherdocs_[% data.ucn %] *').not(':visible'), function() {
+						$(this).addClass('toHide');
+						$(this).show();
+					});
+					
+					$('.showAllDocs').hide();
+					$('.hideDocs').show();
+					$("#otherdocs_[% data.ucn %]").trigger("update");
+				}); 
+				
+				$(document).on("click", ".hideDocs", function () {
+	            	$.each($('.toHide'), function() {
+						$(this).removeClass('toHide');
+						$(this).hide();
+					});
+					
+					$('.showAllDocs').show();
+					$('.hideDocs').hide();
+					$("#otherdocs_[% data.ucn %]").trigger("update");
+				}); 
+				
+				if($('#otherdocs_[% data.ucn %] tr:hidden').length < 1){
+					$('.showAllDocs').hide();
+				}
+            });
+			
+            </script>
+            
+
+            <div class="drawer-container side-by-side caseDetails" style="height: 100%; position: relative; margin-top:1%">
+                
+                <div class="drawer full" style="height: 100%; float: left">
+                    <div class="drawer-controls">
+                        <i class="fa fa-arrow-left decrease"></i>
+                        <i class="fa fa-arrow-right increase"></i>
+                    </div>
+
+                    [% IF data.caseinfo.Sealed == 'Y' %]
+                    <div>
+                        <span style="color: red; font-weight: bold"><i class="fa fa-user-secret"></i> THIS CASE IS SEALED</span>
+                    </div>
+                    [% END %]
+                
+                    <div class="main-details" style="height: 100%">
+                        <div style="float: left">
+                            <button class="btn btn-primary printTab printHide" data-print="caseDetails" data-orientation="portrait" title="Print Page"><i class="fa fa-print"></i> Print This</button>
+                        </div>
+                        <div style="float: right">
+                            <a class="helpLink" data-context="casedetails">
+                                <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+                            </a>
+                        </div>
+                        
+                        <br class="clearfix"/><br class="clearfix"/>
+            
+                        <div class="container-fluid">
+                            <table style="width: 100%">
+                                <tr>
+                                    <td>
+                                        <div style="position: relative; width: 100%;">
+                                            <div id="casesummary_[% data.ucn %]" style="width: 40%; float: left;">
+                                                <table class="summary" title="Case Summary">
+                                                    <tr>
+                                                        <td colspan="2" class="title">
+                                                            [% IF data.openwarrants %]
+                                                                <a href="#warrants_[% data.ucn %]">
+                                                                    <img src="/asterisk.png"
+                                                                         alt="Open  Warrants">
+                                                                </a>
+                                                            [% END %] Case # [% data.ucn %]
+                                                        </td>
+                                                    </tr>
+                                                    <tr title="Division Judge: [% data.divjudge %]">
+                                                        <td class="label">Division Judge</td>
+                                                        <td>[% data.divjudge %]</td>
+                                                    </tr>
+                                                    <tr title="Division: [% data.caseinfo.DivsionID %]">
+                                                        <td class="label">Division</td>
+                                                        <td>
+                                                            [% data.caseinfo.DivisionID %]
+                                                        </td>
+                                                    </tr>
+                                                    [% IF data.showDispJudge %]
+                                                    <tr title="Disposition Judge: [% data.caseinfo.JudgeAtDisposition %]">
+                                                        <td class="label">Disposition Judge</td>
+                                                        <td>[% data.caseinfo.JudgeAtDisposition %]</td>
+                                                    </tr>
+                                                    [% END %]
+                                                    [% IF data.disposed %]
+	                                                	<tr>
+	                                                    	<td class="label">Disposition Date</td>
+	                                                        <td>[% data.caseinfo.DispositionDate %]</td>
+	                                                    </tr>
+                                                    [% END %]
+                                                    <tr title="Case Type: [% data.caseinfo.CaseTypeDesc %]">
+                                                        <td class="label">Case Type</td>
+                                                        <td>[% data.caseinfo.CaseTypeDesc %]</td>
+                                                    </tr>
+                                                    <tr title="Court Type: [% data.caseinfo.CourtType %] - [% data.caseinfo.CourtTypeDescription %]">
+                                                        <td class="label">Court Type</td>
+                                                        <td>[% data.caseinfo.CourtType %] - [% data.caseinfo.CourtTypeDescription %]</td>
+                                                    </tr>
+                                                    <tr title="Case Status: [% data.caseinfo.CaseStatus %]">
+                                                        <td class="label">Status</td>
+                                                        <td>[% data.caseinfo.CaseStatus %]</td>
+                                                    </tr>
+            
+                                                    [% IF data.reopened %]
+                                                    <tr title="ReopenDate: [% data.caseinfo.ReopenDate %]">
+                                                        <td class="label">Reopen Date</td>
+                                                        <td>[% data.caseinfo.ReopenDate %]</td>
+                                                    </tr>
+                                                    [% END %]
+            
+                                                    <tr title="Filing Date: [% data.caseinfo.FileDate %]">
+                                                        <td class="label">Filing Date</td>
+                                                        <td>[% data.caseinfo.FileDate %]</td>
+                                                    </tr>
+            
+                                                    [% IF data.crimflag %]
+                                                    <tr title="Speed Trial Waived Date: [% data.caseinfo.SpeedyTrialWaivedDate %]">
+                                                        <td class="label">Speedy Waived</td>
+                                                        <td>[% data.caseinfo.SpeedyTrialWaivedDate %]</td>
+                                                    </tr>
+                                                    <tr title="Speed Trial Demand Date: [% data.caseinfo.SpeedyTrialDemandDate %]">
+                                                        <td class="label">Speedy Demanded</td>
+                                                        <td>[% data.caseinfo.SpeedyTrialDemandDate %]</td>
+                                                    </tr>
+                                                    <tr title="Speed Trial Waiver Exppires: [% data.caseinfo.SpeedyTrialDueDate %]">
+                                                        <td class="label">Speedy Expires</td>
+                                                        <td>[% data.caseinfo.SpeedyTrialDueDate %]</td>
+                                                    </tr>
+                                                    [% END %]
+            
+                                                    <tr title="Case Age: [% data.caseinfo.CaseAge %]">
+                                                        <td class="label">Case Age</td>
+                                                        <td>[% data.caseinfo.CaseAge %] days</td>
+                                                    </tr>
+                                                    <tr title="Last Activity Date: [% data.caseinfo.LastActivity %]">
+                                                        <td class="label">Activity</td>
+                                                        <td>[% data.caseinfo.LastActivity %]</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+            
+                                       <div class="watchList" style="margin-bottom:10px;">
+                                                        [% data.watchList %]
+                                                </div>
+										<div style="margin-bottom:10px;">
+                                                    <button class="btn btn-default btn-lge printHide "
+                                                        onclick="window.location.href='mailto:cad-caseissues\@pbcgov.org?subject=Case%20[% data.caseinfo.CaseNumber %]%20data%20issue'">
+                                                        <i class="fa fa-2x fa-comments pull-left"></i>
+                                                            To notify court administration of misfiled documents<br>
+                                                            or inaccurate system information, click here.
+                                                        
+                                                    </button>
+													<br>
+										</div>     
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                	<td colspan="2">
+                                    	<br/>
+										[% IF data.odpuser %]
+                                        	<button onclick="window.location.href='/orders/igo.php?ucn=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&new=Y'" class="btn btn-primary printHide" title="Create Orders">Create Orders</button>
+										[% ELSE %]
+											<button class="btn btn-primary printHide noaccess" title="You do not have access to create orders.">Create Orders</s></button>
+										[% END %]
+									</td>
+                                </tr>
+                                
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                
+                                <tr>
+                                    <td>
+										<div>
+	                                    	<button onclick="window.location.href='/related_case_search/search_form.php?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]'" title="Search for Related Cases" class="btn btn-primary printHide" title="Click this button to search related cases">
+	                                            <i class="fa fa-search"></i> Search for Related Cases</span>
+	                                        </button> 
+	  
+	                                        <button onclick="window.location.href='/cgi-bin/eservice/eService.cgi?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&efileCheck=1'" title="E-File and E-Serve Documents" data-efile="1" class="btn btn-primary printHide esButton" title="Click this button to e-file and e-serve documents"><i class="fa fa-file"></i> E-File/E-Serve</button> 
+											<button onclick="window.location.href='/cgi-bin/eservice/eService.cgi?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&showOnly=1'" title="Show Service List" data-showonly="1" class="btn btn-primary printHide esButton" title="Click this button to show the service list"><i class="fa fa-list"></i> Show Service List</button>                        
+				                		</div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Defendants -->
+                                <tr>
+                                    <td>
+                                        <div id="defendantdiv_[% data.ucn %]" title="Defendants">
+                                    <table class="summary">
+                                        <tr>
+                                            <td class="title">Defendant</td>
+                                        </tr>
+                                        [% FOREACH defendant IN data.defendants %]
+                                        <tr>
+                                            <td class="tableholder">
+                                                <table class="defendant summary" title="Defendant">
+                                                    <thead>
+                                                        <tr class="title">
+                                                            <th class="name"style="white-space: nowrap">Name and Address</th>
+                                                            <th class="phone">Phones</th>
+                                                            <th class="active">Sex</th>
+                                                            <th class="race">Ethnicity</th>
+                                                            <th class="date">DOB</th>
+                                                            <th class="partyAge">Age</th>
+                                                            <th class="active">Deceased</th>
+                                                            <th>Most Recent Photo</th>
+                                                            <th>&nbsp;</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td class="name" style="vertical-align: top; text-align: left">
+                                                                <span style="font-weight: bold;">[% defendant.LastName %], [% defendant.FirstName %] [% defendant.MiddleName %]</span>
+                                                                [% IF defendant.IsProSe == 1 %]
+                                                                <span style="font-size: smaller; color: blue">(Pro Se)&nbsp;&nbsp;</span>
+                                                                [% END %]
+                                                                [% IF defendant.Aliases.size > 0 %]
+                                                                <br/>
+                                                                Aliases:
+                                                                <div class="aliases" style="padding-left: 2em;">
+                                                                [% FOREACH alias IN defendant.Aliases %]
+                                                                    [% alias.AKA %]<br/>
+                                                                [% END %]
+                                                                </div>
+                                                            [% END %]
+                                                            [% defendant.FullAddress %]
+                                                            </td>
+                                                            <td class="phone">
+                                                                [% defendant.Phones %]
+                                                            </td>
+                                                            <td class="active">
+                                                                [% defendant.Sex %]
+                                                            </td>
+                                                            <td class="race"">
+                                                                [% defendant.Race %]
+                                                            </td>
+                                                            <td class="date">
+                                                                [% defendant.DOB %]
+                                                            </td>
+                                                            <td class="partyAge">
+                                                                [% defendant.Age %]
+                                                            </td>
+                                                            <td class="active">
+                                                                [% defendant.DOD %]
+                                                            </td>
+                                                            <td style="text-align: center; width: 10em;">
+                                                                [% IF defendant.LastBookingPhoto == "no jacket" %]
+                                                                no photo<br/>(no arrests on file)
+                                                                [% ELSE %]
+                                                                <a href="[% defendant.LastBookingPhoto %]" target="_blank">
+                                                                    <img class="img-responsive" src="[% defendant.LastBookingPhoto %]"
+                                                                         style="display: block; margin: auto; border: none; width: 65px; height: 84px;"
+                                                                         alt="Most recent booking photo"/>
+                                                                </a>
+                                                                <br/>
+                                                                [% IF defendant.InJail == "No" %]
+                                                                <span>Not in Jail</span>
+                                                                [% ELSE %]
+                                                                <span class="emphasis">In Jail</span>
+                                                            [% END %]
+                                                                [% END %]
+                                                            </td>
+                                                            <td>
+                                                            	<a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="[% defendant.DOB %]" data-first="[% defendant.FirstName %]" data-middle="[% defendant.MiddleName %]" data-last="[% defendant.LastName %]"><img src="/jvsicons/search.png"/></a>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        [% END %]
+                                    </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                [% FOREACH appellant IN data.appellants %]
+                                <!-- Appellants -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="appellantdiv_[% data.ucn %]" title="Appellants">
+                                            <table class="summary" title="Appellant">
+                                                <tr>
+                                                    <td colspan="6" class="title">Appellant</td>
+                                                </tr>
+                                                <tr class="title">
+                                                    <td>Name and Address</td>
+                                                    <td style="white-space:nowrap">Phone(s)</td>
+                                                    <td>Date of Birth</td>
+                                                    <td>Sex</td>
+                                                    <td>Race</td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                [% END %]
+            
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <!-- Parties -->
+                                <tr>
+                                    <td>
+                                        <div id="partydiv_[% data.ucn %]" title="Parties">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Parties</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.parties.size == 0 %]
+                                                    <td>No other parties on this case</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="parties_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th class="name">Full Name</th>
+                                                                    <th class="partyType">Party Type</th>
+                                                                    <th class="date">Date of Birth</th>
+                                                                    <th class="active">Sex</th>
+                                                                    <th class="race">Race</th>
+                                                                    <th>&nbsp;</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH party IN data.parties %]
+                                                                <tr>
+                                                                    <td class="name" style="font-weight: bold">
+                                                                        [% party.LastName %], [% party.FirstName %] [% party.MiddleName %]
+                                                                    </td>
+                                                                    <td class="partyType">
+                                                                        [% party.PartyTypeDescription %]
+                                                                    </td>
+                                                                    <td class="date">
+                                                                        [% party.DOB %]
+                                                                    </td>
+                                                                    <td class="active">
+                                                                        [% party.Sex %]
+                                                                    </td>
+                                                                    <td class="race">
+                                                                        [% party.Race %]
+                                                                    </td>
+                                                                    <td>
+                                                                    	<a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="[% party.DOB %]" data-first="[% party.FirstName %]" data-middle="[% party.MiddleName %]" data-last="[% party.LastName %]"><img src="/jvsicons/search.png" /></a>
+                                                                    </td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Attorneys -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="attorneydiv_[% data.ucn %]" title="Attorneys">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Attorneys</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.attorneys.size == 0 %]
+                                                    <td>No attorneys on this case</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="attorneys_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th class="partyType"> Type </th>
+                                                                    <th class="name" style="white-space:nowrap;"> Name </th>
+                                                                    <th class="phone"> Phone(s) </th>
+                                                                    <th class="name"> Firm </th>
+                                                                    <th class="barid"> Bar # </th>
+                                                                    <th>&nbsp;</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH attorney IN data.attorneys %]
+                                                                <tr>
+                                                                    <td class="partyType">
+                                                                        [% attorney.PartyType %]
+                                                                    </td>
+                                                                    <td class="name">
+                                                                        <span style="font-weight: bold">
+                                                                        [% attorney.AttorneyName %]
+                                                                        </span>
+                                                                        [% IF attorney.FullAddress %]
+                                                                        <br/>
+                                                                        [% attorney.FullAddress %]
+                                                                        [% END %]
+                                                                    </td>
+                                                                    <td class="phone">
+                                                                        [% attorney.Phone %]
+                                                                    </td>
+                                                                    <td class="name">
+                                                                        [% attorney.FirmName %]
+                                                                    </td>
+                                                                    <td class="barid">
+                                                                        [% attorney.BarNumber %]
+                                                                    </td>
+                                                                    <td>
+                                                                    	[% namePieces = attorney.AttorneyName.split(',') %]
+                                                                    	[% lastName = namePieces.0 %]
+                                                                    	[% midFirst = namePieces.1 | trim %]
+                                                                    	[% midFirst = midFirst.split(' ') %]
+																		[% firstName = midFirst.0 %]
+																		[% middleName = midFirst.1 %]
+                                                                    	<a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="" data-first="[% firstName %]" data-middle="[% middleName %]" data-last="[% lastName %]"><img src="/jvsicons/search.png" /></a>
+                                                                    </td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- fees -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="feesdiv_[% data.ucn %]" title="Case Fees">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Case Balance</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.fees.size == 0 %]
+                                                    <td>No fee information for this case</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="fees_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <td>Assessed</td>
+                                                                    <td>Paid</td>
+                                                                    <td>Balance</td>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH fee IN data.fees %]
+                                                                <tr>
+                                                                    <td style="text-align: center">
+                                                                        $ [% fee.Assessed %]
+                                                                    </td>
+                                                                    <td style="text-align: center">
+                                                                        $ [% fee.Paid %]
+                                                                    </td>
+                                                                    <td style="text-align: center">
+                                                                        $ [% fee.Balance %]
+                                                                    </td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Flags and casenotes -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                
+                                <tr>
+                                    <td>
+                                <div id="flagsnotes_[% data.ucn %]" title="Case Flags and Notes">
+                                    <!-- Opens main table -->
+                                    <table>
+                                        <tr style="vertical-align: top">
+                                            <td>
+                                                <!-- Opens flags table -->
+                                                <table class="summary" id="flags_[% data.ucn %]" title="Case Flags">
+                                                    <tr>
+                                                        <!-- Flags table header -->
+                                                        <td class="title">
+                                                            Flags
+                                                    
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                    <tr id="flaglist_[% data.ucn %]">
+                                                        <td>Retrieving flags...</td>
+                                                    </tr>
+                                                </table>
+                                            </td> <!-- End of cell containing flags table -->
+                                            
+                                            <td style="width: 3em"></td>
+                                            
+                                            <!-- Opens notes table -->
+                                            <td>
+                                                <table class="summary" id="notes_[% data.ucn %]" title="Case Notes">
+                                                    <tr>
+                                                        <!-- Flags table header -->
+                                                        <td class="title">
+                                                            Notes
+                                                           <!-- <button type="button" style="font-size: smaller" class="addNote printHide">
+                                                                Add Note
+                                                            </button>-->
+                                                        </td>
+                                                        
+                                                    </tr>
+                                                    <tr id="casenotes_[% data.ucn %]">
+                                                        <td>Retrieving notes...</td>
+                                                    </tr>
+                                                </table>
+                                            </td> <!-- End of cell containing notes table -->
+                                            
+                                        </tr>
+                                        
+                                        <tr><td>&nbsp;</td></tr>
+                                        <tr>
+                                            <td colspan="2">
+											[% IF data.notesuser %]
+											<button onclick="window.location.href='/casenotes/index.cgi?ucn=[% data.ucn %]&div=[% data.caseinfo.DivisionID %]'" class="btn btn-primary printHide">Add Flags/Case Notes</button>
+											[% ELSE %]
+											<button class="btn btn-primary printHide noaccess" title="You do not have access to add flags/case notes.">Add Flags/Case Notes</button>
+											[% END %]  
+                                            </td>
+                                        </tr>
+                                       
+            
+                                       
+                                        <tr>
+                                            <td colspan="2">
+                                                <br/>
+												   [% IF data.odpuser %]
+                                                <button onclick="window.location.href='/orders/igo.php?ucn=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&new=Y'" class="btn btn-primary printHide" title="Create Orders">Create Orders</button>
+												[% ELSE %]
+												<button class="btn btn-primary printHide noaccess" title="You do not have access to create orders.">Create Orders</s></button>
+											[% END %]
+											</td>
+                                        </tr>
+                                       
+            
+            
+                                    </table>
+                                </div>
+                                    </td>
+            
+                                </tr>
+            
+                                <!-- Related cases -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="relatedcasesdiv_[% data.ucn %]" title="Related Cases">
+                                            Loading Related Cases...
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Arrests -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="arrestsdiv_[% data.ucn %]" title="Arrests">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Arrests</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.arrests.size == 0 %]
+                                                    <td>There are no arrests in this case</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="arrests_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 100px">Arrest Date</th>
+                                                                    <th style="min-width: 125px">PBSO Case</th>
+                                                                    <th style="min-width: 100px">Jacket ID</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH arrest IN data.arrests %]
+                                                                <tr>
+                                                                    <td style="text-align: center">[% arrest.ArrestDate %]</td>
+                                                                    <td style="text-align: center">[% arrest.BookingSheetNumber %]</td>
+                                                                    <td style="text-align: center">[% arrest.CountyID %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Warrants -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="warrantsdiv_[% data.ucn %]" title="Warrants">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Warrants</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.warrants.size == 0 %]
+                                                    <td>There are no warrants for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="warrants_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 7em">Warrant<br/>Number</th>
+                                                                    <th style="min-width: 5em">Warrant<br/>Closed?</th>
+                                                                    <th style="min-width: 10em">Description</th>
+                                                                    <th style="min-width: 7em">Created</th>
+                                                                    <th style="min-width: 7em">Modified</th>
+                                                                    <th style="min-width: 7em">Arrested</th>
+                                                                    <th style="min-width: 7em">Issued</th>
+                                                                    <th style="min-width: 5em">Bond<br/>Amt</th>
+                                                                    <th style="min-width: 5em">Action<br/>Closed?</th>
+                                                                    <th style="min-width: 5em">Action<br/>Code</th>
+                                                                    <th style="min-width: 7em">Action<br/>Date</th>
+                                                                    <th style="min-width: 7em">Agency</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH warrant IN data.warrants %]
+                                                                <tr>
+                                                                    <td style="text-align: center">[% warrant.WarrantNumber %]</td>
+                                                                    <td style="text-align: center">[% warrant.Closed %]</td>
+                                                                    <td style="text-align: center">[% warrant.WarrantTypeDesc %]</td>
+                                                                    <td style="text-align: center">[% warrant.CreateDate %]</td>
+                                                                    <td style="text-align: center">[% warrant.ModifyDate %]</td>
+                                                                    <td style="text-align: center">[% warrant.ArrestDate %]</td>
+                                                                    <td style="text-align: center">[% warrant.IssueDate %]</td>
+                                                                    <td style="text-align: right">$ [% warrant.BondAmount %]</td>
+                                                                    <td style="text-align: center">[% warrant.WarrantActionClosed %]</td>
+                                                                    <td style="text-align: center">[% warrant.ActionCode %]</td>
+                                                                    <td style="text-align: center">[% warrant.ActionDate %]</td>
+                                                                    <td style="text-align: center">[% warrant.AgencyName %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Bonds -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="bondsdiv_[% data.ucn %]" title="Bonds">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Bonds</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.bonds.size == 0 %]
+                                                    <td>There are no bonds for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="bonds_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 7em"> Arrest<br/>Number</th>
+                                                                    <th style="min-width: 7em">Bond<br/>Number</th>
+                                                                    <th style="min-width: 7em">Bond<br/>Amount</th>
+                                                                    <th style="min-width: 7em">Type </th>
+                                                                    <th style="max-width: 25em; min-width: 10em;">Surety<br/>Company </th>
+                                                                    <th style="max-width: 25em; min-width: 10em;">Agent</th>
+                                                                    <th class="dateCol">Issue<br/>Date</th>
+                                                                    <th class="dateCol">Forfeiture<br/>Date</th>
+                                                                    <th class="dateCol">Closed<br/>Date </th>
+                                                                    <th class="smallNum"> Charge<br/>Count </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH bond IN data.bonds %]
+                                                                <tr>
+                                                                    <td style="text-align: center">[% bond.ArrestNumber %]</td>
+                                                                    <td style="text-align: center">[% bond.BondNumber %]</td>
+                                                                    <td style="text-align: right">$ [% bond.BondAmount %]</td>
+                                                                    <td style="text-align: center">[% bond.BondType %]</td>
+                                                                    <td style="text-align: center">[% bond.SuretyCompany %]</td>
+                                                                    <td style="text-align: center">[% bond.BondAgent %]</td>
+                                                                    <td class="dateCol">[% bond.IssueDate %]</td>
+                                                                    <td class="dateCol">[% bond.ForfeitureDate %]</td>
+                                                                    <td class="dateCol">[% bond.ClosedDate %]</td>
+                                                                    <td class="smallNum">[% bond.ChargeCount %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Charges -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="chargessdiv_[% data.ucn %]" title="Charges">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Charges</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.charges.size == 0 %]
+                                                    <td>There are no charges for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="charges_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="width: 3em">Count</th>
+                                                                    <th class="date" >Date</th>
+                                                                    <th style="width: 5em">Statute</th>
+                                                                    <th style="width: 5em">Citation</th>
+                                                                    <th style="width: 20em">Description</th>
+                                                                    <th style="width: 5em">Degree</th>
+                                                                    <th style="width: 20em">Disposition</th>
+                                                                    <th class="date">Disp.<br/>Date</th>
+                                                                    <th style="width: 7em">Plea</th>
+                                                                    <th class="date">Plea<br/>Date</th>
+                                                                    <th class="date">Court<br/>Decision<br/>Date</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH charge IN data.charges %]
+                                                                <tr>
+                                                                    <td style="text-align: center">[% charge.ChargeCount %]</td>
+                                                                    <td class="date">[% charge.ChargeDate %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteNumber %]</td>
+                                                                    <td style="text-align: center">[% charge.CitationNumber %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteDescription %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteLevel %] [% charge.CourtStatuteDegree %]</td>
+                                                                    <td style="text-align: center">[% charge.Disposition %]</td>
+                                                                    <td class="dateCol">[% charge.DispositionDate %]</td>
+                                                                    <td style="text-align: center">[% charge.Plea %]</td>
+                                                                    <td class="date">[% charge.PleaDate %]</td>
+                                                                    <td class="date">[% charge.CourtDecisionDate %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Sentences -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="sentencessdiv_[% data.ucn %]" title="Sentences">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Sentences</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.sentences.size == 0 %]
+                                                    	<td>There are no sentences for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="sentences_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                	<th class="date">Date</th>
+                                                                    <th style="width:3em">Count</th>
+                                                                    <th style="min-width:6em">Sentence</th>
+                                                                    <th style="min-width:6em">Confinement</th>
+                                                                   	<th style="min-width:6em">Term</th>
+                                                                    <th style="min-width:6em">Credit Time</th>
+                                                                    <th style="min-width:6em">Conditions</th>
+                                                                    <th style="min-width:6em">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH sentence IN data.sentences %]
+                                                                <tr>
+                                                                	<td class="date">[% sentence.SentenceImposedDate %]</td>
+                                                                    <td style="text-align: center">[% sentence.ChargeCount %]</td>
+                                                                    <td style="text-align: left">[% sentence.Sentence %]</td>
+                                                                    <td style="text-align: left">[% sentence.Confinement %]</td>
+                                                                    <td style="text-align: left">
+                                                                    	[% IF sentence.JailTimeYears > 0 || (sentence.JailTimeMonths > 0) || (sentence.JailTimeDays > 0) %]
+                                                                    		Jail Time:
+	                                                                    	[% IF sentence.JailTimeYears > 0 %]
+	                                                                    		&nbsp;[% sentence.JailTimeYears %] years
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.JailTimeMonths %]
+	                                                                    		&nbsp;[% sentence.JailTimeMonths %] months
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.JailTimeDays %]
+	                                                                    		&nbsp;[% sentence.JailTimeDays %] days
+	                                                                    	[% END %]
+	                                                                   	[% ELSIF sentence.ConfinementSentenceTerm %]
+	                                                                   		Jail Time:
+	                                                                   		&nbsp;[% sentence.ConfinementSentenceTerm %]
+                                                                    	[% END %]
+                                                                    	[% IF sentence.ProbationTimeYears > 0 || (sentence.ProbationTimeMonths > 0) || (sentence.ProbationTimeDays > 0) %]
+                                                                    		<br/>
+                                                                    		Probation Time:
+	                                                                    	[% IF sentence.ProbationTimeYears > 0 %]
+	                                                                    		&nbsp;[% sentence.ProbationTimeYears %] years
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.ProbationTimeMonths %]
+	                                                                    		&nbsp;[% sentence.ProbationTimeMonths %] months
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.ProbationTimeDays %]
+	                                                                    		&nbsp;[% sentence.ProbationTimeDays %] days
+	                                                                    	[% END %]
+	                                                                    [% ELSIF sentence.ProbationSentenceTerm %]
+	                                                                   		Jail Time:
+	                                                                   		&nbsp;[% sentence.ProbationSentenceTerm %]
+                                                                    	[% END %]
+                                                                    	[% IF sentence.MinMandatoryYears > 0 || (sentence.MinMandatoryMonths > 0) || (sentence.MinMandatoryDays > 0) %]
+                                                                    		<br/>
+                                                                    		Min. Mandatory:
+	                                                                    	[% IF sentence.MinMandatoryYears > 0 %]
+	                                                                    		&nbsp;[% sentence.MinMandatoryYears %] years
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.MinMandatoryMonths %]
+	                                                                    		&nbsp;[% sentence.MinMandatoryMonths %] months
+	                                                                    	[% END %]
+	                                                                    	[% IF sentence.MinMandatoryDays %]
+	                                                                    		&nbsp;[% sentence.MinMandatoryDays %] days
+	                                                                    	[% END %]
+                                                                    	[% END %]
+                                                                    </td>
+                                                                    <td style="text-align: left">
+                                                                    	[% IF sentence.CreditTimeYears > 0 || (sentence.CreditTimeMonths > 0) || (sentence.CreditTimeDays > 0) %]
+	                                                                    	Credit Time: 
+	                                                                    	[% IF sentence.CreditTimeYears > 0 %]
+		                                                                    	&nbsp;[% sentence.CreditTimeYears %] years
+		                                                                   	[% END %]
+		                                                                   	[% IF sentence.CreditTimeMonths %]
+		                                                                   		&nbsp;[% sentence.CreditTimeMonths %] months
+		                                                                   	[% END %]
+		                                                                   	[% IF sentence.CreditTimeDays %]
+		                                                                   		&nbsp;[% sentence.CreditTimeDays %] days
+		                                                                   	[% END %]
+	                                                                   	[% END %]
+                                                                    </td>
+                                                                    <td style="text-align: left">
+                                                                    	[% IF sentence.SentenceConditions %]
+                                                                    		Sentence Conditions: <br/>
+                                                                    		1. [% sentence.SentenceConditions %]
+                                                                    		<br/>
+                                                                    	[% END %]
+                                                                    	[% IF sentence.ConfinementConditions %]
+                                                                    		<br/>
+                                                                    		Confinement Conditions: <br/>
+                                                                    		1. [% sentence.ConfinementConditions %]
+                                                                    		<br/>
+                                                                    	[% END %]
+                                                                    </td>
+                                                                    <td style="text-align: left">[% sentence.SentenceStatus %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Citations -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="citationsdiv_[% data.ucn %]" title="Citations">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Citations</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF ! data.hasCitations %]
+                                                        <td>There are no citations for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="citations_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 6em">Citation</th>
+                                                                    <th style="min-width: 7em">Aggressive<br/>Driving</th>
+                                                                    <th style="min-width: 7em">Commercial<br/>License</th>
+                                                                    <th style="min-width: 6em">Actual<br/>Speed</th>
+                                                                    <th style="min-width: 6em">Posted<br/>Speed</th>
+                                                                    <th style="min-width: 6em">Speed<br/>Diff</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH charge IN data.charges %]
+                                                            [% IF charge.CitationNumber %]
+                                                                <tr>
+                                                                    <td>[% charge.CitationNumber %]</td>
+                                                                    <td style="text-align: center;[% IF charge.AggressiveDriving == 'Y' %] color: red[% END %]">[% charge.AggressiveDriving %]</td>
+                                                                    <td style="text-align: center;[% IF charge.CommercialDL == 'Y' %] color: red[% END %]">[% charge.CommercialDL %]</td>
+                                                                    <td style="text-align: center">[% charge.ActualSpeed %]</td>
+                                                                    <td style="text-align: center">[% charge.PostedSpeed %]</td>
+                                                                    [% IF charge.SpeedDiff %]<td style="text-align: center;[% IF charge.SpeedDiff >= 15 %] color: red[% END %]">[% charge.SpeedDiff %]</td>
+                                                                    [% ELSE %]<td>&nbsp;</td>[% END %]
+                                                                </tr>
+                                                            [% END %]
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+            
+                                <!-- Events -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="eventsdiv_[% data.ucn %]" title="Case Calendar Event Docket">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Case Calendar Event Docket</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.events.size == 0 %]
+                                                    <td>There are no events for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="events_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th class="date">Date</th>
+                                                                    <th style="min-width: 150px">Description</th>
+                                                                    <th style="min-width: 150px">Location/Room</th>
+                                                                    <th style="min-width: 100px">Time</th>
+                                                                    <th style="min-width: 100px">Canceled</th>
+                                                                    <th style="min-width: 100px">Updated</th>
+                                                                    <th style="min-width: 100px">Judge</th>
+                                                                    <th class="date">Docket Date</th>
+                                                                    <th style="min-width: 100px">Notes</th>
+                                                                    <th style="min-width: 100px">Reason</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH event IN data.events %]
+                                                                <tr class="[% event.RowClass %]">
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">
+                                                                        [% IF event.ShowVRBLink == "future" %]
+                                                                            <a class="vrbDate" data-vrbdate="[% event.ISODate %]" data-event_id="[% event.EventID %]">[% event.EventDate %]</a>
+                                                                        [% ELSE %]
+                                                                            [% event.EventDate %]
+                                                                        [% END %]
+                                                                    </td>
+                                                                    <td class="date [% event.RowClass %]" style="text-align: center">[% event.CourtEventType %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.Location %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.CourtEventTime %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.Canceled %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.Updated %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.JudgeName %]</td>
+                                                                    <td class="date [% event.RowClass %]" style="text-align: center">[% event.DocketDate %]</td>
+                                                                    <td class="[% event.RowClass %]" style="text-align: center">[% event.CourtEventNotes %]</td>
+                                                                    [% IF event.Updated == 'Y' %]
+                                                                    	<td class="[% event.RowClass %]" style="text-align: center">[% event.update_info %]</td>
+                                                                    [% ELSIF event.Canceled == 'Y' %]
+                                                                    	<td class="[% event.RowClass %]" style="text-align: center">[% event.cancel_reason %]</td>
+                                                                    [% ELSE %]
+                                                                    	<td class="[% event.RowClass %]" style="text-align: center">&nbsp;</td>
+                                                                    [% END %]
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!--<tr>
+                                    <td>
+                                        <button title="Schedule Event in This Case" type="button" class="btn btn-primary vrbCase printHide" data-ucn="[% data.caseinfo.CaseNumber %]">Schedule Event</button>
+                                    </td>
+                                </tr>-->
+                                
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                
+                                <tr>
+                                    <td>
+                                        <div id="otherdocsdiv_[% data.ucn %]" title="Other Documents">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Other Documents</td>
+                                                </tr>
+                                                [% IF data.otherDocs.size == 0 %]
+                                                <tr>
+                                                    <td>There are no other documents for this case.</td>
+                                                </tr>
+                                                [% ELSE %]
+                                                <tr>
+                                                    <td>
+                                                        <table id="otherdocs_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 20em">Title</th>
+                                                                    <th style="min-width: 10em">Created By</th>
+                                                                    <th style="min-width: 6em">Date Created</th>
+                                                                    <th style="min-width: 10em">Current Queue</th>
+                                                                    <th style="min-width: 6em">Current Status</th>
+                                                                    <th style="min-width: 20em">Comments</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                [% FOREACH doc IN data.otherDocs %]
+                                                                <tr style="[% doc.style %]">
+                                                                    <td class="center">
+                                                                    	[% IF doc.file %]
+			                                                        		<a href="[% doc.file %]" target="_blank">[% doc.Title %]</a>
+			                                                        	[% ELSE %]
+			                                                        		<a class="[% doc.doc_type %]" data-is_order="[% doc.is_order %]" data-docid="[% doc.DocID %]" data-casenum="[% data.caseinfo.CaseNumber %]">[% doc.Title %]</a></td>
+			                                                        	[% END %]		
+                                                                    </td>
+                                                                    <td class="center">[% doc.creator %]</td>
+                                                                    <td class="center">[% doc.CreationDate %]</td>
+                                                                    <td class="center">[% doc.queue %]</td>
+                                                                    <td class="center">[% doc.current_status %]</td>
+                                                                    <td class="center">
+                                                                        [% doc.Comments %]
+                                                                    </td>
+                                                                </tr>
+                                                                [% END %]
+                                                                <tr>
+			                                                    	<td colspan="6" align="center">
+			                                                    		<a class="showAllDocs">Show Hidden Documents</a>
+			                                                    		<a class="hideDocs" style="display:none">Hide Completed Documents</a>
+			                                                    	</td>
+			                                                    </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                                [% END %]
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+            
+                                <!-- Docket -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div class="docketdiv" id="docketdiv_[% data.ucn %]">
+                                            Loading Docket Info...
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Other Cases -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div style="position: relative" id="fullOtherCaseDiv_[% data.ucn %]">
+                                            Loading Other Case Listing...
+                                        </div>
+                                    </td>
+                                </tr>
+            
+                                <!-- Reopens -->
+                                <tr class="spacer"><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td>
+                                        <div id="reopendiv_[% data.ucn %]" title="Case Reopen History">
+                                            <table class="summary">
+                                                <tr>
+                                                    <td class="title">Reopen History</td>
+                                                </tr>
+                                                <tr>
+                                                    [% IF data.reopens.size == 0 %]
+                                                    <td>There is no reopen history for this case.</td>
+                                                    [% ELSE %]
+                                                    <td class="tableholder">
+                                                        <table id="reopens_[% data.ucn %]">
+                                                            <thead>
+                                                                <tr class="title">
+                                                                    <th style="min-width: 7em">Count</th>
+                                                                    <th style="min-width: 10em">Reason</th>
+                                                                    <th style="min-width: 6em">Reopen<br/>Date</th>
+                                                                    <th style="min-width: 6em">Reopen<br/>Close Date</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            [% FOREACH reopen IN data.reopens %]
+                                                                <tr class="[% event.RowClass %]">
+                                                                    <td style="text-align: center">[% reopen.CountNo %]</td>
+                                                                    <td style="text-align: center">[% reopen.ReOpenReason %]</td>
+                                                                    <td style="text-align: center">[% reopen.ReOpenDate %]</td>
+                                                                    <td style="text-align: center">[% reopen.ReOpenCloseDate %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                    [% END %]
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+            
+            
+                            </table>
+                        </div>
+            
+                        <div style="padding-top:1%">
+                            <div class="pbsodiv" id="pbsodiv_[% data.ucn %]">
+                                Retrieving PBSO Booking History...
+                            </div>
+                        </div>
+                    
+                        <div id="hiddenvars_[% data.ucn %]">
+                            <input class="division" type="hidden" id="division_[% data.ucn %]" name="division" value="[% data.caseinfo.DivisionID %]"/>
+                            <input class="mjid" type="hidden" id="mjid_[% data.ucn %]" name="mjid" value="[% data.MJID %]"/>
+                            <input class="ucn" type="hidden" id="ucn_[% data.ucn %]" name="ucn" value="[% data.caseinfo.CaseNumber %]"/>
+                            <input class="caseType" type="hidden" value="[% data.caseinfo.CaseType %]"/>
+                            <input class="caseid" type="hidden" value="[% data.caseinfo.CaseID %]"/>
+                        </div>
+                        
+                    </div> <!-- end of drawer-content -->
+                    
+                </div>
+                    
+                <div class="content closed" style="display: none; height: 100%">
+                    <div id="documents_[% data.ucn %]" class="dv-window" style="height: 90%; width: 100%;">
+                    </div>
+                </div>
+            
+            </div> <!-- End of drawer-container -->

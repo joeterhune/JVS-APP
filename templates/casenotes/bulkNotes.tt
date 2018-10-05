@@ -1,0 +1,332 @@
+<div style="padding-left:1%">
+    <script type="text/javascript">
+        var clearAll = false;
+        var action;
+        function countChecked () {
+            checkCount = $('#listTable').find('.caseCheck:checked').length;
+            if (checkCount == 1) {
+                string = checkCount + " listed case is "
+            } else {
+                string = checkCount + " listed cases are "
+            }
+            
+			string += "selected for adding case notes.";
+
+            $('#checkCount').html(string);
+        }
+        
+        $(document).ready(function () {
+            $(".datepicker").datepicker({
+                showOn: "both",
+				buttonImage: "/style/images/calendar.gif",
+				buttonImageOnly: true,
+				changeMonth: true,
+				changeYear: true,
+                dateFormat: "mm/dd/yy",
+				minDate: 0,
+				altField: '#expdate',
+				altFormat: 'yy-mm-dd'
+			});
+            
+            $('input,textarea').placeholder();
+            $('#prevSelected').val('');
+            
+            $('.clearCases').click(function() {
+                $('#caseList').val('');
+            });
+            
+            $('#listTable').on('click', '.selAll', function () {
+                $(this).closest('table').find('.caseCheck').prop('checked',true);
+                countChecked();
+            });
+            
+            $('#listTable').on('click', '.selNone', function () {
+                $(this).closest('table').find('.caseCheck').prop('checked',false);
+                countChecked();
+            });
+            
+            $('#listTable').on('change','.caseCheck', function() {
+                countChecked();
+            });
+            
+            $('#listTable').on('click','.icmslink', function() {
+                url = "/cgi-bin/search.cgi?name=" + $(this).attr('data-ucn');
+                open_win(url, 'icmswin');
+            });
+            
+            $('.checkCaseBtn').click(function() {
+                checkUrl = "/cgi-bin/casenotes/checkAddNote.cgi";
+                
+                caseList = undefined;
+                caseList = $('#caseList').val();
+                
+                if (((caseList == undefined) || (caseList == ""))) {
+                    showDialog("No Cases Entered", "Please enter a list of cases.");
+                    return false;
+                }
+                
+                $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><h3>Looking Up Cases</h3>', fadeIn: 0});
+                
+                $.post(checkUrl,{ cases : caseList }, function(data) {
+                    $.unblockUI();
+
+                    // Hide the legend.  We'll display it if it's needed.
+                    $('#legend').hide();
+                    
+                    if (data.NotValid.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.NotValid, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The system was unable to determine a valid case number from the following entered values:'),
+                            $(list),
+                            $('<p>').html('Please correct the list and re-submit.')
+                        );
+                        showDialog("Invalid Case Number Entered", $(errStr).html());
+                        return false;
+                    }
+                    
+                    if (data.NotFound.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.NotFound, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The following case numbers were not found:'),
+                            $(list),
+                            $('<p>').html('Please correct the list and re-submit.')
+                        );
+                        showDialog("Cases Not Found", $(errStr).html());
+                        return false;
+                    }
+                    
+                    if (data.Ambiguous.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.Ambiguous, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The following case numbers could match more than one case:'),
+                            $(list),
+                            $('<p>').html('Please correct the list to match the exact case and re-submit.')
+                        );
+                        showDialog("Ambiguous Case Numbers Entered", $(errStr).html());
+                        return false;
+                    }
+
+                    $('#caseListBody').html('');
+                    $.each(data.Cases, function(i,e) {
+                        newRow = $('<tr>');
+                        $(newRow).attr('id','case-' + e.CaseNotesNum);
+                        checkboxText = '<input type="checkbox" name="addNoteToCase" class="caseCheck" value="' + e.CaseNotesNum + '|' + e.DivisionID +'"/>'
+
+                        icmsLink = '<a class="icmslink" data-ucn="' + e.CaseNotesNum + '">' + e.CaseNotesNum + '</a>';
+                        $(newRow).append(
+                            $('<td class="cbCell" style="text-align: center">').html(checkboxText),
+                            $('<td style="text-align: center;">').html(icmsLink),
+                            $('<td>').html(e.CaseStyle),
+                            $('<td style="text-align: center">').html(e.DivisionID)
+                        );
+                        $('#caseListBody').append($(newRow));                      
+                    });
+                    
+                    $('#listTable').tablesorter ({
+                        widgets: ['zebra'],
+                        sortList: [[1,1]],
+                        headers: {0: {sorter: false}}
+                    });
+                    
+                    $('#caseCheckResult').show();
+                
+                    // Need to do this AFTER the table is shown, because the widget doesn't properly apply to a hidden table
+                    $('#listTable').trigger('update');
+                    
+                    countChecked();            
+                    
+                    // Display the submit button to flag
+                    $('.addNoteBtn').show();
+                    
+                    return true;
+                });
+                
+                return true;
+            });
+            
+            $('.addNoteBtn').click(function () {
+                
+                var note_text = $('#noteText').val();
+                if (note_text == '') {
+                    showDialog("No Notes Entered", "Please enter case notes to add.");
+                    return false;
+                }
+                
+                var private = $('#makePrivate:checked').length;
+                
+                noteCases = $('#listTable').find('.caseCheck:checked');
+                if (!$(noteCases).length) {
+                    showDialog("No Cases Selected", "Please select case(s) to add notes to.");
+                    return false;
+                }
+                cases = [];
+                $(noteCases).each(function (i,e) {
+                    cases.push($(e).val());
+                });
+                
+                var data = new FormData();
+                var attachment = $('#attachment').val();
+                if (attachment != '') {
+    				data.append('attachment', $('#attachment').prop('files')[0]);
+                }
+                
+                data.append('note', note_text);
+                data.append('cases', cases.join(","));
+                data.append('private', private);
+                
+                //postArgs = {note : note_text, cases : cases.join(","), private: private}; 
+                
+                var abortquietly;
+                // Make this an asynchronous call, to avoid issues with the DOM updating in time for us to check it.
+                $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><h3>Adding Notes to Cases</h3>', fadeIn: 0});
+                
+                url = '/cgi-bin/casenotes/doBulkNote.cgi';
+                
+                $.ajax({
+			        type: 'POST',               
+			        processData: false, // important
+			        contentType: false, // important
+			        data: data,
+			        url: url,
+			        dataType : 'json',  
+			        success: function(data, status, settings)  {  
+		               doUpdates(data, status);
+		            }  
+			    }); 
+                
+                //xmlhttp = doAjax(url,postArgs,1,doUpdates);
+                return false;
+            });
+        });
+        
+        function doUpdates (response, status) {
+            $.unblockUI();
+            var content = response;
+            $.each(content.Completed, function(key, val) {
+                var caseDiv = val.split("|");
+                var rowClass = "#case-" + caseDiv[0];
+                // And remove the checkbox, so they can't accidentally re-flag it.
+                $(rowClass).find('.cbCell').html('');
+            });
+            
+            if ($('#listTable').find('.caseCheck').length == 0) {
+                $('#checkCount').html('Case notes have been added to all cases.');
+            } else {
+                countChecked();
+            }
+
+            $('#legend').show();
+            
+            return true;
+        }
+    </script>
+    <style type="text/css">
+    	table tbody > tr:nth-child(odd) > td,
+		table tbody > tr:nth-child(odd) > th {
+		    background-color: #FFFFFE;
+		}
+    </style>
+    
+    <div style="height: 50px;">
+    	<br/>
+        <div style="float: left; width:50%">
+            <span class="h1">Bulk Case Notes</span>
+            
+            <p class="instructions">
+                Use this interface to apply a note to multiple cases at once.  You can enter the listing of cases,
+                separated by spaces or carriage returns (no commas) in the box below.  When you click "Look Up Cases", the listing will
+                be validated; then select the cases you wish to add the note for and click "Add Note to Selected Cases".
+            </p>
+        </div>
+    </div>
+
+    <br style="clear: both"/><br style="clear: both"/>
+
+    <div style="height: 14em; margin-bottom: 0;">
+        
+        <div id="noteOptions" style="float: left; position: relative">
+            <div id="selectDiv">
+                <label for="noteLabel" id="selectLabel" style="width: 8em; vertical-align: top">Note Text</label>
+                <textarea rows="4" cols="50" name="noteText" id="noteText" placeholder="Please enter your case note here."></textarea>
+                <br/>
+                <label for="privLabel" id="privLabel" style="width: 8em; vertical-align: top">Make Private?</label>
+                <input type="checkbox" id="makePrivate" name="makePrivate"/>
+                <br/>
+                <label for="attachmentLabel" id="attachmentLabel" style="width: 8em; vertical-align: top">Attachment</label>
+                <input style="display:inline" type="file" id="attachment" name="attachment"/>
+            </div>
+            
+            <div style="vertical-align: top;" id="caseListDiv">
+                <label for="caseList" style="width: 8em; vertical-align: top">Case List</label>
+                <textarea rows="4" cols="50" name="caseList" id="caseList" placeholder="Please enter the list of cases here."></textarea>
+                
+                <br class="clear"/><br class="clear"/>
+                <div style="padding-left:24%">
+	                <button class="clearCases">Clear Case List</button>
+	                <button class="checkCaseBtn">Look Up Cases</button>
+	                <button class="addNoteBtn" style="display: none">Add Note to Selected Cases</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <br style="clear: both;"/><br style="clear: both;"/>
+    
+    <div id="caseCheckResult" style="margin-top: 0; display: none">
+    
+    	<div style="float: none; clear: both">
+            <div style="float: left; margin-right: 5em;">
+                <span id="checkCount"></span>
+            </div>
+        </div>
+        
+        <table id="listTable" class="summary">
+            <thead>
+                <tr class="title" id="listHeader">
+                    <th style="width: 8em">
+                        Select
+                        <a class="selAll">All</a> | <a class="selNone">None</a>
+                    </th>
+                    <th style="width: 15em">Case Number</th>
+                    <th style="width: 30em;">Case Style</th>
+                    <th style="width: 6em">Division</th>
+                </tr>
+            </thead>
+            <tbody id="caseListBody">
+                
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="hiddenStuff">
+        <input type="hidden" id="prevSelected" value=""/>
+    </div>
+
+    </div>
+
+</body>
+</html>

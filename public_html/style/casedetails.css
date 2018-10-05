@@ -1,0 +1,76 @@
+.defendant td, .party td {
+	text-align: center;
+}
+
+.defendant span.emphasis {
+	color: red;
+}
+
+td.partyname, th.partyname {
+	font-weight: bold;
+	text-align: left;
+	width: 30em;
+}
+
+.party span.address {
+	font-weight: normal;
+}
+
+table.summary {
+	border: 1px solid green;
+}
+
+.imglink a {
+	color: blue !important;
+}
+
+.imglink a:visited {
+	color: purple !important;
+}
+
+span.incustody {
+	color: red;
+}
+
+table.chargedetail {
+	border: 1px solid black;
+	width: 100%;
+	background-color: #EEFFCC;
+}
+
+.chargedetail td {
+	border: 1px solid black;
+}
+
+.chargedetail th {
+	border: 1px solid black;
+	font-weight: bold !important;
+}
+
+.chargedetail .arrest {
+	width: 15%;
+}
+
+.chargedetail .charges {
+	width: 50%;
+}
+
+.chargedetail .icmscase {
+	width: 20%;
+}
+
+.chargedetail .refcase {
+	width: 16%;
+}
+
+.chargedetail ul {
+	padding-left: 5%;
+}
+
+tr.commercialdl {
+	background-color: pink !important;
+}
+
+span.confidential {
+	color: red !important;
+}

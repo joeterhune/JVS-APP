@@ -1,0 +1,21 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Final Judgment After Default (Eviction)~cc-final-judgment-after-default-eviction~CC,SC~amount,interest~01~~~RA
+#
+FIELDS
+amount~Costs~~TEXT~20~~~
+interest~Interest Rate~~TEXT~10~<small>Don't enter percent sign (%)</small>~
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+#/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

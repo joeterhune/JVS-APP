@@ -1,0 +1,11 @@
+\i<b>DONE AND ORDERED</b> at %ddcity%, Palm Beach County, Florida, 
+\uon this %today%.
+%esig%
+\m%sig%
+\m%ddtrsig%
+\mTraffic Hearing Officer
+
+<a>For a better translation of this document contact cad-ada@pbcgov.org</a>
+
+Copies provided to:
+%cc%

@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/style/image-cgi.css" />
+        <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        </style>
+        <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.js" type="text/javascript"></script>
+        <script src="/javascript/image-cgi.js?1.2"></script>
+    </head>
+    <body>
+        <div id="image-[% data.imageID %]" class="image-container" style="" data-url="/[% data.imageURL %]#view=FitH&navpanes=1&scrollbar=1&toolbar=1&statusbar=1">
+        <!--<div id="image-FOO" class="image-container" style="" data-url="/Viewer.js/../[% data.imageURL %]">-->
+        <!--<div id="image-[% data.imageID %]" class="image-container" style="" data-url="/Viewer.js/../[% data.imageURL %]">-->
+            <div class="image-spinner">
+                <img src=/icons/image-loader.gif class="spinner" />
+                <div class="image-status">
+                    <p class="status">Retrieving document from clerk...</p>
+                    <p class="alt">[% data.UCN %]</p>
+                </div>
+            </div>
+        </div>
+        
+        <script type="text/javascript">
+            $(document).ready(function () {
+                RenderImage('#image-[% data.imageID %]','pdfjs');
+            });
+        </script>
+    </body>
+</html>

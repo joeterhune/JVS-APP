@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		
+		<link rel="stylesheet" type="text/css" href="/icms1.css" />
+		<link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/jquery-ui-1.10.3/themes/ui-lightness/jquery-ui.css" />
+		<link rel="stylesheet" type="text/css" href="/style/events.css" />
+		
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.8.3.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.3.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.min.js" type="text/javascript"></script>
+		<script src="/javascript/date.js" type="text/javascript"></script>
+		<script src="/javascript/ajax.js" type="text/javascript"></script>
+		<script src="/icms.js" type="text/javascript"></script>
+		<script src="/javascript/main.js" type="text/javascript"></script>
+		<title>
+			[% data.title %]
+		</title>
+	</head>
+	
+	<body [% IF data.lev %]onload="SetBack('ICMS_[% data.lev %]');"[% END %]>
+		<script>
+			$(document).ready (function() {
+				$('#addevent').show();
+				$('#caldiv').hide();
+			});
+			$(function() {
+				$(".datepicker").datepicker({
+					showOn: "both",
+					buttonImage: "/style/images/calendar.gif",
+					buttonImageOnly: true,
+					changeMonth: true,
+					changeYear: true,
+					dateFormat: "yy-mm-dd"
+				});
+				$(".launcher").click(function() {
+					$('#addevent').show();
+					$('#caldiv').hide();
+				});
+				$(".calshow").click(function() {
+					$('#addevent').hide();
+					$('#caldiv').show();
+				});
+				$("#formSubmit").click(function(){
+					var option = $('input[name=showtype]:radio:checked').val();
+					var divs = $('#divs').val();
+					switch(option) {
+						case 'today':
+							$('#addevent').hide();
+							var date = $.datepicker.formatDate('yy-mm-dd', new Date());
+							var xmlhttp = doAjax('showCal.cgi',{date : date, divs : divs});
+							showCal(xmlhttp);
+							break;
+						case 'otherday':
+							$('#addevent').hide();
+							var date = $('#anotherday').val();
+							if (date == "") {
+								alert ("You must select a date.");
+								return false;
+							}
+							var xmlhttp = doAjax('showCal.cgi',{date : date, divs : divs});
+							showCal(xmlhttp);
+							break;
+						case 'dayrange':
+							$('#addevent').hide();
+							var startdate = $('#startdate').val();
+							var enddate = $('#enddate').val();
+							if ((startdate == "") || (enddate == "")) {
+								alert ("You must both a start and end date.");
+								return false;
+							}
+							var sd = new Date(startdate);
+							var ed = new Date(enddate);
+							if (sd.getTime() > ed.getTime()) {
+								alert("The start date must be before the end date.");
+								return false;
+							}
+							var xmlhttp = doAjax('showCal.cgi',{startdate : startdate, enddate : enddate, divs: divs});
+							showCal(xmlhttp);
+							break;
+						case 'showCase':
+							$('#addevent').hide();
+							var casenum = $('#searchcase').val();
+							var xmlhttp = doAjax('showCal.cgi',{casenum : casenum, divs: divs});
+							showCal(xmlhttp);
+							break;
+						case 'addEvent':
+							$('#caldiv').hide();
+							$('#addevent').show();
+							break;
+						default:
+							alert ("Unknown action selected");
+					}
+					return true;
+				});
+			});
+			
+			function showCal (xmlhttp) {
+				$('#caldiv').html(xmlhttp.responseText);
+				$('#caldiv').show();
+				$('#calendar').tablesorter({widgets: ['zebra'], headers : {9 : {sorter: false}}});
+			}
+			
+			function validateCase(caseobj) {
+				var casenum = $(caseobj).val();
+				if (casenum == "") {
+					alert("Please enter a case number");
+					return false;
+				}
+				
+				var xmlhttp = doAjax('checkCase.cgi',{casenum : casenum});
+				var xmlDoc = xmlhttp.responseXML;
+				var validCase = $(xmlDoc).find('casenum').text();
+				if (validCase != "") {
+					$(caseobj).val(validCase);
+					
+					// If this is just checking the value for an upcoming search, we're done.
+					if ($('#showCase').attr('checked') == 'checked') {
+						$('#divtext').html('');
+						$('#casediv').val('');
+						return true;
+					}
+					
+					var casediv = $(xmlDoc).find('case_div').text();
+					$('#divtext').html(casediv);
+					$('#casediv').val(casediv);
+					
+					//debugger;
+					var mydivs = $('#divs').val();
+					if (!mydivs.match("AllDivs")) {
+						var divarray = mydivs.split(",");
+						var inMyDivs = $.inArray(casediv,divarray);
+						if (inMyDivs < 0) {
+							alert("You are adding an event for a  case that is not in your division(s). "+
+								  "If you continue, the hearing will be scheduled on your divisional calendar.")
+							$('#sched_div').val(divarray[0]);
+						} else {
+							$('#sched_div').val(casediv);
+						}
+					} else {
+						// AllDivs user.  Default the sched_div to the case_div
+						$('#sched_div').val(casediv);
+					}
+					
+					var casestyle = $(xmlDoc).find('case_style').text();
+					$('#casestyletext').html(casestyle);
+					$('#casestyle').val(casestyle);
+					
+					// Enable the submit button
+					$('#btn-submit').attr('disabled',false);
+					
+					// Set focus to location
+					setTimeout(function() {
+						$('#evtdate').focus();
+					},100);
+					
+					return true;
+				}
+				
+				alert ("'" + casenum +"' is not a valid case number.");
+				
+				// Disable the submit button
+				$('#btn-submit').attr('disabled',true);
+				
+				setTimeout(function() {
+					$('#casenum').focus();
+				},100);
+				
+				return false;
+			}
+		</script>
+		
+		<div id="logo">
+			<a href="/"><img src="/icmslogo.jpg" alt="ICMS" /></a>
+		</div>
+		
+		<div id="help" style="margin-bottom: 10px">
+			<!--
+			<button name="helpbutton" value="Help"
+					onclick="popup('help/icmshelp.html','Help');">
+				Help
+			</button>
+			-->
+		</div>
+		
+		<form action="doEvent.php" method="post" id="theForm" onsubmit="return false;">
+			<div id="options">
+				<div id="showCal">
+					<table class="outer">
+						<tr">
+							<th style="vertical-align: top">
+								Event Management:
+							</th>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<input type="radio" name="showtype" value="addEvent"
+												   id="addEvent" class="launcher" checked="checked">
+										</td>
+										<td>
+											Add Calendar Event
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						
+						<tr>
+							<td>
+								&nbsp;
+							</td>
+						</tr>
+						
+						<tr>
+							<th style="vertical-align: top">
+								Show Calendar:
+							</th>
+							<td>
+								<table>
+									<tr>
+										<td>
+											<input type="radio" value="today" id="showToday"
+												   name="showtype">
+										</td>
+										<td>
+											Today
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<input type="radio" value="otherday"
+												   name="showtype" id="showOtherDay">
+										</td>
+										<td>
+											Another Day
+										</td>
+										<td>
+											<input type="text" name="anotherday" class="datepicker" id="anotherday"
+												   onfocus="$('#showOtherDay').attr('checked','checked'); $('#addevent').hide();">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<input type="radio" name="showtype" value="dayrange"
+												   id="showDayRange">
+										</td>
+										<td>
+											Range of Days
+										</td>
+										<td>
+											<input type="text" name="startdate" class="datepicker" class="range"
+												   id="startdate" onchange="$('#showDayRange').attr('checked','checked')"
+												   onfocus="$('#showDayRange').attr('checked','checked'); $('#addevent').hide();">
+										</td>
+										<td>
+											to
+										</td>
+										<td>
+											<input type="text" name="enddate" class="datepicker" class="range"
+												   id="enddate" onchange ="$('#showDayRange').attr('checked','checked')"
+												   onfocus="$('#showDayRange').attr('checked','checked'); $('#addevent').hide();">
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<input type="radio" name="showtype" value="showCase"
+												   id="showCase">
+										</td>
+										<td>
+											Calendar for Case
+										</td>
+										<td>
+											<input type="text" name="searchcase" id="searchcase"
+												   onchange ="validateCase($(this));"
+												   onfocus="$('#showCase').attr('checked','checked'); $('#addevent').hide();">
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+						
+
+						<tr>
+							<td>
+								<button class="button" id="formSubmit">Go!</button>
+							</td>
+						</tr>
+						
+						<div id="hiddenvars">
+							<input type="hidden" name="divs" id="divs" value="[% data.divs %]">
+						</div>
+					</table>
+				</div>
+			</div>
+		</form>
+		
+		<div id="addevent" style="display: none">
+			[% INCLUDE addEvent.tt %]
+		</div>
+			
+		</div>
+		
+		<div id="caldiv">
+			&nbsp;
+		</div>
+	</body>
+</html>

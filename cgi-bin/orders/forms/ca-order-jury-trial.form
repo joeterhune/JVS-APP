@@ -1,0 +1,14 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Order Jury Trial~ca-order-jury-trial~CA~period,edate,etime,courtroom,reserved~01~~~
+#
+FIELDS
+period~Trial Period~~TEXT~30~~~
+courtroom~Courtroom~~TEXT~10~~~
+reserved~How many days?~~TEXT~5~~~
+
+#
+#/nocheck
+USERTF
+FORM

@@ -1,0 +1,24 @@
+ORDER
+TR - Additional Time~tr-reqmoretime~TR,MO,CO~pay,school,commsrv,dddisp,payD6,clearD6,eduedate,more2,ddcity~01
+FIELDS
+USERTF
+FORM
+#include "tr-header.txt"
+
+\tORDER ON REQUEST FOR ADDITIONAL TIME
+
+\i<b>THIS CAUSE</b> came before the Court, in chambers, upon motion/request for additional
+\utime to 
+\i[ %pay% ] pay fines/costs.
+[ %school% ] attend and complete driving school. 
+[ %commsrv% ] complete community service.
+\uThe Court has reviewed the file.  It is hereby
+
+\i<b>ORDERED AND ADJUDGED</b> as follows:
+1.  The request for additional time is <b>%dddisp%</b>.
+\i[ %payD6% ]  The defendant shall pay the late fees.
+[ %clearD6% ]  Issue the D-6 in error, recall case from collections, and waive late fees.
+\u2.  The clerk shall extend the due date(s) to %eduedate%.
+%more2%
+\u
+#include "tr-doneandordered.txt"

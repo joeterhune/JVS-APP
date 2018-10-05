@@ -1,0 +1,78 @@
+#flagsDiv div {
+	margin-bottom: 5px;
+}
+
+#flagsDiv label {
+	position: relative;
+	font-weight: bold;
+	width: 150px;
+	float: left;
+}
+
+#flagsDiv input[type=text] {
+	float: none;
+	clear: both;
+}
+
+.flagrow {
+	position: relative;
+	left: 0px;
+}
+
+.flagrow input[type=checkbox] {
+	left: 0px;
+	position: absolute;
+}
+
+.flagrow span {
+	position: relative;
+	left: 50px;
+}
+
+.row-buffer {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.row-even {
+    background-color:#EEFFCC
+}
+.row-odd {
+    background-color:#DBFFB8;
+}
+.row-header {
+    background-color:#C8C8FF;
+    border: 1px solid blue;
+}
+
+tr.alreadyFlagged {
+    background-color: pink !important;
+}
+
+#listTable .case {
+    width: 14em;
+    text-align: center
+}
+
+#listTable .date {
+    width: 5em;
+    text-align: center
+}
+
+#listTable .narrow {
+    width: 5em;
+    text-align: center;
+}
+
+tr:nth-child(odd) {
+    background:#C0FFC0
+}
+
+tr:nth-child(even) {
+    background:#EEFFCC
+}
+
+.urlcase {
+    text-decoration: underline;
+    color: blue;
+}

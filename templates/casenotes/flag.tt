@@ -1,0 +1,150 @@
+<!-- $Id$ -->
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+            $(".datepicker").datepicker({
+                showOn: "both",
+                buttonImage: "/style/images/calendar.gif",
+                buttonImageOnly: true,
+                changeMonth: true,
+                changeYear: true,
+                dateFormat: "mm/dd/yy",
+                minDate: 0,
+                altField: '#expdate',
+                altFormat: 'yy-mm-dd'
+            });
+        });
+        
+        $(document).on('click','.showHiddenFlagTypes',function () {
+	        $('.hideflag').toggle();
+	        return false;
+	    });
+    </script>
+
+    <div class="h2">
+        Flag a Case
+    </div>
+
+    <form class="theform" id="addFlags-[% data.ucn %]" method="post" action="/casenotes/flag2.cgi">
+        <div>
+            <div class="flagsDiv" style="position: relative; width: 50%">
+                <div class="casenum">
+                    <label style="width:15%">Case Number</label>
+                    <input type="text" readonly="readonly" name="casenum" value="[% data.ucn %]" size="30"/>
+                </div>
+
+                <div class="userid">
+                    <label style="width:15%">User ID</label>
+                    <input type="text" name="user" readonly="readonly" size="12" value="[% data.userid %]"/>
+                </div>
+
+                <div class="flagdate">
+                    <label style="width:15%">Date</label>
+                    <input type="text" name="dateval" readonly="readonly" size="12" value="[% data.today %]"/>
+                </div>
+
+                <div class="flagtypes">
+                    <label style="width: 0px">Flag</label>
+                    <div class="flaglist" style="position: relative; left: 8em; min-height: 4em">
+                        [% FOREACH flagtype IN data.flagTypes %]
+                            [% current = -1 %]
+                            [% index = 0 %]
+                            [% WHILE index <= data.currentFlags.size %]
+                                [% IF flagtype.FlagType == data.currentFlags.$index.FlagType %]
+                                    [% current = index %]
+                                [% END %]
+                            [% LAST IF current >= 0 %]
+                            [% index = index + 1 %]
+                        [% END %]
+
+                        [% IF (! flagtype.display) && (current < 0) %]
+                        <div class="flagrow hideflag" style="display: none">
+                        [% ELSE %]
+                        <div class="flagrow">
+                        [% END %]
+                            <input type="checkbox" class="flagCheck" name="flagtype" value="[% flagtype.FlagType %]"
+                            [% IF current >= 0 %] checked="checked" disabled="disabled" [% END %]/>
+                                <span>[% flagtype.FlagDesc %]</span>
+                                [% IF current >= 0 %]
+                                <br/>
+                                <span style="margin-left: 1em; font-style: italic; color: blue; font-size: 70%">
+                                    (already set by
+                                    [% data.currentFlags.$current.FlagUser %] on
+                                    [% data.currentFlags.$current.FlagDate %])
+                                </span>
+                                [% IF data.currentFlags.$current.Expires %]
+                                <span style="margin-left: 1em; font-style: italic; color: red; font-size: 70%">
+                                    (expires on [% data.currentFlags.$current.Expires %])
+                                </span>
+                                [% END %]
+                                [% END %]
+
+                        </div>
+                            [% END %]
+                        </div>
+                    </div>
+
+            <div>
+                <input type="hidden" class="division" name="division" value="[% data.division %]"/>
+
+                <button class="flagSubmit">Submit Flags</button>&nbsp;&nbsp;&nbsp;
+                <!--<button class="flagCancel">Cancel</button>-->
+            </div>
+
+
+        <div style="position: absolute; top: 0px; left: 110%; min-height: 100px; width: 90%;">
+            <div class="info" style="z-index: 10; padding: 10px; text-align: center; border: 1px solid green; position: relative; top: 0px; left: 0px; min-height: 100px;">
+                <span style="font-weight: bold; color: red">NOTE:</span>
+                <br/>
+                We've hidden some flags that are not likely to apply to your case type.
+                To show all of the available flag types, please click the button:
+                <br/>
+                <button class="showHiddenFlagTypes" style="margin-top: 10px">Toggle Hidden Types</button>
+            </div>
+
+            <br/>
+
+            <div style="z-index: 10; padding: 10px; text-align: center; border: 1px solid green; position: relative; top: 0px; left: 0px; min-height: 100px;">
+                <span style="font-weight: bold; color: red">Set Flag Expiration?</span>
+                <br/>
+                You can choose to set an expiration on the flags that you're setting here (this will not affect existing flags).
+                Flags that have a set expiration date will automatically be cleared when that date is reached.
+
+                <div style="margin-top: 1em;" class="expire">
+                    <span style="font-weight: bold">Expire these flags:</span>
+                    <div style="border: 1px solid red; text-align: left">
+                        <div>
+                            <input type="radio" name="exptype" value="never" checked="checked"/>Don't expire
+                        </div>
+                        <div>
+                            <input type="radio" name="exptype" class="expradio" value="xtime"/>In
+                            <input type="text" class="timecount expval" name="timecount" style="width: 3em"/>
+                            <select name="timetype" class="expval">
+                                <option value="days" selected="selected">days</option>
+                                <option value="weeks">weeks</option>
+                                <option value="months">months</option>
+                            </select>
+                            from today.
+                        </div>
+                        <div>
+                            <input type="radio" name="exptype" class="expradio" value="ondate"/>On specific date
+                            <input type="text" class="datepicker expval localexpdate" name="localexpdate"/>
+                            <input type="hidden" name="expdate" class="expdate"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <br/>
+
+            <div style="z-index: 10; padding: 10px; text-align: center; position: relative; top: 0px; left: 0px; min-height: 100px;">
+                <button class="flagSubmit">Submit Flags</button>&nbsp;&nbsp;&nbsp;
+                <!--<button class="flagCancel">Cancel</button>-->
+            </div>
+
+        </div>
+    </div>
+    </div>
+    <input type="hidden" name="division" id="division" value="[% data.division %]"/>
+    </form>

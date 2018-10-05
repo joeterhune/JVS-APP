@@ -1,0 +1,9 @@
+.dayappt { width: 300px; }
+.daytime { border-style: solid }
+
+.daycal { display: table; }
+.dayrow { display: table-row; }
+
+TD.time {  border:solid 1px black }
+TD.biz {  border:solid 1px black; display: table-cell; background-color: #EEFFEE; width: 100%; height:18px; }
+TD.nonbiz {  border:solid 1px black; display: table-cell; background-color: #DDFFDD; width: 100%; height:18px; }

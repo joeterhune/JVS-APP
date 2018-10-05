@@ -1,0 +1,20 @@
+ORDER
+#
+#  ALL divisions may use this form.
+FCM Order of Referral to General Magistrate~fcm-order-refer-general-magistrate~DR~issue1,magistrate,ddallcities~01
+#
+FIELDS
+issue1~Issue:~~TEXT~50~<small>(the issue for line 1)</small>~~~
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

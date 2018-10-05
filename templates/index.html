@@ -1,0 +1,169 @@
+[% INCLUDE "header.html" %]
+
+
+    <div id="search">
+        <span class="h2">
+            Circuit-Wide Search
+        </span>
+        
+        <form action="/cgi-bin/search.cgi" method="post" id="searchform">
+        
+        <div id="namesearch" style="margin-top: 10px; height: 125px">
+            <label>
+                Name or Case #:
+            </label>
+            <div class="searchfield">
+                <input type="text" name="name" />
+                
+                <label class="searchopt">
+                    <input type="checkbox" name="soundex" />
+                    'Sounds Like' Name Search
+                </label>
+                
+                <label class="searchopt">
+                    <input type="checkbox" name="business" />
+                    Business Names Only
+                </label>
+                
+                <label class="searchopt">
+                    <input type="radio" name="searchtype"
+                           value="regular" checked="checked" />
+                    All Party Search
+                </label>
+                
+                <label class="searchopt">
+                    <input type="radio" name="searchtype"
+                           value="attorney" />
+                    Attorney Party Search
+                </label>
+                
+                <label class="searchopt">
+                    <input type="radio" name="searchtype"
+                           value="defendant" />
+                    Defendant Party Search
+                </label>
+                
+                <label class="searchopt">
+                    <input type="checkbox" name="photos" />
+                    Show Booking Photos
+                </label>
+            </div>
+            <div>
+                <input type="submit" name="gosearch" value="Search" />
+            </div>
+        </div>
+        
+        <div id="citationsearch" style="margin-top: 20px; height: 100px">
+            <label>
+                Citation #:
+            </label>
+            <div class="searchfield">
+                <input type="text" name="citation" />
+                
+                <label class="searchopt">
+                    <input type="checkbox" name="active" />
+                    Active Cases Only
+                </label>
+                
+                <label class="searchopt">
+                    <input type="checkbox" name="charges" />
+                    Show Charge Information
+                </label>
+                
+                <label class="searchopt">
+                    <input id="crimonly" type="checkbox" name="criminal"
+                           onchange="toggleOpposite('crimonly','civonly')"/>
+                    Criminal and Traffic Cases Only
+                </label>
+                
+                <label class="searchopt">
+                    <input id="civonly" type="checkbox" name="nocriminal"
+                           onchange="toggleOpposite('civonly','crimonly')" />
+                    Civil Cases Only
+                </label>
+            </div>
+            <div>
+                <input type="submit" name="gosearch" value="Search" />
+            </div>
+        </div>        
+                
+        </form>
+        
+      <div id="flaggedsearch" class="link">
+        <a href="flaggedcases.php">
+            Flagged Case Search
+        </a>
+      </div>
+
+      <div id="pbsolookup" class="link">
+        <a href="pbso/pbsolookup.php">
+            PBSO Search
+        </a>
+      </div>
+        
+    </div>
+
+    <div id="judgereports" class="report">
+        <span class="h2">
+            Judge Reports
+        </span>
+        <form id="judgereport" action="judge.php" method="post">
+        <div id="judgeselect">
+            <select name="judgexy" class="reports">
+                [% FOREACH judge IN data.judges %]
+                <option value="[% judge.divs %]">[% judge.name %]</option>
+                [% END %]
+            </select>
+            <input type="submit" name="judgereport" value="Search" />
+        </div>
+        </form>
+    </div>
+
+    <div id="divreports" class="report">
+        <span class="h2">
+            Division Reports
+        </span>
+        <form id="divreport" action="gensumm.php" method="post">
+        <div id="divselect">
+            <select name="divxy" class="reports">
+                [% FOREACH division IN data.divisions %]
+                <option value="[% division.divs %]">[% division.name %]</option>
+                [% END %]
+            </select>
+            <input type="submit" name="divreport" value="Search" />
+        </div>
+        </form>
+        
+        <div id="crimdivs" class="reportlink">
+            <a href="alldivs.php">
+                All Criminal Divisions
+                </a>
+        </div>
+
+        <div id="civdivs" class="reportlink">
+            <a href="allcivdivs.php">
+                All Civil Divisions
+            </a>
+        </div>
+    </div>
+    
+    <div id="flaggedcases" class="report">
+        <span class="h2">
+            Flagged Case Reports
+        </span>
+        <form id="flaggedcasereport" action="gensumm.php" method="post">
+        <div id="flagselect">
+            <select name="flagxy" class="reports">
+                [% FOREACH flag IN data.flags %]
+                <option value="[% flag.flagtype %]">[% flag.name %]</option>
+                [% END %]
+            </select>
+            <input type="submit" name="flag" value="Search" />
+        </div>
+        </form>
+    </div>
+
+    [% INCLUDE "disclaimer.html" %]
+
+    </body>
+</html>

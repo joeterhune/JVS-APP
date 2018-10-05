@@ -1,0 +1,31 @@
+<p>
+    Case number 
+    [% IF data.icms_user == '1' %]
+    	<a href="https://jvs.15thcircuit.com/cgi-bin/search.cgi?name=[% data.CaseNumber %]">[% data.CaseNumber %]</a> 
+    [% ELSE %]
+    	[% data.CaseNumber %]
+    [% END %]	
+    is on your watchlist.
+</p>
+
+<p>
+    The following new documents have been filed in this case:
+</p>
+
+<table style="border: 1px solid black">
+    <thead>
+        <tr style="background-color: lightblue">
+            <th style="border: 1px solid black; text-align: left">Docket Code</th>
+            <th style="border: 1px solid black; text-align: left">Docket Description</th>
+        </tr>
+    </thead>
+    [% FOREACH doc IN data.docs %]
+    <tbody>
+        <tr>
+            <td style="border: 1px solid black;">[% doc.DocketCode %]</td>
+            <td style="border: 1px solid black;">[% doc.DocketDescription %]</td>
+        </tr>
+    </tbody>
+    [% END %]
+</table>
+

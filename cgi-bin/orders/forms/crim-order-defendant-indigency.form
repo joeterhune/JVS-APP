@@ -1,0 +1,23 @@
+ORDER
+Order on Defendant's Indigency for Costs~crim-order-defendant-indigency~CF~motion,motiondate,approveDeny,denyReason,ddallcities~01~MND
+FIELDS
+# name~description~cookie~type~length~comment~choices~initval
+motion~Motion~~TEXT~100~~~
+motiondate~Date of Motion~ICMS_EDATE~DATE~15~<small>(format you would like to appear on form)</small>
+approveDeny~Granted/Denied~~DROPDOWN~~~:Granted:Denied:
+denyReason~Reason for Denial~~DROPDOWN~~~:No affidavit filed:Not indigent:
+
+#
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+#/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

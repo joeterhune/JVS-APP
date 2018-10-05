@@ -1,0 +1,220 @@
+tr.canceled  {
+	background-color: yellow !important;
+	text-decoration: line-through;
+}
+
+td.canceled  {
+	background-color: yellow !important;
+	text-decoration: line-through;
+}
+
+tr.updated  {
+	background-color: orange !important;
+}
+
+td.updated  {
+	background-color: orange !important;
+}
+
+/* filter row */
+.tablesorter-filter-row td {
+  background: #eee;
+  line-height: normal;
+  text-align: center; /* center the input */
+  -webkit-transition: line-height 0.1s ease;
+  -moz-transition: line-height 0.1s ease;
+  -o-transition: line-height 0.1s ease;
+  transition: line-height 0.1s ease;
+}
+/* optional disabled input styling */
+.tablesorter-filter-row .disabled {
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+  cursor: not-allowed;
+}
+
+/* hidden filter row */
+.tablesorter-filter-row.hideme td {
+  /*** *********************************************** ***/
+  /*** change this padding to modify the thickness     ***/
+  /*** of the closed filter row (height = padding x 2) ***/
+  padding: 2px;
+  /*** *********************************************** ***/
+  margin: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+.tablesorter-filter-row.hideme .tablesorter-filter {
+  height: 1px;
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  /* don't use visibility: hidden because it disables tabbing */
+  opacity: 0;
+  filter: alpha(opacity=0);
+}
+
+/* filters */
+.tablesorter-filter {
+  width: 95%;
+  height: inherit;
+  margin: 4px;
+  padding: 4px;
+  background-color: #fff;
+  border: 1px solid #bbb;
+  color: #333;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-transition: height 0.1s ease;
+  -moz-transition: height 0.1s ease;
+  -o-transition: height 0.1s ease;
+  transition: height 0.1s ease;
+}
+
+table.docketOther {
+	width: 90%;
+	position: relative;
+	left: 0px;
+}
+
+table.docketOther th {
+	border: none;
+	font-weight: bold;
+	width: 14em;
+	vertical-align: top;
+	margin-top: 0px;
+	padding-top: 0px;
+}
+
+table.docketOther td {
+	vertical-align: top;
+	margin-top: 0px;
+}
+
+table.trafficDocket tr {
+	border: 1px solid
+}
+
+tr.aggressive {
+	background-color: #FF3399 !important;
+}
+
+tr.cdl {
+	background-color: #FFFF66 !important;
+}
+
+tr.InProcess {
+	background-color: #66FFFF !important;
+}
+
+tr.Processed {
+	background-color: #D7D7DD !important;
+}
+
+td.plus6 {
+	color: green
+}
+
+td.plus10 {
+	color: blue
+}
+
+td.plus15 {
+	color: purple
+}
+
+td.plus20 {
+	color: red
+}
+
+td.plus30 {
+	color: red;
+	font-weight: bold;
+}
+
+td.spacer {
+	width: 4em;
+	border: none;
+}
+
+.datecol {
+	width: 6em;
+}
+
+table.summary tr.even {
+    background-color:#EEFFCC
+}
+table.summary tr.odd {
+    background-color:#DBFFB8;
+	/*background-color:#FFFFFF*/
+}
+
+button.docketForm {
+	min-width: 15em;
+}
+
+#listTable {
+	font-size: 90%;
+	width: 100%;
+}
+
+.link {
+	text-align: center;
+	max-width: 8em;
+}
+
+.widelink {
+	text-align: center;
+	max-width: 15em;
+}
+
+.lawFirm {
+	max-width: 15em;
+}
+
+.judge {
+	max-width: 5em;
+}
+
+.caseStyle {
+	max-width: 15em;
+}
+
+.timeDate {
+	max-width: 6em;
+	text-align: center;
+}
+
+.code {
+	max-width: 6em;
+	text-align: center;
+}
+
+.contact {
+	max-width: 15em;
+	word-wrap: break-word;
+}
+
+.eventDesc {
+	max-width: 10em;
+	word-wrap: break-word;
+}
+
+.hideCol {
+	cursor: pointer;
+	color: blue;
+	text-decoration: underline;
+}
+
+.showCol {
+	cursor: pointer;
+	color: red;
+	text-decoration: underline;
+}
+
+.pqueue {
+    background-color: yellow !important;
+}
+

@@ -1,0 +1,10 @@
+ORDER
+Baker Act Outpatient Report~mh-outpatient-report~MH~edate,etime,facility,reporton,magistrate~01
+#
+FIELDS
+facility~Facility:~~TEXT~50~~~
+reporton~Report on Petition For:~~DROPDOWN~~~Involuntary Outpatient Placement:Continued Involuntary Outpatient Placement:Status Conference Hearing Order:Show Cause Hearing Order~
+/nocheck
+#
+USERTF
+FORM

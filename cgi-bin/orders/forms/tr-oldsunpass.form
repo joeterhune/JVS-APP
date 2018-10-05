@@ -1,0 +1,21 @@
+ORDER
+TR - Sunpass Case Order~tr-oldsunpass~TR,MO,CO~occurred,hearing,ddcity~01
+FIELDS
+occurred~Violation Date~~TEXT~15
+hearing~Hearing Date~~TEXT~15
+USERTF
+FORM
+#include "tr-header.txt"
+
+\tORDER SETTING HEARING
+
+\i<b>THIS CAUSE</b> came before the Court, in chambers, pursuant to Administrative Order
+\u10.407.  The above listed citation is a toll viloation (SunPass) for an alleged violation that occurred in %occurred%, in which the defendant entered an untimely not guilty plea and subsequently paid the late fees and D-6 clearance fees.  The defendant now seeks a hearing in this case.  The Court has reviewed the file and being advised of the facts and law contained therein, it is hereby
+
+\i<b>ORDERED AND ADJUDGED</b> as follows:
+
+1.\iThe above case is scheduled for a hearing on %hearing%, at 1:00 p.m. in Courtroom 9 in the South County Courthouse, 200 W. Atlantic Avenue, Delray Beach, FL 33444.  At this hearing, the court will determine whether the defendant and the state (F.D.O.T.) can amicably resolve this case without a hearing.  If the case cannot be amicably resolved between the state and the defendant at that time, the court will conduct an evidentiary hearing to determine whether the state has been prejudiced by the delay caused by the defendant and whether they are able to proceed to trial on this old case.  If the state is able to proceed to trial, then the trial will take place on %hearing% at 1:00 p.m. immediately after the evidentiary hearing.  If the state is unable to proceed to trial due to the prejudice caused by the defendant (pursuant to Florida Rule of Traffic Court 6.600), the court will determine the terms in which the defendant must pay out the citation(s) at that time.
+\u
+\u
+#include "tr-doneandordered.txt"
+F.D.O.T. (SunPass toll officer)

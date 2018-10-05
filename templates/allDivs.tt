@@ -1,0 +1,24 @@
+<div style="padding-left:1%">
+	<div class="h1">
+	    All [% data.type %] Divisions
+	</div>
+	
+	[% FOREACH courtType IN data.divlist %]
+	<div>
+	    <div class="h2">
+	        [% courtType.type %]
+	    </div>
+	    <div>
+	        <ul>
+	            [% FOREACH division IN courtType.divs %]
+	            <li>
+	                <a href="/gensumm.php?rpath=/Palm/[% data.pathpart %]/div[% division.DivisionID %]/index.txt&divName=[% division.DivisionID %]">
+	                    [% division.DivisionID %]
+	                </a>
+	            </li>
+	            [% END %]
+	        </ul>
+	    </div>
+	</div>
+	[% END %]
+</div>

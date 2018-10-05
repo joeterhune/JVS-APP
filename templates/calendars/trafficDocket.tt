@@ -1,0 +1,144 @@
+<script type="text/javascript">
+    var refreshCal = setInterval(doRefresh, 10000);
+    
+    $(document).ready(function () {
+        
+        $(document).on('click', '.imageLink', function() {
+	        var pane = $(this).closest('.caseTab');
+	        var ucn = $(this).attr('data-casenum');
+	        var ucnobj = $(this).attr('data-ucnobj');
+	        var caseid = $(this).attr('data-caseid');
+	        var tabTitle = $(this).attr('data-docname');
+	        var parentTab = $(this).attr('data-parentTab');
+	        var showTif = $(this).attr('data-showTif');
+	        if(showTif == 1){
+	        	showTif = "&showTif=1";
+	        }
+	        else{
+	        	showTif = "";
+	        }
+	        if (parentTab == undefined) {
+	            parentTab = $(this).closest('.caseTab').attr('id');
+	        }
+	        var pieces = ucnobj.split("|");
+	        var objID = pieces[1];
+	        var tabname = parentTab + '-' + objID;
+	        
+	        window.open('/cgi-bin/image-new.cgi?ucn=' + ucn + '&objid=' + objID +'&caseid=' + caseid + showTif, '_blank');
+	        return true;
+	    });
+    });
+</script>
+
+
+<div style="text-align: center">
+	<span style="font-weight: bold; font-size: 1.25em">Pending/In-Process Cases Remaining:</span>
+	<span style="font-weight: bold; font-size: 1.25em; color: red;" id="pendCount"></span>
+</div>
+
+<table id="trafficDocket" class="summary trafficDocket tablesorter" style="width: 100%">
+    <thead>
+        <tr class="title">
+            <th class="filter-select" data-placeholder="Select" style="width: 8em">Status</th>
+            <th class="filter-select" data-placeholder="Select" style="min-width: 5em">Time</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 15em">Defendant</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 20em">Charges</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 15em">Attorney</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 15em">Officer</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 15em">Witnesses</th>
+            <th class="filter-select" data-placeholder="Select" style="width: 9em">Accident</th>
+            <th>Speed</th>
+            <th>Affidavit of Defense</th>
+			<th>Last Notice of Hearing</th>
+            <th>Citation</th>
+        </tr>
+    </thead>
+    <tbody>
+        [% FOREACH hearing IN data.events %]
+        <tr class="citationRow [% hearing.RowClass %] [% hearing.ICPClass %]" id="[% hearing.CourtEventID %]">
+            <input type="hidden" class="casenum" value="[% hearing.CaseNumber %]"/>
+            <td style="width: 8em" class="icp">
+                [% hearing.ICPStatus %]
+            </td>
+            <td style="min-width: 5em">
+                [% hearing.CourtEventTime %]
+            </td>
+            <td style="width: 10em">
+                <input type="hidden" class="eventID" value="[% hearing.CourtEventID %]"/>
+                <a class="caseLink" data-casenum="[% hearing.CaseNumber %]">
+                    [% hearing.Defendant %]
+                </a>
+            </td>
+            <td style="width: 10em">
+                [% FOREACH charge IN hearing.Charges %]
+                [% charge.CourtStatuteDescription%]<br/>
+                [% END %]
+            </td>
+            
+            <td style="width: 15em">
+                [% IF hearing.Attorneys %]
+                    [% FOREACH attorney IN hearing.Attorneys %]
+                        [% attorney %]<br/>
+                    [% END %]
+                    [% ELSE %]
+                        Pro Se
+                    [% END %]
+            </td>
+            <td style="width: 15em">
+                [% hearing.OfficerName %]
+            </td>
+            <td style="width: 15em">
+                [% IF hearing.Witnesses %]
+                    [% FOREACH witness IN hearing.Witnesses %]
+                        [% witness %][% IF ! loop.last %]<br/>[% END %]
+                        [% END %]
+                        [% ELSE %]
+                            N/A
+                        [% END %]
+            </td>
+            
+            <td style="width: 9em; text-align: center">
+                [% hearing.Charges.0.Citation.0.Crash %]
+            </td>
+
+            <td class="[% hearing.SpeedClass %]" style="text-align: center">
+                [% IF hearing.Charges.0.Citation.0.ActualSpeed %]
+                [% hearing.Charges.0.Citation.0.ActualSpeed %] / [% hearing.Charges.0.Citation.0.PostedSpeed %]
+                <br/>([% hearing.Charges.0.Citation.0.Variance %])
+                [% ELSE %]
+                    &nbsp;
+                [% END %]
+            </td>
+            
+            [% IF hearing.AODF.ObjectID %]
+				<td style="text-align: center">
+	                <a class="showAODF" data-docname="[% hearing.Defendant %] - Affidavit of Defense" data-parentTab="searchtop"
+	                   data-obj="[% hearing.AODF.ObjectID %]" data-caseid="[% hearing.CaseID %]"
+	                   data-casenum="[% hearing.CaseNumber %]">Image</a></td>
+			[% ELSE %]
+				<td>&nbsp;</td>
+			[% END %]
+            
+            [% IF hearing.LastNOH.ObjectID %]
+				<td style="text-align: center">
+	                <a class="showNOH" data-docname="[% hearing.Defendant %] - Notice of Hearing" data-parentTab="searchtop"
+	                   data-obj="[% hearing.LastNOH.ObjectID %]" data-caseid="[% hearing.CaseID %]"
+	                   data-casenum="[% hearing.CaseNumber %]">Image</a></td>
+			[% ELSE %]
+				<td>&nbsp;</td>
+			[% END %]
+            
+            <td style="text-align: center; width: 7em">
+                <a class="showRecord" data-casenum="[% hearing.CaseNumber %]"
+                   data-docname="[% hearing.Defendant %] - Record and Citation"
+                   title="Click to show Citation and Driver History">
+                    [% hearing.Charges.0.Citation.0.CitationNumber %]
+                </a>
+                
+            </td>
+        </tr>
+        [% END %]
+    </tbody>
+    <input type="hidden" id="hadTraffic" class="hadTraffic" value="1"/>
+</table>
+

@@ -1,0 +1,433 @@
+<script src="/javascript/settings.js?1.2" type="text/javascript"></script>
+<script type="text/javascript">
+    
+    var HASWORKQUEUE=1;
+
+function FixSharedList() {
+    // now fix the sharedlist (visible list)
+    // to match shared_with...in case it is wrong
+    var str='';
+    var sty='<span style="background-color:lightgrey;padding: 0px 4px 0px 4px">';
+    var x=$("#shared_with").val().split(',');
+    
+    for (i=0;i<x.length;i++) {
+        for (j=0;j<users.length;j++) {
+            if (users[j].userid==x[i]) {
+                if ((str != undefined) && (str != "")) {
+                    str+=" "+sty+users[j].fullname+'</span>';
+                } else {
+                    str=sty+users[j].fullname+'</span>';
+                }
+            }
+        }
+    }
+    for (i=0;i<x.length;i++) {
+        for (j=0;j<divs.length;j++) {
+            if (divs[j].divid==x[i]) {
+                if ((str != undefined) && (str != "")) {
+                    str+=" "+sty+divs[j].fullname+'</span>';
+                } else {
+                    str=sty+divs[j].fullname+'</span>';
+                }
+            }
+        }
+    }
+    $("#sharedlist").html(str);
+}
+
+function FixPNSharedList() {
+    // now fix the sharedlist (visible list)
+    // to match shared_with...in case it is wrong
+    var str='';
+    var sty='<span style="background-color:lightgrey;padding: 0px 4px 0px 4px">';
+    var x=$("#priv_notes_shared_with").val().split(',');
+    
+    for (i=0;i<x.length;i++) {
+        for (j=0;j<users.length;j++) {
+            if (users[j].userid==x[i]) {
+                if ((str != undefined) && (str != "")) {
+                    str+=" "+sty+users[j].fullname+'</span>';
+                } else {
+                    str=sty+users[j].fullname+'</span>';
+                }
+            }
+        }
+    }
+    $("#privnoteslist").html(str);
+}
+
+function FixTransferList() {
+    // now fix the sharedlist (visible list)
+    // to match transfer_to...in case it is wrong
+    var str='';
+    var sty='<span style="background-color:lightgrey;padding: 0px 4px 0px 4px">';
+    var x=$("#transfer_to").val().split(',');
+    
+    for (i=0;i<x.length;i++) {
+        for (j=0;j<users.length;j++) {
+            if (users[j].userid==x[i]) {
+                if ((str != undefined) && (str != "")) {
+                    str+=" "+sty+users[j].fullname+'</span>';
+                } else {
+                    str=sty+users[j].fullname+'</span>';
+                }
+            }
+        }
+    }
+    for (i=0;i<x.length;i++) {
+        for (j=0;j<divs.length;j++) {
+            if (divs[j].divid==x[i]) {
+                if ((str != undefined) && (str != "")) {
+                    str+=" "+sty+divs[j].fullname+'</span>';
+                } else {
+                    str=sty+divs[j].fullname+'</span>';
+                }
+            }
+        }
+    }
+    $("#transferlist").html(str);
+}
+
+
+function DelUserFromShared() {
+
+}
+
+// workflow user list for sharing queues...
+var users=[[% FOREACH user IN data.users %]
+        { userid: '[% user.userid %]', fullname: '[% user.name %]' }[% IF user.index != user.max %], [% END %][% END %]
+           ];
+           
+var divs=[
+		[% FOREACH divid IN data.divlist.keys %]
+			[% divrec = data.divlist.$divid %]
+			[% IF divrec.CustomQueue == '0' %]
+				[% dFullName = divrec.CourtType _ " Division "_ divrec.DivisionID %]
+			[% ELSE %]
+				[% dFullName = divrec.CourtType %]
+			[% END %]
+        	{ divid: '[% divrec.DivisionID %]', fullname: '[% dFullName %]' }[% IF divid.index != user.max %], [% END %][% END %]
+        ];
+
+        
+$().ready(function() {
+    $("#set tr:odd").addClass('alternate'); // zebra stripes em.. css("background","#ccc");
+    $("#opt tr:odd").addClass('alternate');
+    $('.allck').click(checkall);
+    $('#save').on( 'click', function() {
+    	SaveSettings();
+    	return false;
+    });
+    UpdatePDFOptions();
+    FixSharedList();
+    FixPNSharedList();
+    FixTransferList();
+    $('.addDiv').click(SettingsNewDivAdd);
+    
+    
+    $(".sharedadd").click(function() {
+        var newval=$("#sharedselect").val();
+        
+        if (newval=='') {
+            return;
+        }
+        
+        var x=$("#shared_with").val();
+        if (x!="") {
+            if (x.search(newval)==-1) { // keeps you from adding twice
+                x+=","+newval;
+            }
+        } else {
+            x=newval;
+        }
+        $("#shared_with").val(x);
+        FixSharedList();
+        return true;
+    });
+    
+    $('.shareddel').click(function () {
+        var todelete = $("#sharedselect").val();
+        if (todelete=='') {
+            return;
+        }
+        
+        var x = $("#shared_with").val();
+        var xarr=x.split(',');
+        var str='';
+        for (i=0;i<xarr.length;i++) {
+            if (xarr[i]!=todelete) {
+                if (str!="") {
+                    str+=","+xarr[i];
+                } else {
+                    str=xarr[i];
+                }
+            }
+        }
+        $("#shared_with").val(str);
+        FixSharedList();
+    });
+    
+    $(".pnsharedadd").click(function() {
+        var newval=$("#privnotessharedselect").val();
+        
+        if (newval=='') {
+            return;
+        }
+        
+        var x=$("#priv_notes_shared_with").val();
+        if (x!="") {
+            if (x.search(newval)==-1) { // keeps you from adding twice
+                x+=","+newval;
+            }
+        } else {
+            x=newval;
+        }
+        $("#priv_notes_shared_with").val(x);
+        FixPNSharedList();
+        return true;
+    });
+    
+    $('.pnshareddel').click(function () {
+        var todelete = $("#privnotessharedselect").val();
+        if (todelete=='') {
+            return;
+        }
+        
+        var x = $("#priv_notes_shared_with").val();
+        var xarr=x.split(',');
+        var str='';
+        for (i=0;i<xarr.length;i++) {
+            if (xarr[i]!=todelete) {
+                if (str!="") {
+                    str+=","+xarr[i];
+                } else {
+                    str=xarr[i];
+                }
+            }
+        }
+        $("#priv_notes_shared_with").val(str);
+        FixPNSharedList();
+    });
+    
+    $(".tlsharedadd").click(function() {
+        var newval=$("#transfer_to_select").val();
+        
+        if (newval=='') {
+            return;
+        }
+        
+        var x=$("#transfer_to").val();
+        if (x!="") {
+            if (x.search(newval)==-1) { // keeps you from adding twice
+                x+=","+newval;
+            }
+        } else {
+            x=newval;
+        }
+        $("#transfer_to").val(x);
+        FixTransferList();
+        return true;
+    });
+    
+    $('.tlshareddel').click(function () {
+        var todelete = $("#transfer_to_select").val();
+        if (todelete=='') {
+            return;
+        }
+        
+        var x = $("#transfer_to").val();
+        var xarr=x.split(',');
+        var str='';
+        for (i=0;i<xarr.length;i++) {
+            if (xarr[i]!=todelete) {
+                if (str!="") {
+                    str+=","+xarr[i];
+                } else {
+                    str=xarr[i];
+                }
+            }
+        }
+        $("#transfer_to").val(str);
+        FixTransferList();
+    });
+});
+
+</script>
+
+[% userid = data.username %]
+
+<div style="float: right">
+    <a class="helpLink" data-context="settings">
+        <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+    </a>
+</div>
+
+<div style="padding-left:2%">
+    
+    <h3>User Settings</h3>
+    
+    <p>
+        <button class="saveSettings" id="save" type="button">Save</button>
+    </p>
+    
+    
+    <div class="settings">
+        
+        <div>
+            <p>
+                <span style="font-weight: bold">Group Memberships:</span>
+                [% FOREACH group IN data.groups.keys %]
+                    <span style="background-color:#ccFFcc;padding: 2pt;">[% group %]</span>
+                [% END %]
+            </p>
+            <p>
+                <div style="width:500px; font-style: italic">
+                    Your account is currently a member of the security groups listed above. If you need additional
+                    access, please contact your technical support staff.
+                </div>
+            </p>
+        </div>
+        
+        <h3>Options</h3>
+        <div style="width:500px">
+            Share Queue With:
+            <span id="sharedlist"></span>
+            <br/>
+            <input type="hidden" id="shared_with" name="shared_with" value="[% data.shared_with %]"/>
+            <select id="sharedselect" style="font-size:10pt">
+                <option value="">Select</option>
+                [% FOREACH user IN data.users %]
+                	[% IF user.userid != data.thisUser %]
+                		<option value="[% user.userid %]">
+                			[% user.name %]
+                		</option>
+                	[% END %]
+                [% END %]
+            </select>
+            <button type="button" class="sharedadd">Add</button>
+            <button type="button" class="shareddel">Delete</button>
+            
+            <br/>
+            <br/>
+            
+            Share Private Notes With:
+            <span id="privnoteslist"></span>
+            <br/>
+            <input type="hidden" id="priv_notes_shared_with" name="priv_notes_shared_with" value="[% data.priv_notes_shared_with %]"/>
+            <select id="privnotessharedselect" style="font-size:10pt">
+                <option value="">Select</option>
+               	[% FOREACH user IN data.users %]
+                	[% IF user.userid != data.thisUser %]
+                		<option value="[% user.userid %]">
+                			[% user.name %]
+                		</option>
+                	[% END %]
+                [% END %]
+            </select>
+            <button type="button" class="pnsharedadd">Add</button>
+            <button type="button" class="pnshareddel">Delete</button>
+            
+            <br/>
+            <br/>
+            
+            Transfer Queue Items To:
+            <span id="transferlist"></span>
+            <br/>
+            <input type="hidden" id="transfer_to" name="transfer_to" value="[% data.transfer_to %]"/>
+            <select id="transfer_to_select" style="font-size:10pt">
+                <option value="">Select</option>
+                [% FOREACH divid IN data.divlist.keys.sort %]
+	            	<option value="[% divid %]">[% divid %] ([% data.divlist.$divid.CourtType %])</option>
+	            [% END %]
+                [% FOREACH user IN data.users %]
+                	<option value="[% user.userid %]">
+                		[% user.name %]
+                	</option>
+                [% END %]
+            </select>
+            <button type="button" class="tlsharedadd">Add</button>
+            <button type="button" class="tlshareddel">Delete</button>
+        
+        <table id="opts">
+<!--            <tr>
+                <td style="width: 60%">Calendar Drag & Drop</td>
+                <td width='40%'><input type=checkbox id='opt_cal_dragdrop' value='1' $opt_checked></td>
+            </tr>-->
+        </table>
+        </div>
+        
+        <h3>Subscriptions</h3>
+        <div style="width:500px; font-style: italic">
+            Check the appropriate boxes for the divisions you desire. Checking and un-checking the All box at the end selects
+            or un-selects all the features for that division. If you don't have permissions to a division it will
+            appear <span style="color:grey">greyed out</span>.</i>
+        </div>
+    
+        [% subs = data.subscriptions.keys %]
+        [% IF subs.size == 0 %]
+        <p style="font-weight: bold">You are not currently subscribed to any divisions.</p>
+        [% ELSE %]
+        <table id="setsubs">
+            <thead>
+                <tr>
+                    <th style="width: 6em">Division</th>
+                    <th>Description</th>
+                    <th></th>
+                    <!--<th class="cbCol">Calendar</th>-->
+                    <th class="cbCol">Reports</th>
+                    <th class="cbCol">Queues</th>
+                    <!--<th class="cbCol">Alerts</th>-->
+                    <th class="cbCol">All</th>
+                </tr>
+            </thead>
+            <tbody>
+                [% FOREACH divid IN data.subscriptions.keys.sort %]
+                <tr>
+                    <td>[% divid %]</td>
+                    <td>
+                    	[% IF data.divlist.$divid.CustomQueue == '0' %]
+                    		[% data.divlist.$divid.CourtType %] Division [% divid %]
+                    	[% ELSE %]
+                    		[% data.divlist.$divid.CourtType %] 
+                    	[% END %]
+                    </td>
+                    <td align="center"></td>
+                    <!--<td align="center">
+                        <input class="subChk" id="cal[% divid %]" type="checkbox" [% IF data.subscriptions.$divid.calendars %]checked="checked"[% END %]/>
+                    </td>-->
+                    <td align="center">
+                    	[% IF data.divlist.$divid.CustomQueue == '0' %]
+                        	<input class="subChk" id="rpt[% divid %]" type="checkbox" [% IF data.subscriptions.$divid.reports %]checked="checked"[% END %]/>
+                        [% ELSE %]
+                        	<input class="subChk" id="rpt[% divid %]" type="checkbox" disabled/>
+                        [% END %]
+                    </td>
+                    <td align="center">
+                        <input class="subChk" id="que[% divid %]" type="checkbox" [% IF data.subscriptions.$divid.queues %]checked="checked"[% END %]/>
+                    </td>
+                    <!--<td align="center">
+                        <input class="subChk" id="alrt[% divid %]" type="checkbox" [% IF data.subscriptions.$divid.alerts %]checked="checked"[% END %]/>
+                    </td>-->
+                    <td align="center">
+                        <input id="all[% divid %]" class="allck" type="checkbox"/>
+                        <input type="hidden" class="subDiv" value="[% divid %]"/>
+                    </td>
+                </tr>
+                [% END %]
+            </tbody>
+        </table>
+        [% END %]
+        
+        <span style="font-weight: bold">Add Division:</span>
+        <select id="newDivSel">
+            <option value="">Select Division</option>
+            [% FOREACH divid IN data.divlist.keys.sort %]
+            [% IF ! data.subscriptions.$divid %]
+            <option value="[% divid %]">[% divid %] ([% data.divlist.$divid.CourtType %])</option>
+            [% END %]
+            [% END %]
+        </select>
+        <button type="button" class="addDiv">Add</button>
+    </div>
+</div>
+

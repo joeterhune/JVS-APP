@@ -1,0 +1,8 @@
+ORDER
+TR - Continuance~tr-reqcont~TR,MO,CO~ddtrial,ddfiledby,speedy,dddisp,more,ddcity~01
+FIELDS
+# overwrite what's in orders.conf for this because want different defaults!
+ddfiledby~Filed by party~~DROPDOWN~~~the officer:the defendant:a witness:__________
+ddtrial~Pertains to~~DROPDOWN~~~trial:pretrial hearing:SunPass trial:_____________
+USERTF
+FORM

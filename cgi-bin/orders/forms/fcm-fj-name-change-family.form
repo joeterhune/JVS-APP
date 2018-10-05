@@ -1,0 +1,20 @@
+ORDER
+#
+#  ALL divisions may use this form.
+FCM Final Judgment of Name Change (Family)~fcm-fj-name-change-family~DR~edate,ddallcities,parents,notified,other,otherreason,orig1,new1,orig2,new2,orig3,new3,orig4,new4~01
+#
+FIELDS
+parents~Petitioners are Parents~~CHECKBOX
+notified~Petitioners is Parent; Other Parent Notified~~CHECKBOX
+other~Other~~CHECKBOX
+otherreason~Other Reason~~TEXT~80~~~~~
+orig1~Person 1 Original Name~~TEXT~80~~~~~
+new1~Person 1 New Name~~TEXT~80~~~~~
+orig2~Person 2 Original Name~~TEXT~80~~~~~
+new2~Person 2 New Name~~TEXT~80~~~~~
+orig3~Person 3 Original Name~~TEXT~80~~~~~
+new3~Person 3 New Name~~TEXT~80~~~~~
+orig4~Person 4 Original Name~~TEXT~80~~~~~
+new4~Person 4 New Name~~TEXT~80~~~~~
+USERTF
+FORM

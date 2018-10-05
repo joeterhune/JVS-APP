@@ -1,0 +1,6 @@
+ORDER
+TR - Generic Form~tr-generic~TR,MO,CO~ordtitle,genupon,genoa,ddcity~01
+FIELDS
+ordtitle~Order Title ("ORDER" is implied)~~TEXT~75~~~blank
+USERTF
+FORM

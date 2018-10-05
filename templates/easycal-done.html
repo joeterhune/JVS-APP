@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		[% IF data.alreadyExists %]
+		<title>Already Exists</title>
+		[% ELSE %]
+		<title>Hearing Added</title>
+		[% END %]
+		<script src="../javascript/jquery.js"></script>
+		<script src="../javascript/easycal.js"></script>
+		<link rel="stylesheet" type="text/css" href="style/easycal.css"/>
+	</head>
+	
+	<body style="width: 1200px">
+		[% IF data.alreadyExists %]
+		<div id="error">
+			<span class="error">
+				There is already a hearing scheduled at [% data.exists.hearing_start_time %] on
+				[% data.exists.hearing_date %] for case [% data.exists.case_num %].
+			</span>
+		</div>
+		[% ELSE %]
+		Foo!
+		[% END %]
+		
+		<div id="links">
+			<div id="subscribe">
+				<a href="[% data.subscribeLink %]">
+					Subscribe to the Division [% data.division %] Outlook Calendar
+				</a>
+			</div>
+			
+			<div id="maincal">
+				<a href="/easycal/index.cgi">
+					Return to the Calendaring Page
+				</a>
+			</div>
+		</div>
+		
+	</body>
+</html>

@@ -1,0 +1,56 @@
+<table class="summary" id="relatedcases_[% data.ucn %]">
+                                    [% IF data.linkedCases.size == 0 %]
+                                    <tr>
+                                        <td class="title">
+                                            Related Cases
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>No cases are related to this case.</td>
+                                    </tr>
+                                    [% ELSE %]
+                                    <tr>
+                                        <td colspan="5" class="title">
+                                            Related Cases
+                                        </td>
+                                    </tr>
+				                    <tr>
+				            	  		[% IF data.linkedCases.size == 0 %]
+								        	<td>No cases are linked to this case.</td>
+				                        [% ELSE %]
+				                        	<td class="tableholder">
+				                            	<table id="linkedcases_[% data.ucn %]">
+				                                	<thead>
+				                                    	<tr class="title">
+				                                        	<th style="min-width: 75px">Case</th>
+				                                        	<th style="min-width: 75px">Division</th>
+					                                        <th style="min-width: 75px">Type</th>
+					                                        <th style="min-width: 75px">Status</th>
+					                                        <th style="min-width: 100px">Filed</th>
+					                                        <th style="min-width: 100px">Description</th>
+				                                        </tr>
+				                                    </thead>
+											        <tbody>
+				                               	    	[% FOREACH relcase IN data.linkedCases %]
+				                                	    	<tr>
+				                                            	<td class="center">
+				                                            		[% IF relcase.OpenWarrants %] <img src="/asterisk.png" />[% END %]
+				                                            		<a class="caseLink" data-casenum="[% relcase.ToCaseNumber %]">
+						                                                [% relcase.ToCaseNumber %]
+						                                            </a>
+						                                            <input type="hidden" class="casenum" value="[% relcase.ToCaseNumber %]">
+							                                    </td>
+							                                    <td class="center">[% relcase.DivisionID %]</td>
+							                                    <td class="center">[% relcase.CaseType %]</td>
+							                                    <td class="center">[% relcase.CaseStatus %]</td>
+							                                    <td class="center">[% relcase.FileDate %]</td>
+							                                    <td>[% relcase.CaseStyle %]</td>
+				                                            </tr>
+				                                        [% END %]
+				                                    </tbody>
+												</table>
+											</td>
+				                    	[% END %]
+				                    </tr>
+                                    [% END %]
+                                </table>

@@ -1,0 +1,9 @@
+ORDER
+TR - AO Order~tr-ao-order~TR,MO,CO~hasornot,granted,sched,ddtrial,reqforsat,payD6,clearD6,moregranted,denied,returntocollections,civilpenalty,moredenied,dddays,ddcity~01
+FIELDS
+moregranted~Additional Granted text~~TEXT~75~~~blank
+moredenied~Additional Denied text~~TEXT~75~~~blank
+returntocollections~Clerk Return to Collections and D6~~CHECKBOX
+civilpenalty~Pay civil penalty~~CHECKBOX
+USERTF
+FORM

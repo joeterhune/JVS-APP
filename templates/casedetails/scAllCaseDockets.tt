@@ -1,0 +1,173 @@
+[% INCLUDE top/header.tt %]
+	<script src="/javascript/casedetails/utils.js?1.2" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.dockets').tablesorter({widgets: ['zebra'],
+                                      sortList: [[0,1]],
+                                      headers: {6: {sorter: false}, 7: {sorter: false}}});
+
+            $('.checkalldockets').click(function () {
+                $(this).closest('table').find(':checkbox').prop('checked', true);
+            });
+
+            $('.uncheckalldockets').click(function () {
+                $(this).closest('table').find(':checkbox').prop('checked', false);
+            });
+
+            $('.checkAllAllCases').click(function () {
+                $(document).find('.docketcheck').prop('checked', true);
+            });
+
+            $('.unCheckAllAllCases').click(function () {
+                $(document).find('.docketcheck').prop('checked', false);
+            });
+
+            $('.showmulti').click(function () {
+                if ($(this).parentsUntil('table').parent().find("input:checked").length == 0) {
+                    $('#dialogSpan').html("Please select one or more items to view.");
+                    $('#dialogDiv').dialog({
+                        resizable: false,
+                        minheight: 150,
+                        width: 500,
+                        modal: true,
+                        title: 'No Items Selected',
+                        buttons: {
+                            "OK": function() {
+                                $(this).dialog( "close" );
+                                return false;
+                                }
+                        }
+                    });
+                    return false;
+                }
+                return true;
+            });
+            $('.generateAllChecked').click(function () {
+                if ($(document).find(".docketcheck:checked").length == 0) {
+                    $('#dialogSpan').html("Please select one or more items to view.");
+                    $('#dialogDiv').dialog({
+                        resizable: false,
+                        minheight: 150,
+                        width: 500,
+                        modal: true,
+                        title: 'No Items Selected',
+                        buttons: {
+                            "OK": function() {
+                                $(this).dialog( "close" );
+                                return false;
+                                }
+                        }
+                    });
+                    return false;
+                }
+                // Build the form on the fly.
+                var $form = $('<form>', {action : '/cgi-bin/scimage-all.cgi', target: '_blank'});
+                $(document).find(".docketcheck:checked").each(function (i,e) {
+                    var objval = $(e).val();
+                    var string = '<input type="checkbox" name="selected" value="' + objval + '" checked="checked">';
+                    $form.append(string);
+                });
+                $form.append('<input type="hidden" name="showmulti" value="All"/>');
+                $form.appendTo($('body'));
+                $form.submit();
+                return true;
+            });
+            $('.hidethis').click(function() {
+                $(this).parentsUntil('.docketTable').find('.outerRow').toggle();
+                return false;
+            });
+            
+            $('.dockets').trigger('update');
+        });
+    </script>
+
+    <div id="dialogDiv">
+        <span id="dialogSpan" style="font-size: 80%"></span>
+    </div>
+	<br class="clear"/>
+    <div>
+    <table style="width: 100%">
+        <tr>
+            <td>
+                <div id="docketdiv">
+                    <div>
+                        <button class="checkAllAllCases">Check All Items, All Cases</button>
+                        <button class="unCheckAllAllCases">Uncheck All Items, All Cases</button>
+                        <button class="generateAllChecked">Generate PDF for All Checked Items</button>
+                    </div>
+                    [% FOREACH key IN data.dockets.keys.sort.reverse %]
+                    [% casedocket = data.dockets.$key %]
+                    <form action="/cgi-bin/multiImage.cgi" class="docketform" method="post" onsubmit="target='_blank'">
+                    	<input type="hidden" name="caseid" id="caseid" value="[% casedocket.0.CaseID %]"/>
+                        <div class="docketTable">
+                        	<br class="clear"/>
+                            <table class="summary">
+                                <tr>
+                                    <td class="title">Docket for [% key %]  <button class="hidethis">Collapse/Expand This Case</button></td>
+                                </tr>
+                                    <tr class="outerRow">
+                                        [% IF casedocket.size == 0 %]
+                                        	<td>No docketed items for this case</td>
+                                        [% ELSE %]
+                                        <td class="tableholder">
+                                            <table class="dockets">
+                                                <thead>
+                                                    <tr class="title">
+                                                        <th class="filter-select" data-placeholder="Date" style="min-width: 6em">Date<br/>Docketed</th>
+                                                        <th class="filter-select" data-placeholder="Code" style="min-width: 6em">Code</th>
+                                                        <th data-placeholder="Search Description" style="min-width: 15em; max-width: 200px">Descripton</th>
+                                                        <th data-placeholder="Search Text" style="min-width: 10em; max-width: 20em">Text</th>
+                                                        <th style="min-width: 8em">PDF Image<br/>
+                                                            <input type="submit" class="showmulti" name="showmulti" value="All Selected"/>
+                                                            <br/>Select
+                                                            <a class="checkalldockets">All</a> |
+                                                            <a class="uncheckalldockets">None</a>
+                                                        </th>
+                                                        [% IF data.showTif %]
+                                                        <th style="min-width: 75px">TIF<br/>Image</th>
+                                                        [% END %]
+                                                    </tr>
+                                                </thead>
+				                                <tbody>
+                                                [% FOREACH docket IN casedocket %]
+                                                    <tr class="[% docket.RowClass %]">
+                                                        <td style="text-align: center">[% docket.EnteredDate %]</td>
+                                                        <td style="text-align: center">[% docket.DocketCode %]</td>
+                                                        <td class="left">[% docket.DocketDescription %]</td>
+                                                        <td class="left">[% docket.DocketText %]</td>
+                                                        <td style="text-align: center">
+                                                            [% IF docket.Image == 'Y' %]
+                                                            	<a class="imageLink" data-caseid="[% docket.CaseID %]" data-ucnobj="[% docket.UCNObj %]" data-casenum="[% key %]"
+                                                            	onclick="target='_blank'">Image</a>&nbsp;&nbsp;
+                                                            <input class="docketcheck" type="checkbox" name="selected" value="[% docket.UCNObj %]"/>
+                                                            [% ELSE %]
+                                                            &nbsp;
+                                                            [% END %]
+                                                        </td>
+                                                        [% IF data.showTif %]
+                                                        <td style="text-align: center">
+                                                            [% IF docket.Image == 'Y' %]
+                                                            <a href="/cgi-bin/scimage.cgi?ucnobj=[% docket.UCNObj %]&amp;showTif=1"
+                                                            onclick="target='_blank'">TIF</a>
+                                                            [% ELSE %]
+                                                            &nbsp;
+                                                            [% END %]
+                                                        </td>
+                                                        [% END %]
+                                                    </tr>
+                                                [% END %]
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                        [% END %]
+                                    </tr>
+                                </table>
+                            </div>
+                    </form>
+                [% END %]
+                </div>
+                        </td>
+                    </tr>
+</table>
+    </div>
+

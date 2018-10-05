@@ -1,0 +1,47 @@
+table.outer {
+    border: 1px solid black;
+    width: 75%
+}
+
+table.outer th {
+    border: none;
+    text-align: right;
+}
+
+#calendar {
+    font-size: 90%;
+}
+
+#calendar .casenum {
+    width: 8%;
+    text-align: center;
+}
+
+#calendar .times {
+    width: 5%;
+    text-align: center;
+}
+
+#calendar .dates {
+    width: 6%;
+    text-align: center;
+}
+
+#calendar .events {
+    width: 20%;
+}
+
+#calendar .styles {
+    width: 18%;
+}
+
+#calendar .delcheck {
+    width: 5%;
+    text-align: center;
+}
+
+@media print{
+	@page {
+		size: landscape
+	}
+}

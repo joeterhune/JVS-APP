@@ -1,0 +1,19 @@
+ORDER
+#
+#  ALL divisions may use this form.
+TR - Order Setting Hearing~tr-order-setting-hearing~TR,MO,CO~genupon,edate,etime,treaddr,ddallcities~01~
+#
+FIELDS
+# Return address for envelopes
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~5
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

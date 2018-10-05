@@ -1,0 +1,44 @@
+	<div id="othercases">
+            [% FOREACH party IN data.parties %]
+                [% IF (party.OtherCases.size) && (party.OtherCases.size > 0) %]
+                <table class="summary">
+					<tr>
+						<td colspan="5" class="title">
+							Other Cases for [% party.FullName %] ([% party.PartyTypeDesc %])
+						</td>
+					</tr>
+
+					<tr>
+                        <td>
+                            <table class="otherCases">
+                                <thead>
+                                    <tr class="title">
+                                        <th style="width: 10em">CaseNumber</th>
+                                        <th style="width: 7em">Party Type</th>
+                                        <th style="width: 5em">Case<br/>Type</th>
+                                        <th style="width: 30em">Case Style</th>
+                                        <th style="width: 5em">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    [% FOREACH otherCase IN party.OtherCases %]
+                                    <tr>
+                                        <td style="text-align: center">
+                                            <a href="/cgi-bin/search.cgi?name=[% otherCase.CaseNumber %]&lev=[% data.nextlev %]">
+                                                [% otherCase.CaseNumber %]
+                                            </a>
+                                        </td>
+                                        <td style="text-align: center">[% otherCase.PartyTypeDesc %]</td>
+                                        <td style="text-align: center">[% otherCase.CaseType %]</td>
+                                        <td style="text-align: left">[% otherCase.CaseStyle %]</td>
+                                        <td style="text-align: center">[% otherCase.Status %]</td>
+                                    </tr>
+                                    [% END %]
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                [% END %]
+            [% END %]
+            </div>

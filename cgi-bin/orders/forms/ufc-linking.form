@@ -1,0 +1,63 @@
+ORDER
+UFC Linking Order~ufc-linking~DP,CJ,DR~ojcase,drcase,dvcase,pcase,ocase,transfer,file,link,forward,porders,phearings,hearingstext,continue~01
+FIELDS
+# name~description~cookie~type~length~comment~choices~initval
+ojcase~Other Juvenile Case No.:~~TEXT~25~~~~
+drcase~Domestic Relations Case No.:~~TEXT~25~~~~
+dvcase~Domestic Violence Case No.:~~TEXT~25~~~~
+pcase~Probate Case No.:~~TEXT~25~~~~
+ocase~Other Case No.:~~TEXT~25~~~~
+#
+# want child selection  (~x after selectkids is number of extra entry boxes)
+#
+/selectkids~2
+# Return address for envelopes
+/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Palm Beach, FL  33401
+# Extra parties to be copied on all versions of the form
+/extraparties
+DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST PALM BEACH~FL~33401
+FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST PALM BEACH~FL~33406
+/endextras
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+Children’s Legal Services, Division %division%
+ChildNet
+Guardian Ad Litem Program, Division %division%
+Juvenile Advocacy Program, Division %division%
+Foster Children’s Project, Division %division%
+DJJ Liaison, Division %division%
+Juvenile Judge, Division %division%
+UFC Juvenile Case Manager
+Office of Regional Conflict Counsel, Division %division%
+Office of the State Attorney - Lynn Powell
+Office of the Public Defender - Barbara White
+Alcolya St. Juste, Esq.
+Diane Duvall, Esq.
+Frank Kreidler, Esq.
+Gary Pickett, Esq.
+John Brewer, Esq.
+John Milton, Esq.
+Karen Martin, Esq.
+Mamie Washington Kendall, Esq.
+Robert Tribuiani, Esq.
+Samuel Marshall, Esq.
+Brian Balaguera, Esq.
+Amy Bierer, Esq.
+Thomas Montgomery, Esq.
+Elisabeth Porter, Esq.
+Ron Herman, Esq.
+Matthew Konecky, Esq.
+Valerie Masters, Esq.
+Dean Merten, Esq.
+Gerald Salerno, Esq.
+Bradd Weinberg, Esq.
+Evelyn Ziegler, Esq.
+UFC Clerk
+/copyend~5
+#
+USERTF
+FORM

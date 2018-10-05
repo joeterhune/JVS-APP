@@ -1,0 +1,56 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" name="stylin" href="/case/icms1.css">
+<script src="/case/icms.js" language="javascript" type="text/javascript">
+</script>
+<title>More Info - Case Number Searches</title>
+</head>
+<body>
+
+<div align="center"><img src=/case/icmslogo.jpg></div>
+
+<p>
+<div align="center" class=newstitle>More Information for Case Number Searches</div>
+<p>
+
+<div class=newstitle>Case Number Searches</div>
+<div class=newsline>
+When using hyphens in a case number search, the exact year, type, and number must be entered. The year must be entered as four digits.  The number must be entered as six digits.  The suffix is optional and should only be included when the case is known to have it.  The search will only return exact matches on the case number. 
+<p>
+When not using hyphens, you can enter two digit or four digit years as well as eliminating leading zeroes in the number. The system will change a two digit year to a four digit one and will add leading zeroes to the number, as needed, to make it six digits.  At least one digit of the number must be entered.  The suffix is optional.  If the suffix is included, only those cases that have that number and the suffix will be returned.  If it's left off, any cases that have that number will be returned.  This is helpful when there are multiple cases that have the same case number with different suffixes. 
+<p>
+A wildcard search can be conducted on the case number by using the no hyphen format with an asterisk (*).  In this format, the year will be adjusted to make it four digits, but the number will not be converted to six digits.  Instead, the search will look for all cases that start with the case number specified by the entered year, type, and at least the digits that are before the asterisk.  
+
+<p>
+Since wildcard case number searches can result in large numbers of cases, there is a limit to how many can be listed.  If your search exceeds the limit, an appropriate message is displayed to show you how many cases matched your search and what the limit is, and you will be asked to refine your search.</div>
+<p>
+</div>
+
+
+<div class=newstitle>Examples</div>
+<div class=newsline>
+<table id="v1">
+<tr><td class="toprow">Examples<td>Comments
+<tr><td>1999-CF-000066-ABX<td>Finds a case with the number 1999-CF-000066-ABX.  
+<tr><td>1999-CF-000066-A<td>Finds a case with the number 1999-CF-000066-A or 1999-CF-000066-AXX.  
+<tr><td>1999-CF-003829<td>Finds a case with the number 1999-CF-003829.  
+<tr><td>1999-CF-0001<td>Returns a format unrecognized error because not enough digits were entered for the number.    
+<tr><td>1999CF000066<br/>99CF000066<br/>1999CF66<br/>99CF66<td>Finds all cases that start with the number 1999-CF-000066.
+<tr><td>2009cf3871a<br/>9cf3871a<td>Finds all cases with that start with the number 2009-CF-003871-A. 
+<tr><td>1999CF000066A<td>Finds all cases that start with the number 1999-CF-000066-A.
+<tr><td>1999CF000066ABX<td>Finds a case with the number 1999-CF-000066-ABX.
+<tr><td>09cf3871<br/>9cf3871<br/>2009CF3871<td>Finds all cases that start with 2009-CF-003871, since there may be suffix matches.
+<tr><td>1999CF<br/>1999CF*<td>Returns a format unrecognized error because no digits were entered for the number.
+<tr><td>1999CF0*<td>Finds all cases that start with 1999-CF-0. This will most likely result in a message saying the results 
+exceeded the limit.
+<tr><td>1999CF1230*<td>Finds all cases that start with 1999-CF-1230.
+<tr><td>9CF0005*<td>Finds all cases that start with 2009-CF-0005. 
+</table>
+</div>
+
+<p><div class=newstitle><a href="icmshelp.html">Go Back</a></div>
+
+</body>
+</html>
+
+

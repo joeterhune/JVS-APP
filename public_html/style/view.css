@@ -1,0 +1,333 @@
+.clear { clear: both; }
+.bold {	font-weight: bold; }
+.code {
+	width: 6em;
+}
+.section {
+	margin: 3px;
+	margin-bottom: 10px;
+	float:left;
+	width:95%
+}
+
+.ucn_url {
+	color: blue;
+	text-decoration: underline;
+	cursor: hand;
+	cursor: pointer
+}
+
+.genlist_header { 
+	font-weight: bold;
+	color: #000000;
+	padding: 2px;
+	margin-bottom: 2px;
+	font-size: 115%;
+	width: 100%;
+}
+
+th {
+	font-weight: bold;
+}
+thead th {
+	font-weight: normal;
+  padding: 1px 3px;
+	color: blue;
+	background-color: #C8C8FF;
+	text-align: center;
+}
+td { 
+	padding: 1px 3px;
+	vertical-align: top;
+	font-size: 13px;
+}
+h2 { 
+	font-weight: bold;
+	color: #000000;
+	background-color: #C8EFC8;
+	padding: 1px 3px;
+	margin-bottom: 2px;
+  font-size: 1em;
+}
+h1 { 
+	font-weight: bold;
+	color: #000000;
+	background-color: #C8EFC8;
+	padding: 1px 3px;
+	margin-bottom: 2px;
+  font-size: 1.1em;
+	text-align: left;
+}
+tr {
+	background-color: #FFFFFF;
+}
+tr.alternate {
+	background-color: #D8FFD8;
+}
+#docket table td {
+	padding: 2px;
+}
+#notes tbody tr {
+	background-color: #EEEE70;
+}
+#bookings tbody th { text-align: right; }
+
+button, #buttons input { 
+	    display: inline-block;
+    padding-left: 6px;
+    padding-right: 8px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-size: 10pt;
+    width: auto;
+    overflow: visible;
+    background-color: #428bca;
+    border-color: #828282;
+    border-width: 1px;
+    border-radius: 5px;
+    color: #fff;
+}
+
+button:disabled {
+    color: gray;
+}
+
+tr.DISP {
+	font-style: italic;
+	color: #888;
+}
+.address {	clear: both; }
+.address div {
+	float: left;
+	padding-right: 3px; 
+}
+.address .type { width: 6em; }
+
+.attorneys div { 
+	float: left; 
+	margin-right: 2em;
+}
+.order { 
+	color: #2222DD;
+	font-weight: bold;
+}
+.motion { 
+	color: red;
+	font-weight: bold;
+}
+
+.order a { 
+	color: #2222DD;
+	font-weight: bold;
+}
+.motion  a { 
+	color: red;
+	font-weight: bold;
+}
+
+.alert {
+	color: red;
+	background-color: #FDD;
+	padding: 3px;
+	text-align: center;
+}
+.control { 
+	text-align: left;
+	margin-top: 10px;
+	background-color: white;
+}
+.showhide {
+	font-size:9pt; 
+	color:blue; 
+	text-decoration:underline; 
+	font-style:italic;
+	font-weight:normal;
+	cursor:pointer;
+	padding: 15px
+}
+
+.toggle {
+	cursor:pointer;
+}
+
+#charges .action { width: 18em; }
+#flags form, #notes form {
+
+	padding: 1px;
+}
+
+#flags, #notes {
+	width: 47%;
+}
+#buttons, #history, #parties, #base_info, #bookings, #charges, #docket, #defendant, #ticklers, #warrants, #events, #imaged_documents { 
+	clear: left; 
+}
+
+#ticklers table, #bookings table, #warrants table, #history table, #charges table, #docket table, #defendant table, #parties table, #events table, #base_info table, #imaged_documents table { 
+	width: 100%; 
+}
+#base_info th {
+	padding: 2px;
+	vertical-align: top;
+	width: 9em;
+}
+#base_info { 
+	width: 95%; 
+	min-width: 32em;
+}
+
+#bookings, #ticklers, #warrants, #events, #parties, #history, #charges, #defendant, #imaged_documents{ 
+	width: 95%; 
+}
+
+.column_1, .column_2 { 
+	float: left; 
+	width: 49%; 
+	min-width: 500px; 
+}
+
+.halfwidth { 
+	width: 49%; 
+	min-width: 500px; 
+}
+
+.fullwidth { 
+	width: 100%; 
+}
+
+.column_1 { 
+	clear: left; 
+}
+
+#docket .link {
+	display: inline-block;
+	float: left;
+}
+
+
+
+#docket th.images { 
+	width: 4em; 
+}
+
+#login_form, #mask { 
+	display: none; 
+}
+
+.help, #title { 
+	float: left; 
+	height: 40px; 
+}
+
+#title { 
+	width: 28em; 
+}
+
+#debug { 
+	width: 100%; 
+	color: #A0A0A0;
+   font-size: 9pt;
+	clear: right;
+	float: center;
+	height: 25px;
+} 
+
+.help  { 
+	width: 10em; 
+	text-align: center; 
+}
+
+#help {
+	display: inline-block;
+	margin-top: 8px;
+	text-decoration: none;
+	color: black;
+	padding: 6px;
+	border: 1px solid #CFCFCF;
+	background-color: #F0F0F0;
+}
+
+#help:hover {
+	font-weight: bold;
+}
+
+@media print {
+	#base_info, #bookings, #ticklers, #warrants, #events, #parties, #charges, #defendant { 
+		width: 100%; 
+	}
+	.control, form, .help, #title, #debug, #buttons, .denypop, .empty, .noprint { 
+		display: none; 
+	}
+	.column_1, .column_2 { 
+		width: 100%; 
+		float: none; 
+	}
+	.section { 
+		float: none; 
+	}
+	#docket h2 .link { 
+		display: none 
+	}
+}
+
+input[type="button"]{
+	padding-left:4px;  
+	padding-right:4px;
+	padding-top:1px;
+	padding-bottom:1px;
+	font-size:10pt; 
+	width:auto; 
+	overflow:visible; 
+	background-color: #B0DFB0;
+	border-color: #C8F8C8;
+	border-width:1px;
+}
+
+input[type="submit"]{
+	padding-left:4px; 
+	padding-right:4px;
+	padding-top:1px;
+	padding-bottom:1px;
+	font-size:10pt; 
+	width:auto; 
+	overflow:visible; 
+	background-color: #B0DFB0;
+	border-color: #C8F8C8;
+	border-width:1px;
+}
+
+
+
+/* from tablesorter/themes/blue */
+
+table.tablesorter {
+
+}
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+
+}
+table.tablesorter thead tr .header {
+	background-image: url(/icms/javascript/jquery/tablesorter/themes/blue/bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+table.tablesorter tbody td {
+	background-color: #D8FFD8;
+}
+table.tablesorter tbody tr.odd td {
+	background-color: #FFFFFF;
+}
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(/icms/javascript/jquery/tablesorter/themes/blue/asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(/icms/javascript/jquery/tablesorter/themes/blue/desc.gif);
+}
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+background-color: #8dbdd8;
+}
+
+img.view-related-cases {
+  cursor: pointer;
+}

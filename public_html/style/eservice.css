@@ -1,0 +1,102 @@
+/*body {
+	font-family: Arial;
+}*/
+
+.pagetitle {
+	text-align: center;
+	font-size: 1.5em;
+	font-weight: bold;
+}
+
+.block {
+	float: none;
+	position: relative;
+    margin-bottom: 0px;
+}
+
+.inner {
+	width: 50em;
+	left: 12em;
+	position: relative;
+	clear: both;
+	top: -1.8em;
+	margin-bottom: 0em;
+}
+
+.inner label {
+	width: 7em;
+}
+
+div.thinner {
+    margin-bottom: 0px !important;
+    clear: both;
+}
+
+.block label {
+	float: none;
+	width: 12em;
+	font-weight: bold;
+}
+
+label.emailaddr {
+	font-weight: normal;
+	width: 20em;
+	/*float: left;*/
+}
+
+.block label.attachment {
+	width: 50px;
+}
+
+.fileinput {
+	position: relative;
+}
+
+.sender {
+	height: 1.5em;
+}
+
+.ulfile {
+	position: absolute;
+	left:75px;
+}
+
+input.check {
+	margin-right: .5em;
+}
+
+button.delAddl,button.suppress {
+	background-color: lightblue;
+}
+
+button.undoDel,button.unsuppress {
+	background-color: yellow;
+	color: green;
+}
+
+.localSvc {
+	color: black;
+}
+
+.fromSc {
+	color: orange;
+}
+
+.portal {
+	color: green;
+}
+
+.addlAddr {
+	color: blue;
+}
+
+.agency {
+	color: purple;
+}
+
+a.toggleLink {
+	color: purple;
+	font-size: 85%;
+	text-decoration: underline;
+	cursor: pointer;
+}

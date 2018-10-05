@@ -1,0 +1,118 @@
+ORDER
+UFC Judicial Memo~ufc-judmemo~DP,CJ,DR~date,re,relcase1cType,relcase1CaseNum,relcase1Mother,relcase1Father,relcase1Child,relcase1Status,relcase1CloseDate,relcase1Note,relcase2cType,relcase2CaseNum,relcase2Mother,relcase2Father,relcase2Child,relcase2Status,relcase2CloseDate,relcase2Note,relcase3cType,relcase3CaseNum,relcase3Mother,relcase3Father,relcase3Child,relcase3Status,relcase3CloseDate,relcase3Note,relcase4cType,relcase4CaseNum,relcase4Mother,relcase4Father,relcase4Child,relcase4Status,relcase4CloseDate,relcase4Note,relcase5cType,relcase5CaseNum,relcase5Mother,relcase5Father,relcase5Child,relcase5Status,relcase5CloseDate,relcase5Note,relcase6cType,relcase6CaseNum,relcase6Mother,relcase6Father,relcase6Child,relcase6Status,relcase6CloseDate,relcase6Note,relcase7cType,relcase7CaseNum,relcase7Mother,relcase7Father,relcase7Child,relcase7Status,relcase7CloseDate,relcase7Note,relcase8cType,relcase8CaseNum,relcase8Mother,relcase8Father,relcase8Child,relcase8Status,relcase8CloseDate,relcase8Note,relcase9cType,relcase9CaseNum,relcase9Mother,relcase9Father,relcase9Child,relcase9Status,relcase9CloseDate,relcase9Note,relcase10cType,relcase10CaseNum,relcase10Mother,relcase10Father,relcase10Child,relcase10Status,relcase10CloseDate,relcase10Note,relcase11cType,relcase11CaseNum,relcase11Mother,relcase11Father,relcase11Child,relcase11Status,relcase11CloseDate,relcase11Note,relcase12cType,relcase12CaseNum,relcase12Mother,relcase12Father,relcase12Child,relcase12Status,relcase12CloseDate,relcase12Note,misc~01
+FIELDS
+# name~description~cookie~type~length~comment~choices~initval
+date~Date:~~TEXT~20
+re~RE:~~TEXT~100
+#misc~Miscellaneous:~~TEXT~100~~~blank
+misc~Miscellaneous:~~TEXT~100~
+relcase1cType~<font color=green>CASE 1:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase1CaseNum~Case 1:  Case Number~~TEXT~20~
+relcase1Mother~Case 1:  Mother~~DROPDOWN~~~ :x~
+relcase1Father~Case 1:  Father~~DROPDOWN~~~ :x~
+relcase1Child~Case 1:  Child~~DROPDOWN~~~ :x~
+relcase1Status~Case 1:  Status~~DROPDOWN~~~Open:Closed~
+relcase1Note~Case 1: Note~~TEXT~50~
+relcase1CloseDate~Case 1:  Closed Date:~~TEXT~20~<small><font color=red>Enter dates as mm/dd/yyyy or mm/dd/yy.</font></small>~~ ~
+relcase2cType~<font color=green>CASE 2:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other~
+relcase2CaseNum~Case 2:  Case Number~~TEXT~20~
+relcase2Mother~Case 2:  Mother~~DROPDOWN~~~ :x~
+relcase2Father~Case 2:  Father~~DROPDOWN~~~ :x~
+relcase2Child~Case 2:  Child~~DROPDOWN~~~ :x~
+relcase2Status~Case 2:  Status~~DROPDOWN~~~Open:Closed~
+relcase2Note~Case 2: Note~~TEXT~50~
+relcase2CloseDate~Case 2:  Closed Date:~~TEXT~20~
+relcase3cType~<font color=green>CASE 3:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase3CaseNum~Case 3:  Case Number~~TEXT~20~
+relcase3Mother~Case 3:  Mother~~DROPDOWN~~~ :x
+relcase3Father~Case 3:  Father~~DROPDOWN~~~ :x
+relcase3Child~Case 3:  Child~~DROPDOWN~~~ :x
+relcase3Status~Case 3:  Status~~DROPDOWN~~~Open:Closed
+relcase3CloseDate~Case 3:  Closed Date:~~TEXT~20~
+relcase3Note~Case 3: Note~~TEXT~50~
+relcase4cType~<font color=green>CASE 4:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase4CaseNum~Case 4:  Case Number~~TEXT~20~
+relcase4Mother~Case 4:  Mother~~DROPDOWN~~~ :x
+relcase4Father~Case 4:  Father~~DROPDOWN~~~ :x
+relcase4Child~Case 4:  Child~~DROPDOWN~~~ :x
+relcase4Status~Case 4:  Status~~DROPDOWN~~~Open:Closed
+relcase4CloseDate~Case 4:  Closed Date:~~TEXT~20~
+relcase4Note~Case 4: Note~~TEXT~50~
+relcase5cType~<font color=green>CASE 5:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase5CaseNum~Case 5:  Case Number~~TEXT~20~
+relcase5Mother~Case 5:  Mother~~DROPDOWN~~~ :x
+relcase5Father~Case 5:  Father~~DROPDOWN~~~ :x
+relcase5Child~Case 5:  Child~~DROPDOWN~~~ :x
+relcase5Status~Case 5:  Status~~DROPDOWN~~~Open:Closed
+relcase5CloseDate~Case 5:  Closed Date:~~TEXT~20~
+relcase5Note~Case 5: Note~~TEXT~50~
+relcase6cType~<font color=green>CASE 6:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase6CaseNum~Case 6:  Case Number~~TEXT~20~
+relcase6Mother~Case 6:  Mother~~DROPDOWN~~~ :x
+relcase6Father~Case 6:  Father~~DROPDOWN~~~ :x
+relcase6Child~Case 6:  Child~~DROPDOWN~~~ :x
+relcase6Status~Case 6:  Status~~DROPDOWN~~~Open:Closed
+relcase6CloseDate~Case 6:  Closed Date:~~TEXT~20~
+relcase6Note~Case 6: Note~~TEXT~50~
+relcase7cType~<font color=green>CASE 7:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase7CaseNum~Case 7:  Case Number~~TEXT~20~
+relcase7Mother~Case 7:  Mother~~DROPDOWN~~~ :x
+relcase7Father~Case 7:  Father~~DROPDOWN~~~ :x
+relcase7Child~Case 7:  Child~~DROPDOWN~~~ :x
+relcase7Status~Case 7:  Status~~DROPDOWN~~~Open:Closed
+relcase7CloseDate~Case 7:  Closed Date:~~TEXT~20~
+relcase7Note~Case 7: Note~~TEXT~50~
+relcase8cType~<font color=green>CASE 8:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase8CaseNum~Case 8:  Case Number~~TEXT~20~
+relcase8Mother~Case 8:  Mother~~DROPDOWN~~~ :x
+relcase8Father~Case 8:  Father~~DROPDOWN~~~ :x
+relcase8Child~Case 8:  Child~~DROPDOWN~~~ :x
+relcase8Status~Case 8:  Status~~DROPDOWN~~~Open:Closed
+relcase8CloseDate~Case 8:  Closed Date:~~TEXT~20~
+relcase8Note~Case 8: Note~~TEXT~50~
+relcase9cType~<font color=green>CASE 9:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase9CaseNum~Case 9:  Case Number~~TEXT~20~
+relcase9Mother~Case 9:  Mother~~DROPDOWN~~~ :x
+relcase9Father~Case 9:  Father~~DROPDOWN~~~ :x
+relcase9Child~Case 9:  Child~~DROPDOWN~~~ :x
+relcase9Status~Case 9:  Status~~DROPDOWN~~~Open:Closed~
+relcase9CloseDate~Case 9:  Closed Date:~~TEXT~20~
+relcase9Note~Case 9: Note~~TEXT~50~
+relcase10cType~<font color=green>CASE 10:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase10CaseNum~Case 10:  Case Number~~TEXT~20~
+relcase10Mother~Case 10:  Mother~~DROPDOWN~~~ :x
+relcase10Father~Case 10:  Father~~DROPDOWN~~~ :x
+relcase10Child~Case 10:  Child~~DROPDOWN~~~ :x
+relcase10Status~Case 10:  Status~~DROPDOWN~~~Open:Closed~
+relcase10CloseDate~Case 10:  Closed Date:~~TEXT~20~
+relcase10Note~Case 10: Note~~TEXT~50~
+relcase11cType~<font color=green>CASE 11:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase11CaseNum~Case 11:  Case Number~~TEXT~20~
+relcase11Mother~Case 11:  Mother~~DROPDOWN~~~ :x
+relcase11Father~Case 11:  Father~~DROPDOWN~~~ :x
+relcase11Child~Case 11:  Child~~DROPDOWN~~~ :x
+relcase11Status~Case 11:  Status~~DROPDOWN~~~Open:Closed~
+relcase11CloseDate~Case 11:  Closed Date:~~TEXT~20~
+relcase11Note~Case 11: Note~~TEXT~50~
+relcase12cType~<font color=green>CASE 12:  Type of Case</font>~~DROPDOWN~~~:Criminal:Family:Juvenile:Other
+relcase12CaseNum~Case 12:  Case Number~~TEXT~20~
+relcase12Mother~Case 12:  Mother~~DROPDOWN~~~ :x
+relcase12Father~Case 12:  Father~~DROPDOWN~~~ :x
+relcase12Child~Case 12:  Child~~DROPDOWN~~~ :x
+relcase12Status~Case 12:  Status~~DROPDOWN~~~Open:Closed~
+relcase12CloseDate~Case 12:  Closed Date:~~TEXT~20~
+relcase12Note~Case 12: Note~~TEXT~50~
+#
+# Return address for envelopes
+/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Palm Beach, FL  33401
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+# Extra parties to be copied on all versions of the form
+/extraparties
+DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST PALM BEACH~FL~33401
+FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST PALM BEACH~FL~33406
+/endextras
+# Use RTF format for this form.
+USERTF
+FORM

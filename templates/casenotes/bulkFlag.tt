@@ -1,0 +1,600 @@
+<div style="padding-left:1%">
+    <script type="text/javascript">
+        var clearAll = false;
+        var action;
+        function countChecked () {
+            checkCount = $('#listTable').find('.caseCheck:checked').length;
+            if (checkCount == 1) {
+                string = checkCount + " listed case is "
+            } else {
+                string = checkCount + " listed cases are "
+            }
+            if (action == 'add') {
+                string += "selected for flagging.";
+            } else {
+                string += "selected for unflagging.";
+            }
+            $('#checkCount').html(string);
+        }
+        
+        function countFlagged () {
+            already = $('#listTable').find('.alreadyFlagged').length;
+            if (already == 1) {
+                if (action == "add") {
+                    $('#alreadyCount').html(already + ' listed case is already flagged with the selected flag.');
+                } else {
+                    $('#alreadyCount').html(already + ' listed case does not contain the selected flag.');
+                }
+            } else {
+                if (action == "add") {
+                    $('#alreadyCount').html(already + ' listed cases are already flagged with the selected flag.');    
+                } else {
+                    $('#alreadyCount').html(already + ' listed cases do not contain the selected flag.');    
+                }     
+            }
+        }
+        
+        $(document).ready(function () {
+            $(".datepicker").datepicker({
+                showOn: "both",
+				buttonImage: "/style/images/calendar.gif",
+				buttonImageOnly: true,
+				changeMonth: true,
+				changeYear: true,
+                dateFormat: "mm/dd/yy",
+				minDate: 0,
+				altField: '#expdate',
+				altFormat: 'yy-mm-dd'
+			});
+            
+            $('input,textarea').placeholder();
+            $('#prevSelected').val('');
+            
+            $('.clearCases').click(function() {
+                $('#caseList').val('');
+            });
+            
+            $('#listTable').on('click', '.selAll', function () {
+                $(this).closest('table').find('.caseCheck').prop('checked',true);
+                countChecked();
+            });
+            
+            $('#listTable').on('click', '.selNone', function () {
+                $(this).closest('table').find('.caseCheck').prop('checked',false);
+                countChecked();
+            });
+            
+            $('#listTable').on('change','.caseCheck', function() {
+                countChecked();
+            });
+            
+            $('#listTable').on('click','.icmslink', function() {
+                url = "/cgi-bin/search.cgi?name=" + $(this).attr('data-ucn');
+                open_win(url, 'icmswin');
+            });
+            
+            // Check to see if the flag type has changed
+            $('#flagTypes').change(function () {          
+                var prev =$('#prevSelected').val();
+                if (prev != '') {
+                    if (prev != $(this).val()) {
+                        // Find the text associated with both the selected option and the
+                        // previously selected option
+                        var name=$(this).find('option:selected').text();
+                        var selected = $(this).find("option[value=" + prev + "]").text();
+                        
+                        var text = '<p>You have previously selected flag "' + selected + '" and have changed your selection to "' + name + '".</p>';
+                        text += '<p>By continuing, your case selections will be cleared and you will need to re-run the lookup.</p>';
+                        text += '<p>Do you wish to continue?</p>'
+                        
+                        $('#dialogSpan').html(text);
+                        $('#dialogDiv').dialog({
+                            resizable: false,
+                            minheight: 150,
+                            width: 500,
+                            modal: true,
+                            title: "Flag Selection Changed",
+                            buttons: {
+                                "Yes": function() {
+                                    $(this).dialog( "close" );
+                                    // Clear the stored value.  It'll be updated when the search is done.
+                                    $('#prevSelected').val(prev);
+                                    $('#caseCheckResult').hide();
+                                    $('.unflagCaseBtn').hide();
+                                    $('.flagCaseBtn').hide();
+                                    return false;
+                                },
+                                "No": function() {
+                                    $(this).dialog( "close" );
+                                    alert("Put it back!!");
+                                    return false;
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            
+            $('.addFlags').click(function() {
+                clearAll = false;
+                $('#caseList').removeAttr('disabled');
+                $('#remAllOption').hide();
+                $('#removeAll').prop('checked',false);
+                $('#flagTypes').find('option').first().html('Select a flag type to add');
+                $('#selectLabel').html('Flag To Add');
+                $('#flagOptions').show();
+                $('#caseListDiv').show();
+                $('.unflagCaseBtn').hide();
+                $('#caseCheckResult').hide();
+                $('#caseListBody').html('');
+            });
+            $('.clearFlags').click(function () {
+                clearAll = false;
+                $('#caseList').removeAttr('disabled');
+                $('#remAllOption').show();
+                $('#removeAll').prop('checked',false);
+                $('#flagTypes').find('option').first().html('Select a flag type to remove');
+                $('#selectLabel').html('Flag To Remove');
+                $('#flagOptions').show();
+                $('#caseListDiv').show();
+                $('.flagCaseBtn').hide();
+                $('#expDiv').hide();
+                $('#caseCheckResult').hide();
+                $('#caseListBody').html('');
+            });
+            
+            $('.removeAll').click(function () {
+                if ($(this).prop('checked') == false) {
+                    $('#caseList').removeAttr('disabled');
+                    return true;
+                }
+                var text = '<p>By selecting this option, when you click "Look Up Cases", you will be presented with a list of ALL cases that have the flag set.</p>';
+                text += '<p>Do you wish to continue?</p>';
+                
+                $('#dialogSpan').html(text);
+                $('#dialogDiv').dialog({
+                    resizable: false,
+                    minheight: 150,
+                    width: 500,
+                    modal: true,
+                    title: "Unflag ALL Cases?",
+                    buttons: {
+                        "Yes": function() {
+                            //$('#caseList').attr('disabled',true);
+                            clearAll = true;
+                            $(this).dialog( "close" );
+                            return false;
+                        },
+                        "No": function() {
+                            $('.removeAll').prop('checked',false);
+                            //$('#caseList').removeAttr('disabled');
+                            clearAll = false;
+                            $(this).dialog( "close" );
+                            return false;
+                        }
+                    }
+                });
+                return true;
+            });
+            
+            $('.checkCaseBtn').click(function() {
+                action = $('input[name=addFlags]:checked').val();
+                if (action == 'add') {
+                    checkUrl = "/cgi-bin/casenotes/checkAdd.cgi";
+                } else {
+                    checkUrl = "/cgi-bin/casenotes/checkDel.cgi";
+                }
+                
+                var selFlag = $('#flagTypes').find('option:selected').val();
+                if (selFlag == '') {
+                    if (action == "add") {
+                        showDialog("No Flag Selected", "Please select a flag to add.");
+                    } else {
+                        showDialog("No Flag Selected", "Please select a flag to remove.");
+                    }
+                    return false;
+                }
+                
+                // Track this value, in case the user changes the drop-down.
+                $('#prevSelected').val(selFlag);
+                
+                caseList = undefined;
+                
+                if (clearAll == false) {
+                    caseList = $('#caseList').val();
+                }
+                
+                if (((caseList == undefined) || (caseList == "")) && (clearAll == false)) {
+                    showDialog("No Cases Entered", "Please enter a list of cases.");
+                    return false;
+                }
+                
+                $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><h3>Looking Up Cases</h3>', fadeIn: 0});
+                
+                $.post(checkUrl,{flags : selFlag, cases : caseList, clearAll : clearAll }, function(data) {
+                    $.unblockUI();
+                    
+                    clearAll = false;
+                    $('#removeAll').attr('checked',false);
+                    if (action == 'add') {
+                        $('#expDiv').show();
+                    } else {
+                        $('#expDiv').hide();
+                    }
+                    // Hide the legend.  We'll display it if it's needed.
+                    $('#legend').hide();
+                    
+                    if (data.NotValid.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.NotValid, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The system was unable to determine a valid case number from the following entered values:'),
+                            $(list),
+                            $('<p>').html('Please correct the list and re-submit.')
+                        );
+                        showDialog("Invalid Case Number Entered", $(errStr).html());
+                        return false;
+                    }
+                    
+                    if (data.NotFound.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.NotFound, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The following case numbers were not found:'),
+                            $(list),
+                            $('<p>').html('Please correct the list and re-submit.')
+                        );
+                        showDialog("Cases Not Found", $(errStr).html());
+                        return false;
+                    }
+                    
+                    if (data.Ambiguous.length) {
+                        $('#caseCheckResult').hide();
+                        list = $('<ul>');
+                            
+                        $.each(data.Ambiguous, function(index,nv) {
+                            listItem = $('<li>').html(nv);
+                            $(list).append($(listItem));
+                        });
+                     
+                        errStr = $('<div>');
+                        $(errStr).append(
+                            $('<p>').html('The following case numbers could match more than one case:'),
+                            $(list),
+                            $('<p>').html('Please correct the list to match the exact case and re-submit.')
+                        );
+                        showDialog("Ambiguous Case Numbers Entered", $(errStr).html());
+                        return false;
+                    }
+
+                    $('#caseListBody').html('');
+                    $.each(data.Cases, function(i,e) {
+                        newRow = $('<tr>');
+                        $(newRow).attr('id','case-' + e.CaseNotesNum);
+                        checkboxText = '<input type="checkbox" name="flagCase" class="caseCheck" value="' + e.CaseNotesNum + '|' + e.DivisionID +'"/>'
+                        
+                        if (e.AlreadyFlagged) {
+                            // Case is already flagged with this flag.  Display the legend
+                            if (action == "add") {
+                                $('#legendCell').html('Already Flagged With Selected Flag');
+                            } else {
+                                $('#legendCell').html('Requested Case Does Not Contain Flag');
+                            }
+                            
+                            $('#legend').show();
+                            // And don't show the checkbox.
+                            $(newRow).addClass('alreadyFlagged');
+                            checkboxText = '';
+                        }
+                        icmsLink = '<a class="icmslink" data-ucn="' + e.CaseNotesNum + '">' + e.CaseNotesNum + '</a>';
+                        $(newRow).append(
+                            $('<td class="cbCell" style="text-align: center">').html(checkboxText),
+                            $('<td style="text-align: center;">').html(icmsLink),
+                            $('<td>').html(e.CaseStyle),
+                            $('<td style="text-align: center">').html(e.DivisionID)
+                        );
+                        $('#caseListBody').append($(newRow));                      
+                    });
+                    
+                    $('#listTable').tablesorter ({
+                        widgets: ['zebra'],
+                        sortList: [[1,1]],
+                        headers: {0: {sorter: false}}
+                    });
+                    
+                    $('#caseCheckResult').show();
+                
+                    // Need to do this AFTER the table is shown, because the widget doesn't properly apply to a hidden table
+                    $('#listTable').trigger('update');
+                    
+                    // Count the alreadyflagged and the number checked
+                    already = $('#listTable').find('.alreadyFlagged').length;
+                    if (already) {
+                        if (action == 'add') {
+                            if (already == 1) {
+                                word = " is ";
+                            } else {
+                                word = " are ";
+                            }
+                            text = '<p>Of the cases listed, ' + already + word +
+                                'already flagged with the selected flag and will not be flagged again.'
+                        } else {
+                            if (already == 1) {
+                                word = " does ";
+                            } else {
+                                word = " do ";
+                            }
+                            text = '<p>Of the cases listed, ' + already + word + 
+                                    'not contain the selected flag.'
+                        }
+                        showDialog('Some Already Flagged', text);
+                        checkboxText = '';
+                    }
+                    
+                    countFlagged(); 
+                    countChecked();            
+                    
+                    // Display the submit button to flag
+                    if (action == "add") {
+                        $('.flagCaseBtn').show();
+                        $('.unflagCaseBtn').hide();
+                    } else {
+                        $('.unflagCaseBtn').show();
+                        $('.flagCaseBtn').hide();
+                    }
+                    
+                    return true;
+                });
+                return true;
+            });
+            
+            $('.flagCaseBtn,.unflagCaseBtn').click(function () {
+                var buttonAction = $(this).attr('data-action');
+                
+                var selFlag = $('#flagTypes').find('option:selected').val();
+                if (selFlag == '') {
+                    showDialog("No Flag Selected", "Please select a flag to add or delete");
+                    return false;
+                }
+                
+                flaggedCases = $('#listTable').find('.caseCheck:checked');
+                if (!$(flaggedCases).length) {
+                    showDialog("No Cases Selected", "Please select case(s) to flag.");
+                    return false;
+                }
+                cases = [];
+                $(flaggedCases).each(function (i,e) {
+                    cases.push($(e).val());
+                });
+                
+                // How many were already flagged?
+                already = $('#listTable').find('.alreadyFlagged').length;
+                newSet = 0;
+                
+				// Ok, there are new flags.  Are there expiration dates?
+                postArgs = {flags : selFlag, cases : cases.join(",")};
+                exptype = $('input[name=exptype]:radio:checked').val();
+                switch(exptype) {
+                    case 'never':
+                        break;
+					case 'xtime':
+                        timecount = $('#timecount').val();
+                        timetype = $('#timetype').val();
+                        if ((timecount == '') || (timetype == '')) {
+                            showDialog("No Range Entered","Please select a number of days, weeks, or months for the expiration.");
+                            return false;
+                        }
+                        postArgs = {flags : selFlag, cases : cases.join(","), exptype: exptype, timecount: timecount, timetype: timetype};
+                        break;
+					case 'ondate':
+                        expdate = $('#expdate').val();
+                        if (expdate == '') {
+							showDialog("No Date Selected","Please select an expiration date for the selected flags.");
+							return false;
+						}
+                        postArgs = {flags : selFlag, cases : cases.join(","), exptype: exptype, expdate: expdate};
+						break;
+                    default:
+                        break;
+				}                
+                
+                var abortquietly;
+                // Make this an asynchronous call, to avoid issues with the DOM updating in time for us to check it.
+                $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait...</h1><h3>Flagging Cases</h3>', fadeIn: 0});
+                
+                if (buttonAction == "addFlag") {
+                    url = '/cgi-bin/casenotes/doBulkFlag.cgi'
+                } else {
+                    url = '/cgi-bin/casenotes/doBulkUnflag.cgi'
+                }
+                xmlhttp = doAjax(url,postArgs,1,doUpdates);
+                
+                return false;
+            });
+            
+            $('.expval'),focus(function () {
+                $('#ondate').attr('checked',true);
+            });
+            
+            $('#timetype,#timecount').focus(function () {
+                $('#xtime').attr('checked',true);
+            });
+        });
+        
+        function doUpdates (response, status) {
+            $.unblockUI();
+            var content = response.responseJSON;
+            $.each(content.Completed, function(key, val) {
+                var caseDiv = val.split("|");
+                var rowClass = "#case-" + caseDiv[0];
+                // Add the alreaadyFlagged class to the row
+                $(rowClass).addClass('alreadyFlagged');
+                // And remove the checkbox, so they can't accidentally re-flag it.
+                $(rowClass).find('.cbCell').html('');
+            });
+            
+            if ($('#listTable').find('.caseCheck').length == 0) {
+                $('#checkCount').html('0 listed cases are');
+            } else {
+                countChecked();
+            }
+            countFlagged();
+            $('#legend').show();
+            
+            return true;
+        }
+    </script>
+    <style type="text/css">
+    	table tbody > tr:nth-child(odd) > td,
+		table tbody > tr:nth-child(odd) > th {
+		    background-color: #FFFFFE;
+		}
+    </style>
+    
+    <div style="height: 50px;">
+        <div style="float: left; width:50%">
+        	<br/>
+            <span class="h1">Bulk Case Flagging</span>
+            
+            <p class="instructions">
+                Use this interface to apply a flag to (or remove a flag from) multiple cases at once.  You can enter the listing of cases,
+                separated by spaces or carriage returns (no commas) in the box below.  When you click "Look Up Cases", the listing will
+                be validated; then select the cases you wish to flag and click "Flag Selected Cases".
+            </p>
+        </div>
+        
+        
+        <div id="expDiv" style="float:right; display: none; text-align: center; border: 1px solid green; width: 40%; margin-top:1%; padding:1%;">
+            <span style="font-weight: bold; color: red; text-align: center;">Set Flag Expiration?</span>
+            <br style="clear: both">
+            <p style="margin: 0px; left: 0px">
+                You can choose to set an expiration on the flags that you're setting here (this will not affect existing flags).
+                Flags that have a set expiration date will automatically be cleared when that date is reached.
+            </p>
+        
+            <div style="margin-top: 1em;" class="expire">
+                <span style="font-weight: bold">Expire these flags:</span>
+                <div style="border: 1px solid red; text-align: left; padding:2%;">
+                    <div>
+                        <input type="radio" name="exptype" value="never" checked="checked"/>Don't expire
+                    </div>
+                    <div>
+                        <input type="radio" name="exptype" id="xtime" class="expradio" value="xtime"/>In
+                        <input type="text" id="timecount" name="timecount" class="expval" style="width: 3em"/>
+                        <select id="timetype" name="timetype" class="expval">
+                            <option value="days" selected="selected">days</option>
+                            <option value="weeks">weeks</option>
+                            <option value="months">months</option>
+                        </select>
+                        from today.
+                    </div>
+                    <div>
+                        <input type="radio" name="exptype" class="expradio" id="ondate" value="ondate"/>On specific date
+                        <input type="text" class="datepicker expval" name="localexpdate" id="localexpdate"/>
+                        <input type="hidden" name="expdate" id="expdate"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br style="clear: both"/><br style="clear: both"/>
+
+    <div style="height: 14em; margin-bottom: 0;">
+        <div style="float: left; margin-right: 3em;">
+            <input type="radio" name="addFlags" class="addFlags" value="add"/>Add flags to cases
+            <br/>
+            <input type="radio" name="addFlags" class="clearFlags" value="del" />Remove flags from cases
+        </div>
+        
+        <div id="flagOptions" style="display: none; float: left; position: relative">
+            <div id="selectDiv">
+                <label for="flagTypes" id="selectLabel" style="width: 8em; vertical-align: top">Flag to Add</label>
+                <select name="flagTypes" id="flagTypes">
+                    <option value="">Select Flag To Add</option>
+                    [% FOREACH flag IN data.flagtypes %]
+                    <option value="[% flag.FlagType %]">[% flag.FlagDescription %]</option>
+                    [% END %]
+                </select>
+            </div>
+            
+            <div style="display: none; vertical-align: top;" id="caseListDiv">
+                <label for="caseList" style="width: 8em; vertical-align: top">Case List</label>
+                <textarea rows="4" cols="50" name="caseList" id="caseList" placeholder="Please enter the list of cases here"></textarea>
+                
+                <br class="clear"/><br class="clear"/>
+                <div style="padding-left:24%">
+	                <button class="clearCases">Clear Case List</button>
+	                <button class="checkCaseBtn">Look Up Cases</button>
+	                <button class="flagCaseBtn" style="display: none" data-action="addFlag">Flag Selected Cases</button>
+	                <button class="unflagCaseBtn" style="display: none" data-action="delFlag">Unflag Selected Cases</button>
+	                <div id="remAllOption" style="display: none">
+	                    <input type="checkbox" id="removeAll" class="removeAll"/>
+	                    <label for="removeAll">Show ALL cases with this flag<span style="color: red"> USE WITH CAUTION</span></label>
+	                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <br style="clear: both;"/>
+    
+    <div id="caseCheckResult" style="margin-top: 0; display: none">
+        <table id="legend">
+            <tr class="alreadyFlagged"><td id="legendCell" style="border: 1px solid">Already Flagged With Selected Flag</td></tr>    
+        </table>
+        
+        <br/>
+        
+        <div style="float: none; clear: both">
+            <div style="float: left; margin-right: 5em;">
+                <span id="checkCount"></span>
+            </div>
+            
+            <div style="float: left;">
+                <span id="alreadyCount"></span>
+            </div>
+        </div>
+        
+        <br style="clear: both"/>
+        
+        <table id="listTable" class="summary">
+            <thead>
+                <tr class="title" id="listHeader">
+                    <th style="width: 8em">
+                        Select
+                        <a class="selAll">All</a> | <a class="selNone">None</a>
+                    </th>
+                    <th style="width: 15em">Case Number</th>
+                    <th style="width: 30em;">Case Style</th>
+                    <th style="width: 6em">Division</th>
+                </tr>
+            </thead>
+            <tbody id="caseListBody">
+                
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="hiddenStuff">
+        <input type="hidden" id="prevSelected" value=""/>
+    </div>
+
+    </div>
+
+</body>
+</html>

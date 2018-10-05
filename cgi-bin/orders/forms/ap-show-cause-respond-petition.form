@@ -1,0 +1,7 @@
+ORDER
+Order Show Cause Respond to Petition~ap-show-cause-respond-petition~AP,CA~petitiontitle,petitiondate~01~~~AY,AC
+FIELDS
+petitiontitle~Petition Title~~TEXT~70~
+petitiondate~Date Petition Filed~~DATE~15~<small>(format you would like to appear on form)</small>
+USERTF
+FORM

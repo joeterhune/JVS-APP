@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Delete a Case Note</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta http-equiv="expires" content="-1"/>
+        <meta http-equiv="pragma" content="no-cache">
+		<link rel="stylesheet" type="text/css" href="/icms1.css">
+		<script src="/icms.js" language="javascript" type="text/javascript"></script>
+	</head>
+	
+	<body onload="SetBack('ICMS_[% data.lev %]');">
+		<div id="logo">
+			<a href="/">
+				<img src="/icmslogo.jpg" alt="ICMS">
+			</a>
+			<br>
+			<input type="button" name="Back" value="Back" onclick="GoBack('ICMS_[% data.lev - 1 %]');">
+		</div>
+		
+		<div class="h2">
+			Delete Case Notes -- [% data.casenum %]
+		</div>
+				
+		[% IF data.notes.size == 0 %]
+		There are currently no notes for this case.
+		[% ELSE %]
+		<form name="theform" method="post" action="delnote2.cgi">
+			<div>
+				<table style="border: 1px solid black; text-align: center">
+					<thead>
+						<tr>
+							<th>
+								Delete?
+							</th>
+							<th style="min-width: 80px">
+								Date
+								</th>
+							<th style="min-width: 100px">
+								User
+							</th>
+							<th style="min-width: 100px; max-width: 500px">
+								Note
+							</th>
+						</tr>
+					</thead>
+				
+					<tbody>
+						[% FOREACH note IN data.notes %]
+						<tr>
+							<td style="border: 1px solid black">
+								<input type="checkbox" name="seq" value="[% note.seq %]">
+							</td>
+							<td style="min-width: 80px; border: 1px solid black">
+								[% note.date %]
+							</td>
+							<td style="min-width: 100px; border: 1px solid black">
+								[% note.userid %]
+							</td>
+							<td style="max-width: 500px; border: 1px solid black; text-align: left">
+								[% note.note %]
+							</td>
+
+						</tr>
+					[% END %]
+					</tbody>
+				</table>
+			</div>
+			
+			<input type="hidden" name="lev" value="[% data.lev + 1 %]">
+			<input type="hidden" name="ucn" value="[% data.casenum %]">
+			<input type="submit" name="submit" value="OK">&nbsp;&nbsp;&nbsp;
+			<input type="button" name="cancel" value="Cancel"
+				   onclick="GoBack('ICMS_[% data.lev - 1 %]');">
+		</form>
+		[% END %]

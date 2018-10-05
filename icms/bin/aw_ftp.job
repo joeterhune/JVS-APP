@@ -1,0 +1,30 @@
+#!/bin/sh
+
+cat /var/www/html/case/Palm/civ/divAW/divcs.txt /var/www/html/case/Palm/civ/divAV/divcs.txt > /var/tmp/divawandav.txt
+
+USERNAME="portal"
+PASSWORD="mobile1"
+SERVER="151.132.51.8"
+
+# local directory to pickup file
+LOCAL="/var/www/html/case/Palm/civ/divAW/"
+
+# remote server directory to upload file
+REMOTE="/portal/webapps/ROOT/divisionaw/data"
+
+# login to remote server
+ftp -n -i $SERVER <<EOF
+user $USERNAME $PASSWORD
+cd $REMOTE
+put /var/tmp/divawandav.txt /portal/webapps/ROOT/divisionaw/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAJ/divcs.txt /portal/webapps/ROOT/scheduling/divaj/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAJ/divcs.txt /portal/webapps/ROOT/scheduling/divdemo/data/divcs.txt
+put /var/tmp/divawandav.txt /portal/webapps/ROOT/scheduling/divawdemo/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAI/divcs.txt /portal/webapps/ROOT/scheduling/divai/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAN/divcs.txt /portal/webapps/ROOT/scheduling/divan/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAB/divcs.txt /portal/webapps/ROOT/scheduling/divab/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAG/divcs.txt /portal/webapps/ROOT/scheduling/divag/data/divcs.txt
+put /var/www/html/case/Palm/civ/divAA/divcs.txt /portal/webapps/ROOT/scheduling/divaa/data/divcs.txt
+quit
+EOF
+

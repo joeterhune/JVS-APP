@@ -1,0 +1,80 @@
+[% IF (data.goodRecipients || data.badRecipients) && (data.goodRecipients.size || data.badRecipients.size) %]
+	<div class="title" style="text-align: center">
+	    <h1>
+	        Message Sent
+	    </h1>
+	</div>
+	[% IF data.orders %]
+		<div>
+		    <span style="color: green">
+		        The following files were sent:
+		    </span>
+		    <ul>
+		        [% FOREACH order IN data.orders %]
+		        	<li>[% order.filedesc %] ([% order.shortname %])</li>
+		        [% END %]
+		    </ul>
+		</div>
+	[% END %]
+	
+	[% IF data.goodRecipients.size %]
+	<div>
+	    <span style="color: green">
+	        They were sent to these recipients:
+	    </span>
+	    <ul>
+	        [% FOREACH recip IN data.goodRecipients %]
+	        	<li>[% recip.email_addr %] [% IF recip.fullname %]([% recip.fullname %])[% END %]</li>
+	        [% END %]
+	    </ul>
+	</div>
+	[% END %]
+	[% IF data.badRecipients.size %]
+	<div>
+	    <span style="color: red">
+	        <strong>They were NOT sent to these recipients due to invalid e-mail addresses:</strong>
+	    </span>
+	    <ul style="color: red">
+	        [% FOREACH recip IN data.badRecipients %]
+	        	<li>[% recip.email_addr %] [% IF recip.fullname %]([% recip.fullname %])[% END %]</li>
+	        [% END %]
+	    </ul>
+	</div>
+	[% END %]
+[% ELSE %]
+	<div>
+		<strong>
+		    <span style="color: red">
+		        No recipients were specified for e-service.
+		    </span>
+	    </strong>
+	</div>
+[% END %]
+
+[% IF data.sends %]
+	[% IF data.foundError %]
+		<div>
+			<strong>
+			    <p style="color: red">
+			        HOWEVER, there was an error processing the filing with the portal.
+			    </p>
+			    <p style="color: red">
+			        Court Technology has been notified and will look into the matter ASAP.  They will attempt to re-submit
+					the filing for you, and no action is necessary on your part at this time.  Confirmation of successful filing will be sent from the Portal to your divisional e-mail box 
+					when the filing has been processed.
+			    </p>
+			</strong>
+		</div>
+	[% ELSE %]
+		<div>
+		    <span style="color: green">
+		        In addition, the following images were e-Filed, receiving Filing ID [% data.filingID %]:
+		    </span>
+		    <ul>
+		        [% FOREACH tiff IN data.sends %]
+		        	<li>[% tiff.filedesc %] ([% tiff.shortname %], [% tiff.pages %] pages)</li>
+		        [% END %]
+		    </ul>
+		</div>
+	[% END %]
+[% END %]

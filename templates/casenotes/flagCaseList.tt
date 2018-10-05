@@ -1,0 +1,91 @@
+
+
+<div id="reportDiv" style="width: 100%;">
+  <!--  <div id="flagrpt-pager" class="pager" style="top: 0px">
+        <form>
+            <img src="/images/first.png" class="first"/>        <img src="/images/prev.png" class="prev"/>
+        <input type="text" class="pagedisplay"/>
+        <img src="/images/next.png" class="next"/>
+        <img src="/images/last.png" class="last"/>
+        <select class="pagesize">
+            <option value="10">10 per page</option>
+            <option value="25">25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100" selected="selected">100 per page</option>
+            <option value="500">500 per page</option>
+            <option value="1000">1000 per page</option>
+        </select>
+    </form>
+</div>-->
+    
+    
+<table class="summary" style="width: 100%;">
+	<tr>
+		<td id="rptname" class="title" style="font-size: 150%">
+			Flagged Case Search for Flag [% data.flag %], Division [% data.division %], Flagged Dates [% data.dates %] -
+                <span id="flagrpt-rowcount">[% data.casecount %]</span>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			[% IF data.outCases.size %]
+			<table id="flagrpt-listTable" style="font-size: 90%; width: 100%;">
+				<thead>
+					<tr class="title">
+						<th class="case" style="width: 20em;" data-placeholder="Part of case #">Case #</th>
+						<th class="narrow filter-select" style="width: 4em" data-placeholder="Select">Div</th>
+						<th style="width: 25em" data-placeholder="Part of Case Style">Case Style</th>
+						<th class="date filter-select" data-placeholder="Date">Initial<br>File</th>
+						<th class="narrow" data-placeholder="Days">Age</th>
+						<th class="date filter-select" data-placeholder="Date">Last<br>Activity</th>
+                        <th class="date filter-select" data-placeholder="Date">Next<br>Event</th>
+						<th class="narrow filter-select" data-placeholder="Type">Type</th>
+						<th class="narrow filter-select" data-placeholder="Status">Status</th>
+						<th data-placeholder="Part of Flag">Flags</th>
+						<th data-placeholder="Part of Note">Notes</th>
+					</tr>
+				</thead>
+				
+				<tbody id="flagrpt-listBody">
+					[% FOREACH case IN data.outCases %]
+					<tr class="caseRow">
+						<td class="case">
+                            <a class="caseLink" data-casenum="[% case.CaseNumber %]">[% case.CaseNumber %]</a>
+						</td>
+						<td class="narrow" style="text-align: center">[% case.DivisionID %]</td>
+						<td style="width: 25em">[% case.CaseStyle %]</td>
+						<td class="date">[% case.FileDate %]</td>
+						<td class="narrow">[% case.CaseAge %]</td>
+						<td class="date">[% case.LastActivityDate %]</td>
+                        <td class="date">[% case.NextEventDate %]</td>
+						<td class="narrow">[% case.CaseType %]</td>
+						<td class="narrow">[% case.CaseStatus %]</td>
+						<td style="color: green">
+                            <ul>
+                            [% FOR flag IN case.Flags %]
+                                <li>
+                                    [% flag.FlagDescription %] <span style="color: black">([% flag.User %], [% flag.FlagDate %])</span>
+                                </li>
+                            [% END %]
+                            </ul>
+                        </td>
+                        <td style="color: green">
+                            <ul>
+                            [% FOR note IN case.CaseNotes %]
+                                <li>
+                                    [% note.CaseNote %] <span style="color: black">([% note.User %], [% note.NoteDate %])</span>
+                                </li>
+                            [% END %]
+                            </ul>
+                        </td>
+					</tr>
+					[% END %]
+				</tbody>
+			</table>
+			[% ELSE %]
+			No flagged cases were found with your selected criteria.
+			[% END %]
+		</td>
+	</tr>
+</table>
+</div>

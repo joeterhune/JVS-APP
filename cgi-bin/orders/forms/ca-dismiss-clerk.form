@@ -1,0 +1,18 @@
+ORDER
+#
+#  ALL divisions may use this form.
+Dismiss with Instructions to Clerk~ca-dismiss-clerk~CA,CC,SC~~01~MND
+#
+FIELDS
+#
+# If /nocheck is set, do not automatically check parties' checkboxes.
+/nocheck
+#
+#  additional cc copy list - -with space for 5 more
+#
+/copystart
+/copyend~2
+#
+# USE RTF FORMAT FORM
+USERTF
+FORM

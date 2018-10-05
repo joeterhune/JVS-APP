@@ -1,0 +1,29 @@
+\bstart
+<a>
+\cNOTICE
+<b>
+If you are a person with a disability who needs any accommodation in order to 
+participate in this proceeding, you are entitled, at no cost to you, to the 
+provision of certain assistance. Please contact the ADA Coordinator in the 
+Administrative Office of the Court, Palm Beach County Courthouse, 
+205 North Dixie Highway, Room 5.2500, West Palm Beach, Florida 33401; 
+telephone number (561) 355-4380 within two (2) working days of your receipt 
+of this Order;  if you are hearing or voice impaired, call 1-800-955-8771.
+</b>
+</a>
+SPANISH
+ASI Ud. es una persona incapacitada que necesita de un servicio especial para participar en este
+processo, Ud. tiene derecho a que le provean cierta ayuda sin costo alguno. Por favor pongase 
+en contacto con Dominique March, el Coordinator de la Oficina Administrativa de la Corte ADA, 
+situada en el 205 North Dixie Highway, Oficina 5.2500, West Palm Beach, Florida, 33401, 
+telefono (561) 355-4380, dentro de los dos (2) proximos dias habiles despues de recibir esta 
+Notificiacion; si tiena incapacidad de oir o hablar llame al 1-800-955-8770.
+
+CREOLE
+ASi ou se yon moun ki infim, ki bezwen ninpot akomodasyon pou ka patisipe nan pwose sa-a, ou 
+gen dwa, san'l pa koute'w anyin, pou yo ba'w kek sevis. Tanpri kontakte Dominique March, koodinate
+ADA ya nan Biro Administratif Tribinal nan cite Palm Beach la, ki nan 205 North Dixie 
+Highway, Cham 5.2500. West Palm Beach, Florida 33401, nimero telefonn-nan se (561)355-4380,
+rele de (2) jou de le ou resevwa Notis sa-a; si ou bebe ou byen soud rele 1-800-955-8770.
+
+\bend

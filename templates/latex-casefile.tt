@@ -1,0 +1,37 @@
+\let\mypdfximage\pdfximage
+\def\pdfximage{\immediate\mypdfximage}
+\documentclass{report}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+
+\usepackage[pdfpagelabels=true]{hyperref}
+\usepackage{bookmark}
+\usepackage{pdfpages}
+\usepackage{longtable}
+\usepackage{pdflscape}
+
+\hypersetup {
+    pdfauthor = {ICMS},
+    pdftitle = {Case File for Case [% data.CaseNumber %]},
+    pdfnewwindow = true
+}
+
+\begin{document}
+
+\hypertarget{[% data.CaseNumber %]}{}
+\pdfbookmark[1]{[% data.CaseNumber %]}{[% data.CaseNumber %]}
+[% FOREACH docket IN data.CaseDocs %]
+    \hypertarget{[% docket.object_id %]}{}
+    \pdfbookmark[2]{[% docket.code %] ([% docket.date %])}{[% docket.object_id %]}
+    [% IF docket.landscape %]
+    [% i = 1 %]
+    [% WHILE i <= docket.pagecount %]
+    \begin{landscape}
+    \includepdf[angle=90,pages={[% i %]}]{[% docket.file %]}
+    \end{landscape}
+    [% i = i + 1 %]
+    [% END %]
+    [% ELSE %]
+    \includepdf[pages={-}]{[% docket.file %]}[% END %]
+[% END %]
+\end{document}

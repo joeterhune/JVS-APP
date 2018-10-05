@@ -1,0 +1,8 @@
+ORDER
+MEOT IB~ap-meot-ib~AP,CA~motiontitle,motiondate,ibduedate~01~~~AY,AC
+FIELDS
+motiontitle~Petition Title~~TEXT~70~
+motiondate~Date Petition Filed~~DATE~15~<small>(format you would like to appear on form)</small>
+ibduedate~Initial Bried Due Date~~DATE~15~<small>(format you would like to appear on form)</small>
+USERTF
+FORM

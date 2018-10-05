@@ -1,0 +1,16 @@
+[% INCLUDE chartHeader.html %]
+
+  <body>
+    <div id="chartContainer">FusionCharts will load here!</div>
+    <script type="text/javascript"><!--
+
+      var myChart = new FusionCharts( "[% swfDir %]/[% chartType %].swf",
+      "myChartId", "[% width %]", "[% height %]", "0", "1" );
+      myChart.setXMLUrl("[% chartFile %]");
+      myChart.render("chartContainer");
+
+    // -->
+    </script>
+  </body>
+
+[% INCLUDE chartFooter.html %]

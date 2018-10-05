@@ -1,0 +1,716 @@
+<script src="/javascript/calendars/utils.js?1.3" type="text/javascript"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+
+	$(document).on('click', '.showRecord', function () {
+		$(this).css('color', '#551A8B');
+    	var casenum = $(this).attr('data-casenum');
+        var url = '/cgi-bin/calendars/showCPCA.cgi?casenum=' + casenum;   
+        window.open(url);
+        return true;
+    });
+    
+    $(document).on("click", ".checkallboxes", function () {
+        $(this).closest('table').find(':checkbox').prop('checked', true);
+    });
+    
+    $(document).on("click", ".uncheckallboxes", function () {
+        $(this).closest('table').find(':checkbox').prop('checked', false);
+    });
+    
+    $(document).on("click", ".showmulti", function () {
+    	if ($("#docketform input:checkbox[name='selectedCPCA']").is(":checked")){
+    		$('#docketform').submit();
+        	return false;
+    	}
+    	else{
+    		showDialog('No PC Affidavits Selected', 'You must select at least one PC Affidavit to view.');
+            return false;
+    	}
+        
+    });
+
+    $('#cal-div-[% data.division %]-listTable').bind('filterEnd', function (event, config) {
+        if(config.filteredRows != config.totalRows){
+			$(".cal-div-[% data.division %]-reset").css("background-color", "red");
+			$(".cal-div-[% data.division %]-reset").css("border-color", "#000000");
+		}
+		else{
+			$(".cal-div-[% data.division %]-reset").css("background-color", "#428bca");
+			$(".cal-div-[% data.division %]-reset").css("border-color", "#357ebd");
+		}
+        countCalRows('cal-div-[% data.division %]');
+    });
+
+	$(".datepicker").datepicker({
+        showOn: "both",
+        buttonImage: "/style/images/calendar.gif",
+        buttonImageOnly: true,
+        format: 'mm/dd/yyyy',
+        autoclose: true,
+        todayHighlight: true,
+        todayBtn: 'linked',
+        minView: 2
+    });
+    
+    $(document).on('click','.hideCol,.showCol', function () {
+        var colName = $(this).attr('data-colName');
+        var selTarget = '.' + colName;
+        // Find the header for the target column - we need to know its column number
+        headerTarget = $('#cal-div-[% data.division %]-headerRow').find(selTarget).first();
+        thisCol = $(headerTarget)[0].column;
+        $(selTarget).toggle();
+        
+        // Also be sure to hide the filter for that column (it doesn't hide with the class)
+        // Find which one it is.  We know the column number
+        $('.tablesorter-filter').each(function(i,e) {
+            var colNum = $(e).attr('data-column');
+            if (colNum == thisCol) {
+                // This is the one.  Hide the parent.
+                $(e).parent().toggle();
+                return false;
+            }
+            return true;
+        });
+        
+        cookieName = $('#cal-div-[% data.division %]-cookieName').val();
+        if ($(this).hasClass('hideCol')) {
+            $(this).removeClass('hideCol').addClass('showCol');
+            colCookie = $.cookie(cookieName);
+            if (colCookie == undefined) {
+                $.cookie(cookieName,colName, {expires : 10000});
+            } else {
+                cookieVal = colCookie + ':' + colName;
+                $.cookie(cookieName, cookieVal, {expires : 10000});
+            }
+        } else {
+            $(this).removeClass('showCol').addClass('hideCol');
+            colCookie = $.cookie($('#cal-div-[% data.division %]-cookieName').val());
+            if (colCookie != undefined) {
+                // Need to remove a value from the cookie.  It's delimited by colons.
+                hideCols = colCookie.split(':');
+                newHide = new Array();
+                for (i = 0; i < hideCols.length; i++) {
+                    if (hideCols[i] == '') {
+                        continue;
+                    }
+                    if (hideCols[i] != colName) {
+                        newHide.push(hideCols[i]);
+                    }
+                }
+                // Now join the values and set the cookie.
+                cookieVal = newHide.join(':');
+                $.cookie(cookieName, cookieVal, {expires : 10000});
+                return true;
+            }
+        }
+        return true;
+    });
+
+	$('.datefield').focus(function () {
+		$(this).parents(".typeselect:first").find('.dateradio').attr('checked','checked');
+		return;
+	});
+
+	$('.calLookup').click(function() {
+        var option = $('#cal-div-[% data.division %]-dates input[name=rangetype]:radio:checked').val();
+        var division = $('#cal-div-[% data.division %]-division').val();
+        var judgeID = $('#cal-div-[% data.division %]-judgeID').val();
+        var isFap = $('#cal-div-[% data.division %]-isFap').val();
+        var calType = $('#cal-div-[% data.division %]-calType').val();
+        var fapch = $('#cal-div-[% data.division %]-fapch').val();
+        var xmlhttp;
+        
+        $('#cal-div-[% data.division %]-calMessage').show();
+        var url = '/cgi-bin/calendars/showCal.cgi';
+        switch(option) {
+            case 'today':
+                $.blockUI({message: '<p><h1><img src="/images/busy.gif"/> Please Wait </h1></p><p>(Click grey area to cancel)</p>', fadeIn: 0});
+                xmlhttp = $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {div : division,rangetype : option, judgeID : judgeID, isFap : isFap, calType: calType, fapch: fapch, jsonOnly: 1},
+                    success: showCal
+                });
+                break;
+            case 'anotherday':
+                var date = $('#cal-div-[% data.division %]-otherday').val();
+                if (date == "") {
+                    showDialog('No Date Selected', 'You must select a date.');
+                    return false;
+                }
+                $.blockUI({message: '<p><h1><img src="/images/busy.gif"/> Please Wait </h1></p><p>(Click grey area to cancel)</p>', fadeIn: 0});
+                xmlhttp = $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {otherday : date, div : division, rangetype : option, judgeID : judgeID, isFap : isFap, calType: calType, fapch: fapch, jsonOnly: 1},
+                    success: showCal
+                });
+                break;
+            case 'dayrange':
+                var startdate = $('#cal-div-[% data.division %]-startday').val();
+                var enddate = $('#cal-div-[% data.division %]-endday').val();
+                if ((startdate == "") || (enddate == "")) {
+                    showDialog('Start and End Date Not Selected', 'You must select both a start and end date.');
+                    return false;
+                }
+                var sd = new Date(startdate);
+                var ed = new Date(enddate);
+                if (sd.getTime() > ed.getTime()) {
+                    showDialog('Invalid Start and End Dates', 'The start date must be before the end date.');
+                    return false;
+                }
+                $.blockUI({message: '<p><h1><img src="/images/busy.gif"/> Please Wait </h1></p><p>(Click grey area to cancel)</p>', fadeIn: 0});
+                xmlhttp = $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {startday : startdate, endday : enddate, div : division, rangetype : option, judgeID : judgeID, isFap : isFap, calType: calType, fapch: fapch, jsonOnly: 1},
+                    success: showCal
+                });
+                break;
+            default:
+                showDialog('Error', 'Unknown action selected.');
+                return false;
+        }
+        
+        $('.blockOverlay').attr('title','Click to unblock').click(function () {
+	    	$.unblockUI();
+	    	$("#cal-div-[% data.division %]-calMessage").hide();
+	        xmlhttp.abort();
+	        return false;
+	    }); 
+        
+        return true;
+    });
+    
+    [% IF data.rangetype || (data.otherday) %]
+		[% IF data.rangetype == 'today' %]
+			$("#cal-div-[% data.division %]-today").attr('checked', 'checked');
+		[% ELSIF data.otherday %]
+			$("#cal-div-[% data.division %]-anotherday").attr('checked', 'checked');
+			$("#cal-div-[% data.division %]-otherday").val("[% data.otherday %]");
+		[% ELSE %]
+			$("#cal-div-[% data.division %]-dayrange").attr('checked', 'checked');
+			$("#cal-div-[% data.division %]-startday").val("[% data.startday %]");
+			$("#cal-div-[% data.division %]-endday").val("[% data.endday %]");
+		[% END %]
+		
+		$(".calLookup").trigger("click");
+	[% END %]
+    
+    //$('#cal-div-[% data.division %]-outCalendar').on('click', '.icmsLink', function () {
+    //    ucn = $(this).attr('data-ucn');
+    //    open_win('/cgi-bin/view.cgi?ucn=' + ucn + '&lev=0','caseWin');
+    //    return true;
+    //});
+    
+    $('#cal-div-[% data.division %]-outCalendar').on('click', '.nameLink', function () {
+        $.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+        var ucn = $(this).data('casenum');
+        var postData = {ucn: ucn};
+        $.ajax({
+            url: "/cgi-bin/relatedSearch.cgi",
+            async: false,
+            data: postData,
+            success: function(data) {
+                var searchName = data.searchName;
+                var tabName = "search-" + searchName.replace(", ","");
+                var tabTitle = "Cases for " + data.searchName;
+                createTab(tabName,tabTitle,'searchtop','innerPane',0);
+                var postData = {name: searchName, DOB: data.DOB, fuzzyDOB: 1, charges: 'on', tab: tabName, show: 1 }
+                $.ajax({
+                    url: '/cgi-bin/search.cgi',
+                    method: 'POST',
+                    data: postData,
+                    async: false,
+                    success: function(data) {
+                        $('#searchLink').trigger('click');
+                        showTab(data);
+                    }
+                });
+            }
+        })
+        $.unblockUI();
+    });
+	
+    $('#cal-div-[% data.division %]-calOutput').on('click', '.export', function () {
+        var option = $('input[name=rangetype]:radio:checked').val();
+        var xmlfile = $.trim($('#cal-div-[% data.division %]-tmpfile').val());
+        windowUrl = '/cgi-bin/export-xml.cgi?xmlfile=' + xmlfile;
+        
+        if (option === "dayrange") {
+            var startdate = $('#cal-div-[% data.division %]-startday').val();
+            var enddate = $('#cal-div-[% data.division %]-endday').val();
+            if ($('#cal-div-[% data.division %]-hasTemplate').val() != undefined) {
+            if (startdate != enddate) {
+                $('#dialogSpan').html($('#cal-div-[% data.division %]-rangeSelected').html());
+                $('#dialogDiv').dialog({
+                    resizable: false,
+                    minheight: 150,
+                    width: 500,
+                    modal: true,
+                    title: 'Date Range Selected',
+                    buttons: {
+                        "Combined": function() {
+                            $(this).dialog( "close" );
+                            windowUrl += '&multiSheets=0';
+                            window.open(windowUrl);
+                            return true;
+                        },
+                        "Separate": function() {
+                            $(this).dialog( "close" );
+                            windowUrl += '&multiSheets=1';
+                            window.open(windowUrl);
+                            return true;
+                        },
+                        "Cancel": function() {
+                            $(this).dialog( "close" );
+                            return false;
+                        }
+                    }
+                });
+                // Exit at this point so we can handle the modal. We'll open
+                // the window from a different function if we need to
+                return true;
+            }
+            }
+        }
+        
+        if (xmlfile != "") {
+            window.open(windowUrl);
+            return true;
+        }
+        return true;
+    });
+	
+	$('#cal-div-[% data.division %]-printopts').on('click','.printCal',function () {
+        var printContents = $('#cal-div-[% data.division %]-outCalendar').clone();
+        
+        // Remove the filter row because it doesn't make sense here.
+        $(printContents).find('.tablesorter-filter-row').remove();
+        
+        var myWindow = window.open("", "popup","width=1500,height=900,scrollbars=yes,resizable=yes," +
+								   "toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0");
+        var doc = myWindow.document;
+        
+        doc.open();
+        doc.write($(printContents).html());
+        $(doc).find('body').addClass('page');
+        $(doc).find('head').append('<link href="/style/print_landscape.css?1.2" rel="stylesheet" type="text/css"/>');
+        doc.close();
+        myWindow.print();
+	});
+	
+    function showCal(json) {
+        $.unblockUI();
+        if (json.cases.length == 0) {
+            showDialog('No Matches','No hearings were found for the selected date range.');
+            $('#cal-div-[% data.division %]-calMessage').hide();
+            return false;
+        }
+        $('#cal-div-[% data.division %]-cookieName').val(json.cookieName);
+        var colCookie = $.cookie($('#cal-div-[% data.division %]-cookieName').val());
+        $('#cal-div-[% data.division %]-calMessage').hide();
+        $('#cal-div-[% data.division %]-tableContainer').html('');
+        if(json.calType == 'magcal'){
+        	$('#cal-div-[% data.division %]-calTitle').text("Calendar for Magistrate " + json.JudgeName);
+        }
+        else if(json.calType == 'medcal'){
+        	if(json.division == 'ALL' || (json.division == 'all')){
+        		$('#cal-div-[% data.division %]-calTitle').text("Calendar for All Mediators");
+        	}
+        	else{
+        		$('#cal-div-[% data.division %]-calTitle').text("Calendar for Mediator " + json.JudgeName);
+        	}
+        }
+        else if(json.calType == 'expcal'){
+        	if(json.division == 'ALL' || (json.division == 'all')){
+        		$('#cal-div-[% data.division %]-calTitle').text("Ex-Parte Calendar");
+        	}
+        	else{
+        		$('#cal-div-[% data.division %]-calTitle').text("Ex-Parte Calendar for Division " + json.division);
+        	}
+        }
+        else if(json.calType == 'mhcal'){
+        	if(json.division == 'ALL' || (json.division == 'all')){
+        		$('#cal-div-[% data.division %]-calTitle').text("Mental Health Calendar");
+        	}
+        	else{
+        		$('#cal-div-[% data.division %]-calTitle').text("Mental Health Calendar for Division " + json.division);
+        	}
+        }
+        else{
+        	$('#cal-div-[% data.division %]-calTitle').text("Calendar for Division " + json.division);
+        }
+        $('#cal-div-[% data.division %]-rptDivision').text(json.division);
+        $('#cal-div-[% data.division %]-rptStartDate').text(json.start);
+        $('#cal-div-[% data.division %]-rptEndDate').text(json.end);
+        $('#cal-div-[% data.division %]-tmpfile').val(json.tmpfile);
+        if (json.exportXMLdef != undefined) {
+            $('#cal-div-[% data.division %]-checkMulti').append(
+                $('<input type="hidden">').attr('id','cal-div-[% data.division %]-hasTemplate').val(1)
+            );
+        }
+        var cases = json.cases;
+        
+        hideCols = new Array;
+        if (colCookie != undefined) {
+            hideCols = colCookie.split(':');
+        }
+        
+        if (cases.length > 0) {
+			$('#cal-div-[% data.division %]-tmpFile').val();
+            $('#cal-div-[% data.division %]-tableContainer').append(
+                $('<table>').attr('id',"cal-div-[% data.division %]-listTable").append(
+                    $('<thead>').append(
+                        $('<tr>').addClass('title').attr('id','cal-div-[% data.division %]-headerRow')
+                    ),
+                    $('<tbody>').attr('id','cal-div-[% data.division %]-dataBody')
+                )
+            );
+            
+            $('#cal-div-[% data.division %]-listTable').bind('filterEnd', function (event, config) {
+		        if(config.filteredRows != config.totalRows){
+					$(".cal-div-[% data.division %]-reset").css("background-color", "red");
+					$(".cal-div-[% data.division %]-reset").css("border-color", "#000000");
+				}
+				else{
+					$(".cal-div-[% data.division %]-reset").css("background-color", "#428bca");
+					$(".cal-div-[% data.division %]-reset").css("border-color", "#357ebd");
+				}
+                countCalRows('cal-div-[% data.division %]');
+            });
+            
+            $('#cal-div-[% data.division %]-columns').html('');
+            
+            // Populate the thead
+            $.each(json.exportHeaders,function (i,e) {
+				header = $('<th>').html(e.Column);
+                
+                if (e.filterType != undefined) {
+                    $(header).addClass(e.filterType);
+                }
+                
+                if (e.filterPlaceholder != undefined) {
+                    $(header).attr('data-placeholder',e.filterPlaceholder);
+                }
+                
+                // Add the fieldname as a class to the column header.
+                $(header).addClass(e.XMLField);
+                
+                if (e.cellClass != undefined) {
+                    $(header).addClass(e.cellClass);
+                }
+                
+                $('#cal-div-[% data.division %]-headerRow').append(
+                    $(header)
+                );
+                
+                // And add it to the list of columns that can be hidden.
+                
+                if(e.XMLField == 'CPCA'){
+                	e.Column = 'PC Affidavit';
+                }
+                
+                var colName = $('<a>').html(e.Column).attr('data-colname',e.XMLField);
+                if ($.inArray(e.XMLField, hideCols) != -1) {
+                    $(colName).addClass('showCol');
+                } else {
+                    $(colName).addClass('hideCol');
+                }
+                
+                $('#cal-div-[% data.division %]-columns').append(
+                    $(colName),
+                    "&nbsp;&nbsp;"
+                );
+            });
+            
+            // And now the tbody
+            var divType = json.divType;
+            $.each(cases, function(i,e) {
+                var newRow = $('<tr>');
+
+                if (e.isCanceled == 'Y') {
+                    $(newRow).addClass('canceled');
+                }
+                $.each(json.exportHeaders, function(j,k) {
+                    var fieldName = k.XMLField;
+                    var newCell;
+                    if (fieldName == 'CaseNumber') {
+                        newCell = $('<td>').html($(e).attr('ICMSLink'));
+						//newCell = $('<td>').html($(e).attr(fieldName));
+					} else {
+                        newCell = $('<td>').html($(e).attr(fieldName));
+                    }
+                    
+                    if (fieldName == 'CaseStyle') {
+                        var caseNum = $(e).attr('CaseNumber');
+                        if (caseNum.match(/-CJ-/ig)) {
+                            if ($(e).attr('CaseStyle') != '-- restricted case --') {
+                                newCell = $('<td>').html($(e).attr('NAMELink'));     
+                            } else {
+                                newCell = $('<td>').html($(e).attr('CaseStyle'));     
+                            }
+                        } else {
+                            newCell = $('<td>').html($(e).attr(fieldName));
+                        }
+                    }
+                    
+                    if (fieldName == 'Charges') {
+                        var newList = $('<ul>');
+                        
+                        $.each(e.Charges, function(q,r) {
+                            listItem = $('<li>').html(r);
+                            $(newList).append($(listItem));
+                        });
+                        newCell = $('<td>');
+                        $(newCell).append($(newList));
+                    }
+                    
+                    if (k.cellClass != undefined) {
+                        $(newCell).addClass(k.cellClass);
+                    }
+                    
+                    // Add the fieldname as a class
+                    $(newCell).addClass(fieldName);
+                    
+                    $(newRow).append(
+                        $(newCell)
+                    );
+                    $(newRow).addClass('eventRow');
+                });
+                $('#cal-div-[% data.division %]-dataBody').append(newRow);
+            });
+            $('#cal-div-[% data.division %]-colSelDiv').show();
+        } else {
+            $('#cal-div-[% data.division %]-tableContainer').html('No events were found that matched the selected criteria.');
+            $('#cal-div-[% data.division %]-colSelDiv').hide();
+        }
+        
+        $('#cal-div-[% data.division %]-outCalendar,#cal-div-[% data.division %]-printopts').show();
+        var pane = $('#cal-div-[% data.division %]-listTable');
+        cleanRestrictedLinks($(pane));
+        doCalSort('cal-div-[% data.division %]');
+        countCalRows('cal-div-[% data.division %]');
+        
+        // And actually hide the columns that should be hidden
+        for (i = 0; i < hideCols.length; i++) {
+            if (hideCols[i] == '') {
+                continue;
+            }
+            var selTarget = '.' + hideCols[i];
+            // Find the header for the target column - we need to know its column number
+            var headerTarget = $('#cal-div-[% data.division %]-headerRow').find(selTarget).first();
+            var thisCol = $(headerTarget)[0].column;
+            $(selTarget).hide();
+            
+            // Also be sure to hide the filter for that column (it doesn't hide with the class)
+            // Find which one it is.  We know the column number
+            $('.tablesorter-filter').each(function(i,e) {
+                var colNum = $(e).attr('data-column');
+                if (colNum == thisCol) {
+                    // This is the one.  Hide the parent.
+                    $(e).parent().hide();
+                    return false;
+                }
+                return true;
+            });
+        }
+        
+        $.unblockUI();
+        $('input, textarea').placeholder();
+        return true;
+    }
+});
+</script>
+
+<div style="float: right">
+    <a class="helpLink" data-context="calendars">
+        <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+    </a>
+</div>
+
+	[% IF data.judges %]
+	<form action="showCal.cgi" method="post" cal-div-[% data.division %]-searchForm" accept-charset="UTF-8" onsubmit="return false;">
+		<div id="cal-div-[% data.division %]-judgeSelect" style="margin-left: 50px; margin-top: 25px">
+			<div class="h2">
+				[% IF data.calType != "expcal"  && (data.calType != "mhcal") %]
+					[% IF data.judges.size > 1 || (data.magistrates.size > 1) || (data.mediators.size > 1) %]Select [% END %][% IF data.magistrates.0.FullName %]Magistrate[% ELSIF data.mediators.0.FullName %]Mediator[% ELSE %]Judge[% END %]
+				[% ELSE %]
+					Division
+				[% END %]
+			</div>
+			<div id="cal-div-[% data.division %]-judgeselect1">
+				[% IF data.judges.size > 1 %]
+					<select name="judgeID" id="cal-div-[% data.division %]-judgeID">
+						<option value="all" selected="selected">All Judges</option>
+						[% FOREACH judge IN data.judges %]
+						<option value="[% judge.JudgeID %]">[% judge.FullName %]</option>
+						[% END %]
+					</select>
+				[% ELSIF data.magistrates.0.FullName  %]
+					[% data.magistrates.0.FullName %]
+					<input type="hidden" name="division" id="division" value="[% data.division %]"/>
+				[% ELSIF data.mediators.size > 1  %]
+					<select name="judgeID" id="cal-div-[% data.division %]-judgeID">
+						<option value="all" selected="selected">All Mediators</option>
+						[% FOREACH med IN data.mediators %]
+							<option value="[% med.JudgeID %]">[% med.FullName %]</option>
+						[% END %]
+					</select>
+				[% ELSIF data.mediators.0.FullName  %]
+					[% data.mediators.0.FullName %]
+					<input type="hidden" name="division" id="division" value="[% data.division %]"/>
+				[% ELSIF data.calType == 'expcal' %]
+					[% IF data.division == "all" || (data.division == "ALL") %]
+						All Divisions
+					[% ELSE %]
+						[% data.division %]
+					[% END %]
+					<input type="hidden" name="division" id="division" value="[% data.division %]"/>
+				[% ELSIF data.calType == 'mhcal' %]
+					[% IF data.division == "all" || (data.division == "ALL") %]
+						All Divisions
+					[% ELSE %]
+						[% data.division %]
+					[% END %]
+					<input type="hidden" name="division" id="division" value="[% data.division %]"/>	
+				[% ELSE %]
+					Hon. [% data.judges.0.FullName %]
+					<input type="hidden" name="judgeID" id="cal-div-[% data.division %]-judgeID" value="[% data.judges.0.JudgeID %]"/>
+				[% END %]
+			</div>
+		</div>
+	
+		<div style="padding-left:2%">
+			<div id="cal-div-[% data.division %]-dates" style="margin-top: 2em;  width: 30em; float: left ">
+		
+				<div class="h2">
+					Date Range
+				</div>
+		
+				<div id="cal-div-[% data.division %]-todaydiv">
+					<input type="radio" class="dateradio" name="rangetype" value="today" checked="checked" id="cal-div-[% data.division %]-today"/>
+					<span style="font-size: smaller">Today</span>
+				</div>
+		
+				<div class="typeselect" id="cal-div-[% data.division %]-anotherdaydiv" style="position: relative">
+					<input type="radio" class="dateradio" name="rangetype" value="anotherday" id="cal-div-[% data.division %]-anotherday"/>
+					<span style="font-size: smaller;">
+						Another Day
+					</span>
+		
+					<div id="cal-div-[% data.division %]-pickotherday" style="position: absolute; left: 150px; top: 0px;">
+						<input type="text" class="datepicker datefield" name="otherday" id="cal-div-[% data.division %]-otherday"/>
+					</div>
+				</div>
+		
+				<div class="typeselect" id="cal-div-[% data.division %]-daterangf.lookupediv" style="position: relative;">
+					<input type="radio" class="dateradio" name="rangetype" value="dayrange" id="cal-div-[% data.division %]-dayrange"/>
+					<span style="font-size: smaller">Date Range</span>
+		
+					<!-- Start date.  Start with today's date selected -->
+					<div id="cal-div-[% data.division %]-startDate">
+						<span class="h3">Start Date</span>
+		
+						<div id="cal-div-[% data.division %]-pickStartDate" style="position: absolute; left: 150px; top: 20px;">
+							<input type="text" class="datepicker datefield" name="startday" id="cal-div-[% data.division %]-startday"/>
+						</div>
+					</div>
+		
+					<div id="cal-div-[% data.division %]-endDate" style="position: relative">
+						<span class="h3">End Date</span>
+		
+						<div id="cal-div-[% data.division %]-pickEndDate" style="position: absolute; left: 150px; top: 0px;">
+							<input type="text" class="datepicker datefield" name="endday" id="cal-div-[% data.division %]-endday"/>
+						</div>
+					</div>
+		
+				</div>
+				<br class="clear"/>
+		
+				<div id="cal-div-[% data.division %]-buttons">
+		            <button type="button" class="calLookup">Search</button><br/><br/>
+					<input type="hidden" name="division" id="cal-div-[% data.division %]-division" value="[% data.division %]"/>
+					<input type="hidden" name="calType" id="cal-div-[% data.division %]-calType" value="[% data.calType %]"/>
+					<input type="hidden" id="cal-div-[% data.division %]-cookieName"/>
+		            [% IF data.isFap %]
+		            	<input type="hidden" name="isFap" id="cal-div-[% data.division %]-isFap" value="1"/>
+		            	<input type="hidden" name="fapch" id="cal-div-[% data.division %]-fapch" value="[% data.fapch %]"/>
+		            [% END %]
+				</div>
+		    </div>
+		</div>		    
+	    
+	</form>	
+    
+	 <div id="cal-div-[% data.division %]-colSelDiv" style="float: left; margin-top: 2em; display: none; width: 45%">
+        <p style="font-weight: bold">
+            Click on the column names listed here to hide (or show) the column in the table.
+            Column names listed in red are already hidden.  Click them to show the column.
+        </p>
+        <div id="cal-div-[% data.division %]-columns">
+        </div>
+    </div>
+    
+    <br style="clear: both"/>
+        <div id="cal-div-[% data.division %]-calOutput">
+            <div id="cal-div-[% data.division %]-calMessage" style="display: none"><span style="color: red">Loading Calendar... please wait.</span></div>
+            <div id="cal-div-[% data.division %]-printopts" style="display: none">
+                <div id="cal-div-[% data.division %]-pager" class="pager" style="top: 40px">
+                    <form>
+                        <img src="/images/first.png" class="first"/>
+                        <img src="/images/prev.png" class="prev"/>
+                        <input type="text" class="pagedisplay"/>
+                        <img src="/images/next.png" class="next"/>
+                        <img src="/images/last.png" class="last"/>
+                        <select class="pagesize">
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="50">50 per page</option>
+                            <option value="100">100 per page</option>
+                            <option value="500">500 per page</option>
+                            <option value="1000">1000 per page</option>
+                            <option value="5000">5000 per page</option>
+                            <option value="10000">10000 per page</option>
+                        </select>
+                    </form>
+                </div>
+
+                <div>
+                    <button class="printCal">Print this Calendar</button>&nbsp; &nbsp;
+                    <button type="button" name="Export" class="export">Export to Excel</button>&nbsp; &nbsp;
+                    <button type="button" class="cal-div-[% data.division %]-reset">Reset Filters</button>
+                    <input type="hidden" name="tmpfile" id="cal-div-[% data.division %]-tmpfile"/>
+                </div>
+            </div>	
+		</div>
+        <br class="clear"/>
+        <div id="cal-div-[% data.division %]-outCalendar" style="display: none">
+        	<form action="/cgi-bin/calendars/showCPCA.cgi" method="post" onsubmit="target='_blank'" id="docketform">
+	            <table class="summary">
+	                <tr>
+	                    <td id="cal-div-[% data.division %]-rptname" class="title" style="font-size: 150%">
+	                        [% IF data.isFap %]First Appearance [% END %]
+	                        <span id="cal-div-[% data.division %]-calTitle"></span>, <span id="cal-div-[% data.division %]-rptStartDate"></span> - <span id="cal-div-[% data.division %]-rptEndDate"></span>,
+	                        <span id="cal-div-[% data.division %]-eventcount"></span>
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td id="cal-div-[% data.division %]-tableContainer"></td>
+	                </tr>
+	            </table>
+            </form>
+        </div>
+	</div>
+    
+    <div id="cal-div-[% data.division %]-checkMulti">
+        
+	</div>
+[% END %]
+
+<div id="cal-div-[% data.division %]-rangeSelected" style="display: none;">
+    You have a range of dates selected.  Would you like to create separate sheets for each date, or would
+    you like to combine all of the dates into a single sheet?
+</div>
+

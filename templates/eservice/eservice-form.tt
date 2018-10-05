@@ -1,0 +1,1118 @@
+<script src="/javascript/eservice.js?1.7" type="text/javascript"></script>
+<script type="text/javascript">
+    var allowNoAttach = 0;
+    var removeShowedPortal = 0;
+    var removeShowedLocal = 0;
+    var docketTypes = [% data.docketCodes %];
+    
+    function lookupOrders (search_string,targetDiv) {
+        targetSel = $('#' + targetDiv);
+        
+        var ph = $(targetSel).siblings('.idLookup').attr('placeholder');
+        if (ph == search_string) {
+            search_string = "";
+        }
+        
+        var matches = new Array();
+        
+        $(docketTypes).each(function (i,e) {
+            var reMatch = e.docket_desc.match(new RegExp(search_string,'i'));
+            if (reMatch != null) {
+                matches.push(e);
+            }
+        });
+        
+        // Ok, now that we have the matching orders, let's populate the <select>
+        // Clear it out first
+        
+        if (matches.length == 0) {
+            $(targetSel).html('');
+            start = $('<option>').val('').html('No matching order types found');
+            $(targetSel).append($(start));
+        } else {
+            $(targetSel).html('');
+            start = $('<option>').val('').html('Please select the order type');
+            $(targetSel).append($(start));
+            $(matches).each(function(i,e){
+                optVal = e.docket_desc + "~" + e.portal_desc + "~" + e.file_group;
+                addOpt = $('<option>').val(optVal).html(e.docket_desc);
+                if (e.docket_desc.toUpperCase() === search_string.toUpperCase()) {
+                    $(addOpt).attr('selected',true);
+                }
+                if ($(matches).length == 1) {
+                    // Only one match - must be this one!
+                    $(addOpt).attr('selected',true);
+                }
+                $(targetSel).append($(addOpt));
+            })
+        }
+        $(targetSel).show();
+        return true;
+    }
+                
+    $(document).ready(function () {
+        var pane = $('.eserviceDiv');
+        
+        $(pane).find('input,textarea').placeholder();
+        var ucn = $(pane).find('.ucn').val();
+        
+        [% IF data.filingid %]
+        $('#dialogSpan').html($('.refileMessage').html());
+        $("#dialogDiv").dialog({
+            resizable: false,
+            minheight: 200,
+            width: 500,
+            modal: true,
+            title: "Amending Filing",
+            buttons: {
+                "OK": function() {
+                    $(this).dialog("close");
+                }
+            }
+        });
+        
+        $('.replace').click(function () {
+            replaceFile = $(this).siblings('.attFile');
+            $(this).siblings('.shortname, .viewLink').hide();
+            $(replaceFile).prop('type', 'file').addClass('ulfile').css('display','inline').css('position','static');
+            return false;
+        });
+                
+        [% END %]
+                
+        $(document).on('click','.newcheck', function () {
+            if (!($(this).is(':checked'))) {
+                var dialogString = "You have un-checked a new address. If you submit the form with this box un-checked, the address will not be saved."
+                $('#dialogSpan').html(dialogString);
+                $("#dialogDiv").dialog({
+                    resizable: false,
+                    minheight: 200,
+                    width: 500,
+                    modal: true,
+                    title: 'Address Will Not Be Stored',
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog("close");
+                            return false;
+                        }
+                    }
+                });
+            }
+        });
+        
+        
+        $(document).on('click','.addEmail', function () {
+        	var addButton = $(this);
+            var email = $('.email').val();
+            var store; 
+            
+            if($(".storeBox").is(':checked')){
+            	store = 1;
+            }
+            else{
+            	store = 0;
+            }
+            
+            if (validEmail(email)) {
+                // Ok, it was valid.  Now check to be sure it isn't duplicated
+                if (!checkDupe(email)) {
+                    var cb = $(this).parent().parent();
+                    $(cb).find('input:checkbox').removeAttr('disabled');
+                    $(cb).find('input:checkbox').prop('checked',true);
+                    $(cb).find('input:checkbox').val(email);
+                    
+                    // Save it
+                    var url = "/eservice/addNewRecip.php";
+                    var pane = $(this).closest('.eserviceDiv');
+                    var casenum = "[% data.UCN %]";
+                    var postData = {casenum: casenum, email: email, store: store};
+                    
+                    $.ajax({
+                        url: url,
+                        data: postData,
+                        async: true,
+                        success: function(data) {
+                        	$(addButton).parent().find('.email').replaceWith("<label style=\"color: blue\" class=\"emailaddr\">" + email + "</label>");
+                        	$(addButton).parent().find('.addEmail').hide();
+                            return true;
+                        }
+                    });
+                    
+                } else {
+                    var cb = $(this).parent().parent();
+                    $(this).val('');
+                    setTimeout(function() {
+                        $(this).focus();
+                    },100);
+                    $(this).focus();
+                    $(cb).find('input:checkbox').attr('disabled','disabled');
+                    $(cb).find('input:checkbox').prop('checked',false);
+                    var dialogString = "The email address '" + email + "' is already on the list.";
+                    $('#dialogSpan').html(dialogString);
+                    $("#dialogDiv").dialog({
+                        resizable: false,
+                        minheight: 200,
+                        width: 500,
+                        modal: true,
+                        title: 'Address Already Exists',
+                        buttons: {
+                            "OK": function() {
+                                $(this).dialog("close");
+                                return false;
+                            }
+                        }
+                    });
+                }
+            } else {
+                var cb = $(this).parent().parent();
+                $(this).val('');
+                setTimeout(function() {
+                    $(this).focus();
+                },100);
+                $(this).focus();
+                $(cb).find('input:checkbox').attr('disabled','disabled');
+                $(cb).find('input:checkbox').removeAttr('checked');
+                var dialogString = "Please enter a valid email address."
+                $('#dialogSpan').html(dialogString);
+                $("#dialogDiv").dialog({
+                    resizable: false,
+                    minheight: 200,
+                    width: 500,
+                    modal: true,
+                    title: 'Invalid Email Address',
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog("close");
+                            
+                            return false;
+                        }
+                    }
+                });
+                
+            }
+        });
+        $('.moreRecips').on('click','.delAddl',function () {
+            var cb = $(this).parent().find('input:checkbox');
+            var ucn = "[% data.UCN %]";
+            var delAddr = $(cb).val();
+            $('#dialogSpan').html("Email address '" + delAddr + "' will be permanently removed from the service list when the form is submitted.");
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: 'Deleting Address',
+                buttons: {
+                    "OK": function() {
+                        $(this).dialog("close");
+                        
+                        var url = "/cgi-bin/eservice/removeAddlAddress.cgi";
+                        var postData = {casenum : ucn, email : delAddr};
+                        $.ajax({
+                            url: url,
+                            data: postData,
+                            async: true,
+                            success: function(data) {
+                                markAddress(data);
+                            }
+                        });
+                        
+                        return false;
+                    },
+                    "Cancel": function() {
+                        $(this).dialog("close");
+                        return false;
+                    }
+                }
+            });
+            
+            return false;
+        });
+        $('.addlrecips').on('click','.undoDel',function () {
+            var cb = $(this).parent().find('input:checkbox');
+            var ucn = "[% data.UCN %]";
+            var delAddr = $(cb).val();
+            $('#dialogSpan').html("Email address '" + delAddr + "' will be restored to the service list.");
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: 'Undo Deletion',
+                buttons: {
+                    "OK": function() {
+                        $(this).dialog("close");
+                        
+                        var url = "/cgi-bin/eservice/restoreAddlAddress.cgi";
+                        var postData = {casenum : ucn, email : delAddr};
+                        $.ajax({
+                            url: url,
+                            data: postData,
+                            async: true,
+                            success: function(data) {
+                                unMarkAddress(data);
+                            }
+                        });
+                        
+                        return true;
+                    },
+                    "Cancel": function() {
+                        $(this).dialog("close");
+                        return false;
+                    }
+                }
+            });
+            return false;
+        });
+        
+        $('.moreRecips').on('click','.suppress',function () {
+            var cb = $(this).parent().find('input:checkbox');
+            var ucn = "[% data.UCN %]";
+            var suppressAddr = $(cb).val();
+            var button = $(this);
+            $('#dialogSpan').html("Email address '" + suppressAddr + "' will be suppressed on this and future mailings on this case.");
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: 'Suppressing Address',
+                buttons: {
+                    "OK": function() {
+                        $(this).dialog("close");
+                        $.ajax({
+                            url: '/cgi-bin/eservice/suppressAddress.cgi',
+                            data: {casenum: ucn, email: suppressAddr},
+                            async: false,
+                            success: function (data) {
+                                $(cb).prop('checked',false);
+                                $(button).html('Undo Suppression').removeClass('suppress').addClass('unsuppress');
+                            }
+                        });
+                        return true;
+                    },
+                    "Cancel": function() {
+                        $(this).dialog("close");
+                        return false;
+                    }
+                }
+            });
+            
+            return false;
+        });
+        
+        $('.moreRecips').on('click','.unsuppress',function () {
+            var cb = $(this).parent().find('input:checkbox');
+            var ucn = "[% data.UCN %]";
+            var suppressAddr = $(cb).val();
+            var button = $(this);
+            $('#dialogSpan').html("Email address '" + suppressAddr + "' will no longer be suppressed on this case.");
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: 'Unsuppressing Address',
+                buttons: {
+                    "OK": function() {
+                        $(this).dialog("close");
+                        $.ajax({
+                            url: '/cgi-bin/eservice/unsuppressAddress.cgi',
+                            data: {casenum: ucn, email: suppressAddr},
+                            async: false,
+                            success: function (data) {
+                                $(cb).prop('checked',true);
+                                $(button).html('Suppress Address').removeClass('unsuppress').addClass('suppress');
+                            }
+                        });
+                        return true;
+                    },
+                    "Cancel": function() {
+                        $(this).dialog("close");
+                        return false;
+                    }
+                }
+            });
+            
+            return false;
+        });
+        
+        $('.addlrecips').on('click','.check', function () {
+            if (!($(this).is(':checked'))) {
+                var email = $(this).val();
+                if ($(this).hasClass('portal')) {
+                    if (removeShowedPortal) {
+                        return true;;
+                    }
+                    $('#dialogSpan').html("Email address '" + email+ "' will be removed from this mailing <span style='font-weight: bold'>only</span>.  <span style=\"color: red\">Since this address has been imported from the state's e-Filing portal, it can only be permanently removed by the person that added it.</span>");
+                    removeShowedPortal = 1;
+                } else {
+                    if (removeShowedLocal) {
+                        return true;
+                    }
+                    $('#dialogSpan').html("Email address '" + email+ "' will be removed from this mailing <span style='font-weight: bold'>only</span>.  If you wish to remove the address from all future mailings, please click the \"Delete Address\" button.");
+                    removeShowedLocal = 1;
+                }
+                
+                $("#dialogDiv").dialog({
+                    resizable: false,
+                    minheight: 200,
+                    width: 500,
+                    modal: true,
+                    title: 'Removing For This Mailing',
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog("close");
+                            removeShowed = 1;
+                            return true;
+                        }
+                    }
+                });
+            }
+            return true;
+        })
+
+        
+        $('.altSender').change(function() {
+            var altSender = $(this);
+            var email = $(this).val();
+            if (validEmail(email) == false) {
+                $('#dialogSpan').html("Please enter a valid email address.");
+                $("#dialogDiv").dialog({
+                    resizable: false,
+                    minheight: 200,
+                    width: 500,
+                    modal: true,
+                    title: "Invalid Email Address",
+                    buttons: {
+                        "OK": function() {
+                            $(this).dialog("close");
+                        }
+                    }
+                });
+                $(altSender).val('');
+
+                // Set focus to altSender
+                setTimeout(function() {
+                    $(altSender).focus();
+                },100);
+                return false;
+            }
+            
+            var dialogString = "Use '" + email + "' as sender address?";
+            $('#dialogSpan').html(dialogString);
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: "Please Confirm Address",
+                buttons: {
+                    "Yes": function() {
+                        $(this).dialog("close");
+                    },
+                    Cancel: function() {
+                        $(altSender).val('');
+                        $(this).dialog( "close" );
+                    }
+                }
+            });
+            return true;
+        });
+        
+        $(document).on('change','.ulfile', function () {
+        	var currentField = $(this);
+            var file = $(this).val();
+            var type = file.split('.').pop();
+            var fileCheckbox = $("input[name='clerkFile']");
+                	
+            if(type != "pdf" && (fileCheckbox.length > 0 && fileCheckbox.is(":checked"))){
+            	$('#dialogSpan').html("Please attach a PDF file.");
+            	$("#dialogDiv").dialog({
+            	    resizable: false,
+                    minheight: 200,
+                    width: 500,
+                    modal: true,
+                    title: 'Error',
+                    buttons: {
+                 	   "OK": function() {
+                    	   $(this).dialog("close");
+                           $(currentField).val("");
+                           return true;
+                    	}
+                	}
+				});		
+			}
+		});
+		
+		$(document).on('click','.es-btn-submit', function () {
+        	$.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+		});
+    });
+    
+    function checkDupe(email) {
+        // First check the "official" service list
+        var isDupe = 0;
+        $('#recipients').find('.check').each(function (i,e) {
+            if (email.toLowerCase() == $(e).attr('data-subject').toLowerCase()) {
+                isDupe = 1;
+                return false;
+            }
+            return true;
+        });
+        
+        if (isDupe) {
+            return isDupe;
+        }
+        
+        // Then check both the existing and new "additional"
+        $('#moreRecips').find('.check').each(function (i,e) {
+            if (email.toLowerCase() == $(e).val().toLowerCase()) {
+                isDupe = 1;
+                return false;
+            }
+            return true;
+        });
+        
+        return isDupe;
+    }
+    
+    function markAddress (data) {
+        if (data.result == "Success") {
+            var email = data.email;
+            $(document).find('div.addlrecips').first().find('input:checkbox').each(function (i,e) {
+                var foo = $(e).val();
+                if (foo == email) {
+                    var label = $(e).parent().find('.emailaddr');
+                    $(label).css('text-decoration','line-through');
+                    $(e).attr('disabled','disabled');
+                    $(e).parent().find('.delAddl').html('Undo Delete').addClass('undoDel');
+                    return(false);
+                }
+                return true;
+            });
+        }
+        return true;
+    }
+    
+    function unMarkAddress (data) {
+        if (data.result == "Success") {
+            var email = data.email;
+            $(document).find('div.addlrecips').first().find('input:checkbox').each(function (i,e) {
+                var foo = $(e).val();
+                if (foo == email) {
+                    var label = $(e).parent().find('.emailaddr');
+                    $(label).css('text-decoration','none');
+                    $(e).removeAttr('disabled');
+                    $(e).prop('checked',true);
+                    $(e).parent().find('.delAddl').html('Delete Address').removeClass('undoDel');
+                    return(false);
+                }
+                return true;
+            });
+        }
+        return true;
+    }
+
+    function nl2br (str, is_xhtml) {
+        var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';
+        return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
+    }
+
+    function validEmail (email) {
+        var hasError = false;
+        var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+        if(email == '') {
+            return false;
+        } else if(!emailReg.test(email)) {
+            return false;
+        }
+        return true;
+    }
+
+    
+    function devAlert(formname) {
+        [% IF data.systemType == 'dev' %]
+        message = "This system is in demo mode.  Any documents that are e-Filed will be " +
+            "filed with the TEST e-Filing portal.  They will NOT be docketed to the case.";
+        $('#dialogSpan').html(message);
+        $("#dialogDiv").dialog({
+            resizable: false,
+            minheight: 200,
+            width: 500,
+            modal: true,
+            title: "DEMO MODE",
+            buttons: {
+                "OK": function() {
+                    $(this).dialog("close");
+                    eserviceValidate(formname);
+                }
+            }
+        });
+        [% ELSE %]
+        eserviceValidate(formname);
+        [% END %]
+    }
+
+    function eserviceValidate (form) {
+        // First check to be sure the sender was selected
+        var pane = $(form).closest('.caseTab');
+        var sender = $(form).find('.sender').val();
+        var altSender = $(form).find('.altSender').val();
+        
+        if ((sender == '') && (altSender == '')) {
+            $('#dialogSpan').html("Please select a sender address.");
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: "No Sender Specified",
+                buttons: {
+                    "OK": function() {
+                    	$.unblockUI();
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            return false;
+        }
+
+        var foundError = 0;
+        var foundAttach = 0;
+        if ($('#genPdf').val() != undefined) {
+            foundAttach = 1;
+            
+            if ($(".suppDocs")[0]){
+            	$(".ulfile").each(function () {
+		            var elem = this.id;
+		            if(elem != ""){
+			            var pieces = elem.split("-");
+			            var number = pieces.pop();
+			            var desc = "file-desc-[% data.UCN %]-"+number;
+			            var fname = $(this).val();
+			            var fdesc = $('#'+desc).val();
+	
+			            if (fname != '') {
+			                foundAttach++;
+			                if ((fdesc == undefined) || (fdesc == '')) {
+			                    foundError = 1;
+			                    return;
+			                }
+			            }
+		            }
+		        });
+            }
+        }
+        else{ 
+	        $(".ulfile").each(function () {
+	            var elem = this.id;
+	            if(elem != ""){
+		            var pieces = elem.split("-");
+		            var number = pieces.pop();
+		            var desc = "file-desc-[% data.UCN %]-"+number;
+		            var fname = $(this).val();
+		            var fdesc = $('#'+desc).val();
+
+		            if (fname != '') {
+		                foundAttach++;
+		                if ((fdesc == undefined) || (fdesc == '')) {
+		                    foundError = 1;
+		                    return;
+		                }
+		            }
+	            }
+	        });
+        }
+
+        if (!foundAttach && !allowNoAttach) {
+            [% IF data.filingid %]
+            $('#dialogSpan').html("Please ensure that you are replacing an existing file.");
+            [% ELSE %]
+            $('#dialogSpan').html("Please ensure you have at least one file attached.");
+            [% END %]
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: "No Attachments Specified",
+                buttons: {
+                    "OK": function() {
+                    	$.unblockUI();
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            return false;
+        }
+        if (!foundError) {
+           $("#eserviceForm-[% data.UCN %]").submit();
+        } else {
+            [% IF data.clerkFile %]
+            	$('#dialogSpan').html("Please ensure you have selected an order type for each file.");
+            [% ELSE %]
+            	$('#dialogSpan').html("Please enter a description for each file.");
+            [% END %]
+            $("#dialogDiv").dialog({
+                resizable: false,
+                minheight: 200,
+                width: 500,
+                modal: true,
+                title: "Select an Order Type",
+                buttons: {
+                    "OK": function() {
+                    	$.unblockUI();
+                        $(this).dialog("close");
+                    }
+                }
+            });
+            return false;
+        }
+    }
+</script>
+
+[% IF data.filingid %]
+	[% IF !data.doc_id %]
+		<div class="refileMessage" style="display: none">
+		    <p>
+		        You will be re-filing filing ID <span style="color: red">[% data.filingid %]</span> on case <span style="color: red">[% data.casenum %]</span>.
+		    </p>
+		    <p>
+		        The original documents from the filing have been attached below. To file an updated version of a document, click the "Replace"
+		        link next to it. Any documents that you do not update will be re-sent with the existing filing in their original form.
+		    </p>
+		    <p>
+		        All documents in this filing will be re-served to selected recipients when the form is submitted.
+		    </p>
+		    <p>
+		        No documents can be added to or removed from an existing filing; if you need to file new documents, you must create a new filing.
+		    </p>
+		</div>
+	[% ELSE %]
+		<div class="refileMessage" style="display: none">
+	    <p>
+	        You will be re-filing filing ID <span style="color: red">[% data.filingid %]</span> on case <span style="color: red">[% data.casenum %]</span>.
+	    </p>
+	    <p>
+	        Your updated document(s) have been attached below.
+	    </p>
+	    <p>
+	        All documents in this filing will be re-served to selected recipients when the form is submitted.
+	    </p>
+	    <p>
+	        No documents can be added to or removed from an existing filing; if you need to file new documents, you must create a new filing.
+	    </p>
+	</div>
+	[% END %]
+[% END %]
+
+<div class="container eserviceDiv">
+    <div class="fullPageDiv">
+        <div>
+            <div style="float: right">
+                <a class="helpLink" data-context="eservice">
+                    <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+                </a>
+            </div>
+            
+            <div class="h2" style="text-align: center">
+                [% data.title %]
+            </div>
+            
+
+        </div>
+        
+        <div style="text-align: center">
+            [% data.caseinfo.CaseStyle %]
+        </div>
+
+[% IF data.filingid %]
+<div style="text-align: center; font-weight: bold; font-style: italic; color: red">
+    Re-filing of Portal Filing ID [% data.filingid %] 
+</div>
+[% END %]
+
+<div class="legend well" style="text-align: center; margin-top: 2em">
+   <p>
+		Email addresses in this color are defined in the Circuit's e-Service system.
+	</p>
+				
+    <p class="fromSc">
+		Email addresses in this color have been added from the Clerk's system.
+	</p>
+           
+    <p style="color: green">
+        Email addresses in this color have been imported from the State's e-Filing
+        portal and cannot be permanently removed here.
+    </p>
+            
+    <p style="color: blue">
+       Email addresses in this color have been added using the "Add'l Recipients" option.    
+    </p>
+            
+    <p style="color: purple">
+       Email addresses in this color are divisional addresses for agencies (SA, PD, ORCC) that are
+       represented on this case.
+    </p>
+    [% IF data.systemType == 'dev' %]
+    <p>
+        <span style="color: red; font-weight: bold">ATTENTION:</span>
+        <span style="color: red">
+            This system is in demo mode.  If you are e-Filing documents, they will be filed with the state's
+            TEST portal and will not actually be docketed on the case.
+        </span>
+    </p>
+    [% END %]
+</div>
+
+[% IF data.senders %]
+<div class="maindiv" style="margin-top: 25px">
+    <form action="eservice-send.cgi" method="post" id="eserviceForm-[% data.UCN %]" class="theForm" name="theForm" enctype="multipart/form-data">
+        [% IF data.clerkFile && data.eFileInfo || (data.gennedPdf) %]
+        <div class="block">
+        	<div class="buttons" style="position: relative; margin-top: 1em;">
+	            <button type="button" style=" position: relative; bottom: 0px; left: 3em" class="btn btn-primary es-btn-submit">
+	                e-Serve [% IF data.clerkFile %]and (if selected) e-File [% END %]Attached Documents
+	            </button>
+	            [% IF ! data.filingid && ! data.gennedPdf %]
+	            <button type="button" style="position: relative; bottom: 0px; left: 3em"
+	                    class="btn btn-primary btn-correspond">
+	                Send Correspondence Without Attaching Files
+	            </button>
+	            [% END %]
+	            <br class="clear"/><br class="clear"/>
+	        </div>
+	        <span style="font-style: italic; font-weight: bold">
+	        	<ul>
+	            	<li>The automated e-filing receipt from the Portal documenting transmission of this filing will be sent to the e-mail address associated with the e-filing ID used for this submission.</li>
+	            	<br>
+	            	<li>A copy of this e-service will be e-mailed to either the address displayed in the sender box, or the address typed in the alternate sender box.</li>
+	        	</ul>
+	        </span>
+	        <br/><br/>
+            <label>e-Filing:</label>
+            <div class="inner">
+                <input class="check" type="checkbox" name="clerkFile" value="1" [% IF data.efileCheck == "1" %] checked="checked" [% END %]/>
+                <span>
+                    Checking this box will automatically e-File all attached PDFs through the state e-Filing portal.
+                </span>
+            </div>
+        </div>
+        <div class="block">
+            <label>Emergency Filing:</label>
+            <div class="inner">
+                <input class="check" type="checkbox" name="emergency" value="1" [% IF data.markEmergency == "1" %] checked="checked" [% END %]/>
+                <span>
+                    Check this box to specify that this is an emergency filing.
+                </span>
+            </div>
+        </div>
+        [% END %]
+        
+        <div class="recipients block">
+            <label>Recipients:</label>
+            <div class="inner">
+                <a class="toggleLink listCheck" data-targetClass="recipCheck" data-checkProp=1>Select All</a>
+                <a class="toggleLink listCheck" data-targetClass="recipCheck" data-checkProp=0>Unselect All</a>
+                [% FOR recip IN data.recipients %]
+	                <div class="thinner" [% IF recip.FromShowcase == '1' %]style="color: orange;"[% END %]>
+	                    <input class="check recipCheck" type="checkbox" [% IF recip.email_addr_id %] name="recipId"
+	                    	value="[% recip.email_addr_id %]" [% ELSE %] name="addlRecip" value="[% recip.email_addr %]"[% END %] checked="checked" data-subject="[% recip.email_addr %]">
+	                    <span>
+	                    	[% recip.fullname %] ([% recip.email_addr %])
+	                    </span>
+	                </div>
+                [% END %]
+            </div>
+        </div>
+
+        <br style="clear: both"/>
+
+        <div class="moreRecips block">
+            <label>Add'l Recipients:</label>
+            <div class="inner" style="top: -2em;">
+                <div class="addlrecips">
+                    <a class="toggleLink listCheck" data-targetClass="recipCheck" data-checkProp=1>Select All</a>
+                    <a class="toggleLink listCheck" data-targetClass="recipCheck" data-checkProp=0>Unselect All</a>
+                    [% FOR recip IN data.addl_recips %]
+                    <div class="thinner">
+                        [% IF (recip.from_portal == 0) && (recip.agency == 0) %]
+                        <input class="check recipCheck" type="checkbox" name="addlRecip"
+                               value="[% recip.email_addr %]" checked="checked"/>
+                        <label class="emailaddr" style="color: blue">[% recip.email_addr %]</label>
+                        <button class="btn btn-danger delAddl">Delete Address</button>
+                        [% ELSE %]
+                            [% IF recip.from_portal == 1 %]
+                            <input class="check portal recipCheck" type="checkbox" name="addlRecip"
+                                   value="[% recip.email_addr %]" [% IF ! recip.isSuppressed %]checked="checked"[% END %]/>
+                            <label class="emailaddr" style="color: green">[% recip.fullname %] ([% recip.email_addr %])</label>
+                            [% ELSIF recip.agency == 1 %]
+                                <input class="check agency recipCheck" type="checkbox" name="addlRecip"
+                                   value="[% recip.email_addr %]" [% IF ! recip.isSuppressed %]checked="checked"[% END %]/>
+                                <label class="emailaddr" style="color: purple">[% recip.email_addr %]</label>
+                            [% END %]
+                        [% IF ! recip.isSuppressed %]
+                        <button class="btn btn-primary suppress">Suppress Address</button>
+                        [% ELSE %]
+                        <button class="btn unsuppress">Undo Suppression</button>
+                        [% END %]
+                        [% END %]
+                    </div>
+                    [% END %]
+                </div>
+            
+                <div>
+                    <button class="btn btn-primary btn-sm addRecip">+</button>&nbsp;Add another recipient
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="block">
+            <label>&nbsp;</label>
+            <div class="inner">
+                <input class="check storeBox" type="checkbox" name="store" checked="checked"/>
+                <span style="color: red">Store new additional recipients for later re-use with this case</span>
+            </div>
+        </div>
+        
+        <div class="from" class="block">
+            <label>Sender:</label>
+            <div class="inner">
+            	[% IF data.senders.size > 1 %]
+	            	<select name="sender" style="height: 1.5em" class="sender">
+		            	<!-- Multiple possible addresses -->
+		                <option value="" selected="selected">Select Sender</option>
+		                [% FOR sender IN data.senders %]
+			            	<option value="[% sender.displayName %]|[% sender.mail %]">
+			                	[% sender.displayName %] ([% sender.mail %])
+			                </option>
+		                [% END %]
+	                </select>
+	            [% ELSIF data.senders.size == 0 %]
+	            	<span style="color: red">No Default Sender - Alternate Sender Required</span>
+	                <input type="hidden" id="sender" name="sender" value=""/>
+                [% ELSE %]
+                    <select name="sender" style="height: 1.5em" class="sender">
+                    <!-- Single address -->
+                    <option value="[% data.senders.0.displayName %]|[% data.senders.0.mail %]|[% data.senders.0.telephoneNumber %]" selected="selected">
+                        [% data.senders.0.displayName %] ([% data.senders.0.mail %])
+                    </option>
+                    </select>
+                [% END %]
+            </select>
+            </div>
+        </div>
+
+        <div class="unlisted_sender" class="block">
+            <label>Alternate Sender:</label>
+            <div class="inner">
+                <input style="width: 40em;" type="text" name="altSender" class="altSender"
+                       title="Please enter an email address to be used instead of the listed above."/>
+            </div>
+        </div>
+        
+        <div class="subject" class="block">
+            <label>Subject:</label>
+            <div class="inner">
+                <input style="width: 40em;" type="text" name="msgSubject" class="msgSubject" value="[% data.subject %]"
+                       title="Please enter the email subject."/>
+            </div>
+        </div>
+
+        <div class="addl_comments" class="block">
+            <label>Additional Comments:</label>
+            <div class="inner">
+                <textarea rows="2" cols="80" name="addlcomments" class="addlcomment"
+                       title="Additional comments to be included in the message"></textarea>
+            </div>
+        </div>
+        
+        [% sdCount = 1 %]
+        [% IF data.gennedPdf %]
+	        <div class="gennedPdfs">
+	            <label style="color: red">[% data.order_label %]:</label>
+	            <div class="inner" style="left:17em;">
+	                <div class="genorder" class="fileinput">
+	                    <div>
+	                        <label>File:</label>
+	                        <span><a href="[% data.gennedPdf %]" target="_blank">[% data.doc_title %]</a></span>
+	                    </div>
+	                    <div>
+	                        <label>Description:</label>
+	                        <span>[% data.genFormName %]</span>
+	                    </div>
+	                    <input type="hidden" id="genPdf" class="genPdf" name="genPdf" value="[% data.gennedPdf %]"/>
+	                    <input type="hidden" id="genDocketDesc" class="genFileDesc" name="genDocketDesc" value="[% data.genDocketDesc %]~[% data.genPortalDesc %]~[% data.genDocketGroup %]"/>
+	                </div>
+	            </div>
+	        </div>
+	        [% IF data.supp_docs.size > 0 %]
+	        	<div id="files-[% data.UCN %]" class="suppDocs files" class="inner">
+	        		<label style="color: red">Attached Documents:</label>
+	        		[% FOREACH sd IN data.supp_docs %]
+		                <div id="attachment-[% data.UCN %]-[% sdCount %]" class="fileinput inner" style="left:17em;">
+		                    <label>File:</label>
+		                    <a href="[% sd.file %]" target="_blank">[% sd.document_title %]</a>
+		                    <input type="hidden" id="attach-file-[% data.UCN %]-[% sdCount %]" class="ulfile" name="attach-file-[% sdCount %]" value="[% sd.file %]"/>
+							<br/>
+		                    <label>Description:</label>
+		                    [% IF data.clerkFile %]
+		                    <input class="idLookup" id="idlookup-[% data.UCN %]-[% sdCount %]" name="idlookup-[% sdCount %]" placeholder="Type part of the order name"
+		                           style="width: 20em"/>
+		                    <button type="button" id="lookupBtn-[% data.UCN %]-[% sdCount %]" name="lookupBtn-[% sdCount %]" class="lookup">Look Up</button>
+		                    <select style="display: none; margin-left:14.5%" class="orderSel" id="file-desc-[% data.UCN %]-[% sdCount %]" name="file-desc-[% sdCount %]"></select>
+		
+		                    [% ELSE %]
+		                    <input style="width: 300px;" id="file-desc-[% data.UCN %]-[% sdCount %]" name="file-desc-[% sdCount %]"
+		                           title="Enter the motion name" type="text">
+		                    [% END %]
+		                </div>
+		                [% sdCount = sdCount + 1 %]
+		                <br/>
+	                [% END %]
+	            </div>
+	        [% END %]
+        [% END %]
+
+		[% IF (data.filingid && !data.doc_id) || !data.filingid %]
+	        <div class="attachments" class="block" style="margin-top: 20px; height: auto; width: 100%;">
+	            <label>Attached Orders:</label>
+	            
+	            [% IF data.filingid %]
+		            <div class="inner">
+		                [% maxcount = data.refiles.size - 1 %]
+		                [% FOREACH i IN [ 0 .. maxcount ] %]
+		                [% count = i + 1 %]
+		                [% file = data.refiles.$i %]
+		                <div id="attachment-[% data.UCN %]-[% count %]" class="fileinput">
+		                    <div style="float: none; clear: both">
+		                        <label style="width: 50px; left:0px;">File:</label>
+		                        <span class="shortname ulfile" style="position: static; display: inline">[% file.shortname %]</span>
+		                        <input type="hidden" class="attFile" id="attach-file-[% data.UCN %]-[% count %]"
+		                               name="attach-file-[% count %]" value="[% file.filename %]"/>
+		                        <a href="[% file.link %]" class="viewLink" target="_blank" style="position: static; display: inline">View</a>
+		                        <a href="#" class="replace" style="display: inline; position: static">Replace</a>
+		                    </div>
+		                    <div>
+		                        <label style="position: relative; width: 50px; left: 5em;">Description:</label>
+		                        <span class="ulfile" style="position: relative; left: 10em">[% file.docketdesc %]</span>
+		                    </div>
+		                    <input type="hidden" id="file-desc-[% data.UCN %]-[% count %]" name="file-desc-[% data.UCN %]-[% count %]" value="[% file.docketdesc %]~[% file.portaldesc %]~[% file.documentgroup %]"/>
+		                    <hr/>
+		                </div>
+		                [% END %]
+		            </div>
+	            [% ELSE %]
+		            [% newAttachedCount = sdCount %]
+		            <div id="files-[% data.UCN %]" class="files" class="inner" style="height: 5em; position: relative; left: 175px; width: 600px;">
+		                <div id="attachment-[% data.UCN %]-[% newAttachedCount %]" class="fileinput">
+		                    <label style="width: 50px; left:0px; position: absolute; float: left;">File:</label>
+		                    <input class="ulfile" type="file" id="attach-file-[% data.UCN %]-[% newAttachedCount %]" name="attach-file-[% newAttachedCount %]"/>
+		
+		                    <label style="width: 50px; position: absolute; left: 0px; top: 30px">Description:</label>
+		                    [% IF data.clerkFile %]
+		                    <input class="idLookup" id="idlookup-[% data.UCN %]-[% newAttachedCount %]" name="idlookup-[% newAttachedCount %]" placeholder="Type part of the order name"
+		                           style="position: absolute; top: 30px; left: 100px; width: 20em"/>
+		                    <button type="button" id="lookupBtn-[% data.UCN %]-[% newAttachedCount %]" name="lookupBtn-[% newAttachedCount %]" style="position: absolute; top: 30px; left: 35em;" class="lookup">Look Up</button>
+		                    <select style="position: absolute; top: 60px; left: 100px; display: none" class="orderSel" id="file-desc-[% data.UCN %]-[% newAttachedCount %]" name="file-desc-[% newAttachedCount %]"></select>
+		
+		                    [% ELSE %]
+		                    <input style="width: 300px; position: absolute; top: 30px; left: 100px" id="file-desc-[% data.UCN %]-1" name="file-desc-[% newAttachedCount %]"
+		                           title="Enter the motion name" type="text">
+		                    [% END %]
+		                    <button style="position: absolute; left: 40em" id="add-button-[% data.UCN %]-[% newAttachedCount %]" name="add-button-[% newAttachedCount %]" title="Add another file"
+		                            class="btn btn-primary btn-sm cloneBtn">
+		                        +
+		                    </button>
+		                </div>
+		            </div>
+		        [% END %]
+	        </div>
+	    [% END %]
+        
+        [% IF data.clerkFile %]
+        	<br class="clear"/>
+        	<div class="efiling_account_select" class="block">
+	            <label>e-File As:</label>
+	            <div class="inner">
+		        	<select name="efile_as" style="height: 1.5em" class="efiling_account">
+		        	[% FOREACH filer IN data.efiling_accounts %]
+			        	<option value="[% filer.value.0.portal_id %]" [% IF filer.value.0.default_account == '1' %]selected="selected"[% END %]>
+			        		[% filer.value.0.user_title %]
+			                [% filer.value.0.judge_first_name %]
+			                [% IF filer.value.0.judge_first_name %]
+			                	[% filer.value.0.judge_middle_name %]
+			                [% END %]
+			                [% filer.value.0.judge_last_name %]
+			                [% IF filer.value.0.judge_suffix %]
+			                	[% filer.value.0.judge_suffix %]
+			                [% END %]
+			            </option>
+		        	[% END %]
+		        	</select>
+		        </div>
+	        </div>
+        [% END %]
+        
+        <div class="buttons" style="position: relative; margin-top: 1em;">
+            <button type="button" style=" position: relative; bottom: 0px; left: 3em" class="btn btn-primary es-btn-submit">
+                e-Serve [% IF data.clerkFile %]and (if selected) e-File [% END %]Attached Documents
+            </button>
+            [% IF ! data.filingid && ! data.gennedPdf %]
+            <button type="button" style="position: relative; bottom: 0px; left: 3em"
+                    class="btn btn-primary btn-correspond">
+                Send Correspondence Without Attaching Files
+            </button>
+            [% END %]
+            <input type="hidden" class="casenum" name="casenum" value="[% data.casenum %]"/>
+            <input type="hidden" class="doc_id" name="doc_id" value="[% data.doc_id %]"/>
+            <input type="hidden" class="ucn" value="[% data.UCN %]"/>
+            <input type="hidden" class="divid" name="divid" value="[% data.caseinfo.DivisionID %]"/>
+            <input type="hidden" class="casestyle" name="casestyle" value="[% data.caseinfo.CaseStyle %]"/>
+            <input type="hidden" class="sendername" name="sendername" value="[% data.sender.name %]"/>
+            <input type="hidden" class="senderaddress" name="senderaddress" value="[% data.sender.address %]"/>
+            <input type="hidden" class="court_type" value="[% data.court_type %]"/>
+            [% IF data.filingid %]>
+            <input type="hidden" class="filingid" name="filingid" value="[% data.filingid %]"/>
+            <input type="hidden" class="filingdate" name="filingdate" value="[% data.origDate %]"/>
+            [% END %]
+        </div>
+        
+        <br/>
+        <br/>
+
+        <span style="font-style: italic; font-weight: bold">
+        	<ul>
+            	<li>The automated e-filing receipt from the Portal documenting transmission of this filing will be sent to the e-mail address associated with the e-filing ID used for this submission.</li>
+            	<br>
+            	<li>A copy of this e-service will be e-mailed to either the address displayed in the sender box, or the address typed in the alternate sender box.</li>
+        	</ul>
+        </span>
+        <br/><br/>
+    </form>
+</div>
+[% ELSE %]
+<div style="margin-top: 100px; text-align: center">
+    There are no divisional addresses defined for division [% data.division %]! Please contact
+    <a href="mailto:cad-help@pbcgov.org">cad-help</a> regarding this issue.
+</div>
+[% END %]
+    </div>
+
+<div class="eServiceResponseDiv" style="display: none"></div>
+
+
+</div>
+
+<!-- The new recip div for eservice - this is cloned on each page as required -->
+<div id="newrecip" style="display: none">
+	<div style="clear: both">
+    	<input style="float: left" class="check newcheck" type="checkbox" name="newRecip" disabled="disabled"/>
+        <div style="clear: right">
+        	<input type="text" class="email" style="width: 25em"/>
+            <button type="button" class="addEmail">Add</button>
+        </div>
+    </div>
+ </div>

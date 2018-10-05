@@ -1,0 +1,22 @@
+ORDER
+#
+#  ALL divisions may use this form.
+FCM Final Disposition~fcm-final-disposition~DR~style,dbh,dpsbh,dpmsbh,dobh,dah,dpsah,dpmsah,doah,dbd,dbj,dnjt,djt,other~01
+#
+FIELDS
+style~Case Style~~DROPDOWN~~~CIRCUIT COURT:COUNTY COURT
+dbh~Dismissed Before Hearing~~CHECKBOX
+dpsbh~Dismissed Pursuant to Settlement - Before Hearing~~CHECKBOX
+dpmsbh~Dismissed Pursuant to Mediated Settlement - Before Hearing~~CHECKBOX
+dobh~Other - Before Hearing~~CHECKBOX
+dah~Dismissed After Hearing~~CHECKBOX
+dpsah~Dismissed Pursuant to Settlement - After Hearing~~CHECKBOX
+dpmsah~Dismissed Pursuant to Mediated Settlement - After Hearing~~CHECKBOX
+doah~Other - After Hearing~~CHECKBOX
+dbd~Disposed by Default~~CHECKBOX
+dbj~Disposed by Judge~~CHECKBOX
+dnjt~Disposed by Non-jury Trial~~CHECKBOX
+djt~Disposed by Jury Trial~~CHECKBOX
+#
+USERTF
+FORM
