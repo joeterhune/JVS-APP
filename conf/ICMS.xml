@@ -16,6 +16,9 @@
     <bindPw>[PASSWORD FOR USER ABOVE]</bindPw>
     <userBase>[DN FOR THE AD USER BASE]</userBase>
     <svcBase>[DN FOR THE AD SERVICE BASE\</svcBase>
+    <!-- filterFormat (below) is a filter applied to the sAMAccountName that must match your user. This example is for the 15th Circuit's configuration,
+	 but it's important to have the %s substitution - it's populated with a sprintf() later -->
+    <filterFormat>(&amp;(sAMAccountName=%s)(memberof:1.2.840.113556.1.4.1941:=CN=CAD-ICMS-GROUP,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org))</filterFormat>
   </ldapConfig>
 
   <vrbUrl>[YOUR VIRTUAL REDBOOK URL]</vrbUrl>

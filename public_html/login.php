@@ -2,7 +2,10 @@
 
 require_once("php-lib/common.php");
 
-$config = simplexml_load_file($icmsXml);
+$xml = simplexml_load_file($icmsXml);
+$json = json_encode($xml);
+$config = json_decode($json, true);
+
 $error = "";
 $errorText = "";
 
@@ -28,7 +31,7 @@ if(!empty($_POST)){
 		die;
 	}*/
 	
-	$ldapURL = $config->ldapConfig->ldapHost[0];
+	$ldapURL = $config['ldapConfig']['ldapHost'];
 	
 	if(isset($_GET['ref'])){
 		$ref = $_GET['ref'];
@@ -38,9 +41,12 @@ if(!empty($_POST)){
 	$ui_pw = trim($_POST['password']);
 	
 	//Now verify their AD credentials
-	$ldaprdn  = "cn=cad icms,ou=Services,ou=CAD,ou=Enterprise,DC=PBCGOV,DC=ORG";
-	$ldappass = 'password99';
-		
+        $ldaprdn  = $config['ldapConfig']['bindDn'];
+        $ldappass = $config['ldapConfig']['bindPw'];
+	$searchBase = $config['ldapConfig']['userBase'];
+        $ldapFilterFormat = $config['ldapConfig']['filterFormat'];
+        $ldapFilter = sprintf($ldapFilterFormat, $ui_login);
+
 	$ldapconn = ldap_connect($ldapURL);
 
 	if(!$ldapconn){
@@ -58,8 +64,9 @@ if(!empty($_POST)){
 	$ad = $ldapconn;
 		
 	$attrs = array("description", "name", "mail");
-	$result = ldap_search($ad, 'ou=Users,ou=CAD,ou=Enterprise,DC=PBCGOV,DC=ORG',
-			"(&(sAMAccountName=".$ui_login.")(memberof:1.2.840.113556.1.4.1941:=CN=CAD-ICMS-GROUP,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org))", $attrs);
+	$result = ldap_search($ad,$searchBase, 
+		$ldapFilter, $attrs);
+
 	$info = ldap_get_entries($ad, $result);
 		
 	$loginString = isset($info[0]['dn']) ? $info[0]['dn'] : null;
