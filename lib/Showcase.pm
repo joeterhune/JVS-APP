@@ -6,10 +6,6 @@
 # 07/28/11 lms new evironment variable for using Trakman Image Service using
 #                  https
 
-BEGIN {
-   use lib $ENV{'PERL5LIB'};
-}
-
 package Showcase;
 require Exporter;
 
@@ -38,7 +34,6 @@ use Common qw (
     getUser
     getSession
     $templateDir
-    $db
 );
 
 use DB_Functions qw(
@@ -72,6 +67,11 @@ use PBSO2 qw (
 
 use JSON;
 
+#use Casenotes qw (
+#    getFlags
+#	getNotes
+#);
+
 use LWP::UserAgent;
 
 use Images qw (createPDF);
@@ -84,6 +84,7 @@ use XML::Simple;
 
 use Exporter();
 our @ISA=qw(Exporter);
+our @EXPORT;
 our @EXPORT_OK=qw(
     $ACTIVE
     $NOTACTIVE
@@ -94,6 +95,7 @@ our @EXPORT_OK=qw(
     @juvDivs
     @partyTypes
     $proSeString
+    $db
     buildTMImageList
     citationSearch
     convertCaseNumToDisplay
@@ -128,6 +130,7 @@ our @EXPORT_OK=qw(
     buildAddress
     lookupMailingAddress
     getjudgedivfromdiv
+    showcaseNameSearch
     getEvents
     getSCCaseNumber
     getCaseID
@@ -182,6 +185,8 @@ $NOTACTIVE .= ")";
 
 # Global array of the valid court types (handy to use with inArray())
 our @ctArray = ("CF","CO","CT","IN","MM","MO","TR","MI");
+
+our $db = getShowcaseDb();
 
 our $partyTypeString = "(select ctrptyp_code from ctrptyp)";
 
@@ -646,14 +651,8 @@ sub showcaseNameSearch{
     my $fieldref = shift;
     my $caseref = shift;
     
-    print "AND HERE!!!\n\n";
-    
     my @charges;
     my $query;
-    
-    use Data::Dumper qw(Dumper);
-    
-    print Dumper $fieldref;
     
     # Temporary storage for the data
     my $temp = [];
