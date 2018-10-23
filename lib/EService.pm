@@ -65,7 +65,7 @@ sub getPortalAddresses {
     
     return if (!defined($ucn));
         
-    my $portalXml = `/usr/bin/php /usr/local/icms/bin/portal/getServiceList.php -x -u $ucn`;
+    my $portalXml = `/usr/bin/php $ENV{'APP_ROOT'}/icms/bin/portal/getServiceList.php -x -u $ucn`;
     
     my $ref = XMLin(
                     $portalXml,

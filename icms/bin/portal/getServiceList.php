@@ -1,5 +1,8 @@
 <?php
-$config = simplexml_load_file("/usr/local/icms/etc/ICMS.xml");
+
+$icmsXml = __DIR__ . "/../../../conf/ICMS.xml";
+
+$config = simplexml_load_file($icmsXml);
 
 if (isset($config->{'serviceListWsdl'})) {
     $wsdl = (string) $config->{'serviceListWsdl'};
