@@ -4,7 +4,7 @@
 #
 
 BEGIN {
-    use lib '$ENV{'PERL5LIB'}';
+    use lib $ENV{'PERL5LIB'};
 };
 
 use strict;

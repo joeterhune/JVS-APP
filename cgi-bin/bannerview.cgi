@@ -6,7 +6,7 @@
 # location of PBSO.pm file - can't make relative in case juvenile
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib $ENV{'PERL5LIB'};
 };
 
 use strict;

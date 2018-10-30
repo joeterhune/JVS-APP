@@ -148,6 +148,12 @@ my %fields;
 my $icmsuser = getUser();
 
 my $ldap = ldapConnect();
+#Original security
+#$fields{'secretuser'} = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
+#$fields{'sealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
+#$fields{'jsealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
+#$fields{'psealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
+
 $fields{'secretuser'} = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
 $fields{'sealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
 $fields{'jsealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
@@ -383,7 +389,7 @@ my $idbh = dbConnect("icms");
 #$info = new CGI;
 my $user = getUser();
 
-createTab("Search Results", "/cgi-bin/case/search.cgi?name=" . $fields{'name'}, 1, 1, "index");
+createTab("Search Results", "/cgi-bin/search.cgi?name=" . $fields{'name'}, 1, 1, "index");
 my @myqueues = ($user);
 my @sharedqueues;
 my $session = getSession();

@@ -8,7 +8,7 @@
 # 04/07/11 lms Change &Dagger; to "F:" to indicate flag
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib $ENV{'PERL5LIB'};
 }
 
 use Spreadsheet::WriteExcel;
@@ -127,10 +127,10 @@ foreach (<INFILE>) {
 				$protocol = "https"
 			}
 			if ($_ !~ /scview.cgi/) {
-				$link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/case/search.cgi?name=$_";
+				$link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/search.cgi?name=$_";
 			} else {
 				my $ucn = (split(/;/, $_))[0];
-				$link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/case/search.cgi?name=$ucn";
+				$link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/search.cgi?name=$ucn";
 			}
 		} else {
 			$link="";

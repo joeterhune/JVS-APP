@@ -5,7 +5,7 @@
 # 11/29/10 lms don't attempt pbso search if there's no database connection
 
 BEGIN {
-   use lib "$ENV{'PERL5LIB'}";
+   use lib $ENV{'PERL5LIB'};
 }
 
 use strict;

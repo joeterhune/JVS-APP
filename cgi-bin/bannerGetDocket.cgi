@@ -4,7 +4,7 @@
 # to show booking history for the defendant
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+   use lib $ENV{'PERL5LIB'};
 }
 
 use strict;
