@@ -1,7 +1,7 @@
 package Common;
 
 BEGIN {
-	use lib "/usr/local/icms/bin";
+	use lib "$ENV{'PERL5LIB'}";
 };
 
 use strict;
@@ -865,7 +865,7 @@ sub readHash {
 sub redirectOutput {
 	my $prog = shift;
 
-	my $basepath = "/usr/local/icms/bin/results";
+	my $basepath = "$ENV{'PERL5LIB'}/results";
 
 	open OUTPUT, '>', "$basepath/$prog.stdout.txt" ||
 		die "Unable to redirect STDOUT to $basepath/$prog.stdout.txt: $!\n\n";

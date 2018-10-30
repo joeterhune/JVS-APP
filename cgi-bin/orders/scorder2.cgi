@@ -3,7 +3,7 @@
 #  orders2.cgi - generates PDF form orders from data
 #
 
-use lib "/usr/local/icms/bin";
+use lib "$ENV{'PERL5LIB'}";
 use strict;
 use DBI;
 use CGI;

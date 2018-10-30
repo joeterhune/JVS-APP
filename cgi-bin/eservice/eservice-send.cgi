@@ -239,7 +239,7 @@ if (defined($params{'clerkFile'})) {
         
         my $fileXml = createFilingXml(\@sends, $user, $casenum, $ucn, $pdbh, $eFileInfo, $caseInfo, $filetime, $params{'filingid'});
         
-        my $filing = `/usr/bin/php /usr/local/icms/bin/portal/fileTemplate.php -f $fileXml`;
+        my $filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $fileXml`;
     
         my $xs = XML::Simple->new();
 		
@@ -251,7 +251,7 @@ if (defined($params{'clerkFile'})) {
 		# If there was an error, let's wait a few seconds and try it one more time before we send an error e-mail
 		if ($@) {
 			sleep 3;
-			$filing = `/usr/bin/php /usr/local/icms/bin/portal/fileTemplate.php -f $fileXml`;
+			$filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $fileXml`;
     
 	        $xs = XML::Simple->new();
 			

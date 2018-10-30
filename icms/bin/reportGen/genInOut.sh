@@ -1,16 +1,16 @@
 #!/bin/bash
 
 echo Civil
-/usr/local/icms/bin/reportGen/civilInOut.pl
+$ENV{'PERL5LIB'}/reportGen/civilInOut.pl
     
 echo Family
-/usr/local/icms/bin/reportGen/familyInOut.pl
+$ENV{'PERL5LIB'}/reportGen/familyInOut.pl
    
 echo Juvenile
-/usr/local/icms/bin/reportGen/juvInOut.pl 
+$ENV{'PERL5LIB'}/reportGen/juvInOut.pl 
     
 echo Probate
-/usr/local/icms/bin/reportGen/probateInOut.pl
+$ENV{'PERL5LIB'}/reportGen/probateInOut.pl
     
 echo Criminal 
-/usr/local/icms/bin/reportGen/crimInOut.pl
+$ENV{'PERL5LIB'}/reportGen/crimInOut.pl

@@ -4,7 +4,7 @@ export LD_LIBRARY_PATH=$ORACLE_HOME/lib
 
 DATE=`/bin/date +%Y%m%d`
 
-cd /usr/local/icms/bin
+cd $ENV{'PERL5LIB'}
 # Showcase reports have been moved to screports.sh
 ./buildjudge.pl
 ./scciv.pl > results/civresults

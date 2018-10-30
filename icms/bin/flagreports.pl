@@ -4,7 +4,7 @@
 # 06/13/11 lms New code.
 
 BEGIN {
-	use lib "/usr/local/icms/bin";
+	use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;

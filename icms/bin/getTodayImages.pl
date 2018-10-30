@@ -3,7 +3,7 @@
 # Pre-fetch images from TrakMan for cases that are scheduled today.
 
 BEGIN {
-    use lib "/usr/local/icms/bin";
+    use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;
@@ -92,7 +92,7 @@ sub getDockets {
 
     my $xml;
     eval {
-		my $command = "/usr/bin/php /usr/local/icms/bin/getTmImages.php -c $caseNum";
+		my $command = "/usr/bin/php $ENV{'PERL5LIB'}/getTmImages.php -c $caseNum";
 		$xml = `$command`;
     };
     

@@ -3,7 +3,7 @@
 # sccrim.pl - ShowCase Criminal Case Reports - based on 06/07/2010 level of
 #             bannercrim.pl
 
-use lib "/usr/local/icms/bin";
+use lib "$ENV{'PERL5LIB'}";
 use strict;
 use POSIX qw(strftime);
 use ICMS;
@@ -1665,7 +1665,7 @@ sub doit() {
 
 	# If we're here, write something to indicate that we ran successfully.
 	my @now = localtime(time);
-	my $donefile = sprintf("/usr/local/icms/bin/results/sccrim-done.%04d%02d%02d", $now[5] + 1900, $now[4] + 1, $now[3]);
+	my $donefile = sprintf("$ENV{'PERL5LIB'}/results/sccrim-done.%04d%02d%02d", $now[5] + 1900, $now[4] + 1, $now[3]);
 	open (DONE, ">$donefile");
 	close DONE;
 
@@ -1679,7 +1679,7 @@ sub doit() {
 #
 
 # First, try to obtain a lock file, to ensure that no other copies are running.
-my $lockfile = "/usr/local/icms/bin/results/sccrim.lock";
+my $lockfile = "$ENV{'PERL5LIB'}/results/sccrim.lock";
 
 if (!getLock($lockfile,5)) {
 	print "Unable to obtain exclusive lock on '$lockfile'.  Another instance is running.  Exiting.\n";

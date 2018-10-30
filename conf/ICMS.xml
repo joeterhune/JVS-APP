@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ICMSConfig>
-
   <ftpConfigs>
     <merlin>
       <!-- Configuration for Merlin server, where we get Bar feeds -->
       <host>merlin.flcourts.org</host>
-      <user>XXXXXX</user>
-      <password>XXXXXX</password>
+      <user>cadweb</user>
+      <password>C@dw3b@R</password>
     </merlin>
   </ftpConfigs>
-
   <ldapConfig>
-    <ldapHost>[LDAP/AD URL]</ldapHost>
-    <bindDn>[DN OF USER FOR BINDING TO AD]</bindDn>
-    <bindPw>[PASSWORD FOR USER ABOVE]</bindPw>
-    <userBase>[DN FOR THE AD USER BASE]</userBase>
-    <svcBase>[DN FOR THE AD SERVICE BASE\</svcBase>
-    <!-- filterFormat (below) is a filter applied to the sAMAccountName that must match your user. This example is for the 15th Circuit's configuration,
-	 but it's important to have the %s substitution - it's populated with a sprintf() later -->
+    <ldapHost>ldap://adldap.pbcgov.org</ldapHost>
+    <bindDn>cn=cad icms,ou=Services,ou=CAD,ou=Enterprise,DC=PBCGOV,DC=ORG</bindDn>
+    <bindPw>password99</bindPw>
+    <userBase>ou=Users,ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG</userBase>
+    <svcBase>ou=Services,ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG</svcBase>
     <filterFormat>(&amp;(sAMAccountName=%s)(memberof:1.2.840.113556.1.4.1941:=CN=CAD-ICMS-GROUP,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org))</filterFormat>
   </ldapConfig>
-
-  <vrbUrl>[YOUR VIRTUAL REDBOOK URL]</vrbUrl>
-
-  <olsURL>[URL to your Online Scheduling Application]</olsURL>
-
+  <vrbUrl>https://demo-vrb.15thcircuit.com</vrbUrl>
+  <olsURL>http://larissa-dev.15thcircuit.com/ols_rewrite</olsURL>
   <showCaseDb>showcase-prod</showCaseDb>
   <signKey>16charactersdede</signKey>
   <baseURL>https://jvs-dev.15thcircuit.com/case/</baseURL>
   <baseURLSearch>https://jvs-dev.15thcircuit.com/cgi-bin/case/search.cgi</baseURLSearch>
-
+  <clerkFileDivs>AI</clerkFileDivs>
   <clerkEmail>
     <name>Circuit Civil</name>
     <CourtTypes>CA</CourtTypes>
@@ -40,29 +33,43 @@
     <CourtTypes>CC,SC</CourtTypes>
     <EmailAddr>CircuitCourtOrders@mypalmbeachclerk.com</EmailAddr>
   </clerkEmail>
-
-  <!-- For communicating with the state e-filing portal -->
   <serviceListWsdl>https://test.myflcourtaccess.com/wsdl/ElectronicServiceListService.wsdl</serviceListWsdl>
   <eFilingWsdl>https://test.myflcourtaccess.com/wsdl/BulkFilingReviewService.wsdl</eFilingWsdl>
-
   <portalAdminFiler>
-    <name>[PORTAL ADMIN USER]</name>
-    <password>[USER PASSWORD]</password>
+    <name>JUD15</name>
+    <password>admin15th</password>
   </portalAdminFiler>
-
   <icmsWebService>https://icms-web.15thcircuit.com</icmsWebService>
-
   <dbConfig>
     <name>showcase-prod</name>
     <dbType>mssql</dbType>
     <!-- Need to specify "server=" with SQL-Server; the hostname should correspond
                      to an entry in /etc/freetds.conf -->
-    <dbHost>XXXXXX</dbHost>
+    <dbHost>server=showcase-prod;database=showcase;IntegratedSecurity=SSPI;ApplicationIntent=ReadOnly</dbHost>
     <dbUser>icmsapp</dbUser>
-    <dbPass>XXXXXX</dbPass>
+    <dbPass>S3ar72Ve</dbPass>
     <dbName>ShowCase</dbName>
   </dbConfig>
-
+  <dbConfig>
+    <name>showcase-prod4</name>
+    <dbType>mssql</dbType>
+    <dbHost>server=showcase-new</dbHost>
+    <dbUser>PBCGOV\icmsapp</dbUser>
+    <dbPass>S3ar72Ve</dbPass>
+    <dbName>distribution</dbName>
+    <schema>ShowCaseRPT.Showcase.dbo</schema>
+  </dbConfig>
+  <dbConfig>
+    <name>showcase-new</name>
+    <dbType>mssql</dbType>
+    <!-- Need to specify "server=" with SQL-Server; the hostname should corresponf
+		to an entry in /etc/freetds.conf -->
+    <dbHost>server=showcase-new</dbHost>
+    <dbUser>PBCGOV\icmsapp</dbUser>
+    <dbPass>S3ar72Ve</dbPass>
+    <dbName>distribution</dbName>
+    <schema>ShowCaseRPT.Showcase.dbo</schema>
+  </dbConfig>
   <dbConfig>
     <name>showcase-rpt</name>
     <dbType>mssql</dbType>
@@ -70,28 +77,32 @@
 		to an entry in /etc/freetds.conf -->
     <dbHost>server=showcase-rpt</dbHost>
     <dbUser>icmsapp</dbUser>
-    <dbPass>XXXXXX</dbPass>
+    <dbPass>S3ar72Ve</dbPass>
     <dbName>ShowCase</dbName>
   </dbConfig>
-
   <dbConfig>
     <name>icms</name>
     <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
-    <dbName>casenotes</dbName>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+    <dbName>casenotes_12</dbName>
   </dbConfig>
-
   <dbConfig>
     <name>ols</name>
     <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
-    <dbName>olscheduling</dbName>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>scheduser</dbUser>
+    <dbPass>schedules</dbPass>
   </dbConfig>
-
+  <dbConfig>
+    <name>trafficSim</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+    <dbName>trafficSim</dbName>
+  </dbConfig>
   <dbConfig>
     <name>pbso2</name>
     <dbType>mssql</dbType>
@@ -99,57 +110,105 @@
 		to an entry in /etc/freetds.conf -->
     <dbHost>server=pbso2</dbHost>
     <dbUser>PBCGOV_Court_Management</dbUser>
-    <dbPass>XXXXXXXX</dbPass>
+    <dbPass>IMACS_icms</dbPass>
     <dbName>bookingQuery</dbName>
   </dbConfig>
-
+  <dbConfig>
+    <name>wpb-banner-prod</name>
+    <dbType>oracle</dbType>
+    <dbHost>JISPROD</dbHost>
+    <dbUser>CTADMRPTS</dbUser>
+    <dbPass>CTADMIN1</dbPass>
+  </dbConfig>
+  <dbConfig>
+    <name>wpb-banner-rpt</name>
+    <dbType>oracle</dbType>
+    <dbHost>JISRPT</dbHost>
+    <dbUser>CTADMRPTS</dbUser>
+    <dbPass>CTADMIN1</dbPass>
+  </dbConfig>
+  <dbConfig>
+    <name>eservice</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+    <dbName>ols_12</dbName>
+  </dbConfig>
   <dbConfig>
     <name>judge-divs</name>
     <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
     <dbName>judge_divs</dbName>
   </dbConfig>
-
+  <dbConfig>
+    <name>calendars</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+    <dbName>ols_12</dbName>
+  </dbConfig>
+  <dbConfig>
+    <name>signatures</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db</dbHost>
+    <dbName>icms_sigs</dbName>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+  </dbConfig>
+  <dbConfig>
+    <name>olsadmin</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>olsadmin</dbUser>
+    <dbPass>Adm1n01$</dbPass>
+    <dbName>ols_12</dbName>
+  </dbConfig>
+  <dbConfig>
+    <name>case_reports</name>
+    <dbType>mysql</dbType>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
+    <dbName>case_reports</dbName>
+  </dbConfig>
   <dbConfig>
     <name>portal_info</name>
     <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>icmsuser</dbUser>
+    <dbPass>icms</dbPass>
     <dbName>portal_info</dbName>
   </dbConfig>
-
- <dbConfig>
-    <name>calendars</name>
-    <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
-    <dbName>olscheduling</dbName>
+  <dbConfig>
+    <name>wpb-images</name>
+    <dbType>oracle</dbType>
+    <dbHost>TRKP</dbHost>
+    <dbUser>ctadmrpts</dbUser>
+    <dbPass>select1</dbPass>
+    <dbName>DBOTR</dbName>
   </dbConfig>
-
   <dbConfig>
     <name>vrb2</name>
     <dbType>mysql</dbType>
-    <dbHost>DBHOST</dbHost>
-    <dbUser>DBUSERNAME</dbUser>
-    <dbPass>DBPASSWORD</dbPass>
-    <dbName>vrb2</dbName>
+    <dbHost>cad-dev-db.15thcircuit.com</dbHost>
+    <dbUser>vrb_user</dbUser>
+    <dbPass>use_vrb</dbPass>
+    <dbName>vrb_12</dbName>
   </dbConfig>
-
   <TrakMan>
     <sealed>
       <userid>SVCCTADMINSV</userid>
-      <password>TMSEALEDPASS</password>
+      <password>r3sbu64w9</password>
     </sealed>
     <nosealed>
       <userid>SVCCTADMIN</userid>
-      <password>TMNOSEALEDPASS</password>
+      <password>Ju90Pf</password>
     </nosealed>
   </TrakMan>
-
   <ADACoordinator>Tammy Anton</ADACoordinator>
   <ADAPhone>(561) 355-4380</ADAPhone>
 </ICMSConfig>

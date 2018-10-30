@@ -6,7 +6,7 @@
 # Don't just use business days, because traffic/FAP cases are filed on weekends, too.
 
 BEGIN {
-	use lib "/usr/local/icms/bin";
+	use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;

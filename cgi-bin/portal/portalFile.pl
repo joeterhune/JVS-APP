@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "/usr/local/icms/bin";
+    use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;
@@ -92,7 +92,7 @@ close OUTFILE;
 print "Content-type: text/html\n\n";
 print "Done!";
 
-my $filing = `/usr/bin/php /usr/local/icms/bin/portal/fileTemplate.php -f $file`;
+my $filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $file`;
 
 open(OUTFILE, ">/tmp/filing.xml");
 print OUTFILE $filing;

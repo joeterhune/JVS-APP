@@ -2,7 +2,7 @@
 
 RECIP=rhaney@pbcgov.org
 DATE=`/bin/date +%Y%m%d`
-RESULTDIR=/usr/local/icms/bin/results
+RESULTDIR=$ENV{'PERL5LIB'}/results
 
 for SCRIPT in sccrim
 do

@@ -76,7 +76,7 @@
 #          lms 	BUGBUG - still need to work on what happens if electronic
 #		signature/stamp cross a page boundary!!!!
 
-use lib "/usr/local/icms/bin";
+use lib "$ENV{'PERL5LIB'}";
 use strict;
 use DBI;
 use CGI;

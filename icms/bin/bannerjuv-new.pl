@@ -2,7 +2,7 @@
 #
 
 BEGIN {	
-	use lib "/usr/local/icms/bin";
+	use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;

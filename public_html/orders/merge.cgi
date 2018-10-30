@@ -2,7 +2,7 @@
 
 # merge.cgi - merges the .tt form with JSON data, creating an html document for viewing/editing/printing
 BEGIN {
-    use lib "/usr/local/icms/bin";
+    use lib "$ENV{'PERL5LIB'}";
 }
 
 use CGI;
