@@ -49,7 +49,7 @@ my %queueItems;
 	
 my $wfcount = getQueues(\%queueItems, \@allqueues, $fdbh);
 
-createTab($params{'casenum'}, "/cgi-bin/case/search.cgi?name=" . $params{'casenum'}, 1, 1, "cases",
+createTab($params{'casenum'}, "/cgi-bin/search.cgi?name=" . $params{'casenum'}, 1, 1, "cases",
 { 
 	"name" => "All Case Docket Listing",
 	"active" => 1,

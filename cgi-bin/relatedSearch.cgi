@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+   use lib "$ENV{'PERL5LIB'}";
 }
 
 use strict;
@@ -60,6 +60,6 @@ my %result;
 $result{'searchName'} = $searchName;
 $result{'DOB'} = $dob;
 
-my $location = sprintf("/cgi-bin/case/search.cgi?name=%s&DOB=%s&fuzzyDOB=1&charges=on", $searchName, $dob);
+my $location = sprintf("/cgi-bin/search.cgi?name=%s&DOB=%s&fuzzyDOB=1&charges=on", $searchName, $dob);
 print $info->redirect(-uri => $location);
 exit;

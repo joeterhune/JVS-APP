@@ -129,7 +129,7 @@ if (defined $ENV{'HTTPS'}) {
     $protocol = "https"
 }
 
-my $link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/case/search.cgi?name=";
+my $link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/search.cgi?name=";
 
 # Now the data
 
@@ -406,7 +406,7 @@ sub addSheet {
             }
             
             if ($field eq 'CaseNumber') {
-                my $url = sprintf("http://jvs.15thcircuit.com/cgi-bin/case/search.cgi?name=%s", $event->{'CaseNumber'});
+                my $url = sprintf("http://jvs.15thcircuit.com/cgi-bin/search.cgi?name=%s", $event->{'CaseNumber'});
                 $sheet->write_url($dataRow, $i, $url, $columns[$i]->{'RowFmt'}, $event->{'CaseNumber'});
             } else {
             	$event->{$field} =~ s|<.+?>| |g;
