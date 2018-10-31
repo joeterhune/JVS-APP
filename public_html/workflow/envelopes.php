@@ -101,7 +101,7 @@ $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
 $signedDoc = getReqVal('signed');
 
-$url = "/case/workflow/envelopes.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/workflow/envelopes.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 	createTab($docInfo['ucn'], $url, 1, 1, "cases",
 	array(
 		"name" => "Order Creation",
@@ -124,7 +124,7 @@ if ($_SERVER['HTTPS'] == 'on') {
 	$protocol = "https";
 }
 
-$url = sprintf("%s://%s/case/orders/genpdf.php?env=Y", $protocol, $_SERVER['HTTP_HOST']);
+$url = sprintf("%s://%s/orders/genpdf.php?env=Y", $protocol, $_SERVER['HTTP_HOST']);
 
 $strCookie = 'PHPSESSID=' . $_COOKIE['PHPSESSID'] . '; path=/';
 session_write_close();

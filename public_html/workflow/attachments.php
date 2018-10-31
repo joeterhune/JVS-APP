@@ -146,7 +146,7 @@ getSharedQueues($user, $dbh, $sharedqueues);
 $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
-$url = "/case/workflow/attachments.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/workflow/attachments.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 	createTab($docInfo['ucn'], $url, 1, 1, "cases",
 		array(
 		"name" => "Order Creation",

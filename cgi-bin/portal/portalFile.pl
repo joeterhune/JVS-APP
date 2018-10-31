@@ -92,7 +92,7 @@ close OUTFILE;
 print "Content-type: text/html\n\n";
 print "Done!";
 
-my $filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $file`;
+my $filing = `/usr/bin/php /var/jvs/icms/bin/portal/fileTemplate.php -f $file`;
 
 open(OUTFILE, ">/tmp/filing.xml");
 print OUTFILE $filing;

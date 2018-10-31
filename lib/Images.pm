@@ -236,8 +236,10 @@ sub getImagesFromNewTM {
 
 		my $fh = File::Temp->new(DIR => $tmpPath,UNLINK => 0,SUFFIX => '.meta');
 		my $filename = $fh->filename;
+
 		print $fh $xml;
-		
+		    	
+
 		my $retfile = `php $ENV{'APP_ROOT'}/icms/bin/getTmImages.php -f $filename`;
 
 		my $docRef;

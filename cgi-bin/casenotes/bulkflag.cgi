@@ -35,17 +35,18 @@ use CGI;
 my $info = new CGI;
 
 my $user = getUser();
-if (!inGroup($user, "CAD-ICMS-NOTES")) {
-    print "You do not have rights to use this function.\n";
-    exit;
-}
+#if (!inGroup($user, "CAD-ICMS-NOTES")) {
+#	print $info->header();
+#    print "<h1 style='color:red;text-align:center;margin-top:20px;'>You do not have rights to use this function.</h1>\n";
+#    exit;
+#}
 
 my $fdbh = dbConnect("icms");
 
 my @myqueues = ($user);
 my @sharedqueues;
 
-createTab("Bulk Case Flagging/Unflagging", "/cgi-bin/case/casenotes/bulkflag.cgi", 1, 1, "index");
+createTab("Bulk Case Flagging/Unflagging", "/cgi-bin/casenotes/bulkflag.cgi", 1, 1, "index");
 my $session = getSession();
 
 getSubscribedQueues($user, $fdbh, \@myqueues);

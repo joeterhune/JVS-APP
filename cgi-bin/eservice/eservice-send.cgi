@@ -239,7 +239,7 @@ if (defined($params{'clerkFile'})) {
         
         my $fileXml = createFilingXml(\@sends, $user, $casenum, $ucn, $pdbh, $eFileInfo, $caseInfo, $filetime, $params{'filingid'});
         
-        my $filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $fileXml`;
+        my $filing = `/usr/bin/php /var/jvs/icms/bin/portal/fileTemplate.php -f $fileXml`;
     
         my $xs = XML::Simple->new();
 		
@@ -251,7 +251,7 @@ if (defined($params{'clerkFile'})) {
 		# If there was an error, let's wait a few seconds and try it one more time before we send an error e-mail
 		if ($@) {
 			sleep 3;
-			$filing = `/usr/bin/php $ENV{'PERL5LIB'}/portal/fileTemplate.php -f $fileXml`;
+			$filing = `/usr/bin/php var/jvs/icms/bin/portal/fileTemplate.php -f $fileXml`;
     
 	        $xs = XML::Simple->new();
 			
@@ -398,12 +398,12 @@ foreach my $tab_key (keys %{$sess_tabs}){
 
 $session->save();
 
-createTab($casenum, "/cgi-bin/case/search.cgi?name=" . $casenum, 1, 1, "cases",
+createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 { 
 	"name" => "e-Service",
 	"active" => 1,
 	"close" => 1,
-	"href" => "/cgi-bin/case/eservice/eService.cgi?case=" . $casenum . "&showOnly=0",
+	"href" => "/cgi-bin/eservice/eService.cgi?case=" . $casenum . "&showOnly=0",
 	"parent" => $casenum
 });
 $session = getSession();

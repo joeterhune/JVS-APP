@@ -153,7 +153,7 @@ $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
 //$formbody = getReqVal('form_body');
 
-$url = "/case/workflow/parties.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/workflow/parties.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 
 createTab($ucn, $url, 1, 1, "cases",
 	array(

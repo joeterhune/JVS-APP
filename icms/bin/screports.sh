@@ -1,8 +1,8 @@
 #!/bin/bash
 
 DATE=`/bin/date +%Y%m%d`
-cd $ENV{'PERL5LIB'}
+cd /var/jvs/icms/bin
 
-if [ ! -e $ENV{'PERL5LIB'}/results/sccrim-done.$DATE ]; then
+if [ ! -e /var/jvs/icms/bin/results/sccrim-done.$DATE ]; then
 	./sccrim.pl > results/crimresults&
 fi

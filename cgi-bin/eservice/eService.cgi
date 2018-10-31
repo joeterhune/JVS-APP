@@ -125,7 +125,7 @@ else{
 	$href = "/cgi-bin/case/eservice/eService.cgi?case=" . $casenum . "&caseid=" . $caseid . "&showOnly=" . $showOnly;
 }
 
-createTab($casenum, "/cgi-bin/case/search.cgi?name=" . $casenum, 1, 1, "cases",
+createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 { 
 	"name" => "e-Service",
 	"active" => 1,

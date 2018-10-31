@@ -135,7 +135,7 @@ if(isset($dbh)) {
 			echo "<div>There is a problem with the Case Notes / Flags database.  No connection can be made.  Please try later.</div>";
 		} else {
 ?>
-	<form id="flaggedcases" method="post" action="/cgi-bin/case/flagsearch.cgi">
+	<form id="flaggedcases" method="post" action="/cgi-bin/flagsearch.cgi">
 		<div style="font-size: 150%; font-weight: bold">
 			Show
 			<select name="flagtype" id="flagtype"  multiple="multiple" size="<?php echo $showcnt;?>">

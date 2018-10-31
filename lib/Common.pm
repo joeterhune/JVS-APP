@@ -225,7 +225,7 @@ sub uploadFile {
 
 	# Don't need the uploaded files visible to the webserver
 	my $uploaduser = getUser();
-	my $upload_base = $ENV{'DOCUMENT_ROOT'} . "/case/uploads";
+	my $upload_base = $ENV{'DOCUMENT_ROOT'} . "/uploads";
 
 	# Keep users from possibly stomping on each other's uploads
 	my $upload_dir = "$upload_base/$uploaduser";
@@ -865,7 +865,7 @@ sub readHash {
 sub redirectOutput {
 	my $prog = shift;
 
-	my $basepath = "$ENV{'PERL5LIB'}/results";
+	my $basepath = /var/jvs/icms/bin/results";
 
 	open OUTPUT, '>', "$basepath/$prog.stdout.txt" ||
 		die "Unable to redirect STDOUT to $basepath/$prog.stdout.txt: $!\n\n";
@@ -1441,7 +1441,7 @@ sub closeTab{
 				}
 				else{
 					$sess_tabs->{0}->{'active'} = 1;
-					$location = "/case/tabs.php";
+					$location = "/tabs.php";
 				}
 			}
 			else{
@@ -1468,7 +1468,7 @@ sub closeTab{
 					}
 					else{
 						$sess_tabs->{0}->{'active'} = 1;
-						$location = "/case/tabs.php";
+						$location = "/tabs.php";
 					}
 				}
 				else{
@@ -1484,7 +1484,7 @@ sub closeTab{
 					}
 					else{
 						$sess_tabs->{0}->{'active'} = 1;
-						$location = "/case/tabs.php";
+						$location = "/tabs.php";
 					}
 				}
 				
@@ -1523,12 +1523,12 @@ sub closeTab{
 			return $location; 
 		}
 		else{
-			$location = "/case/tabs.php";
+			$location = "/tabs.php";
 			return $location;
 		}
 	}
 	else{
-		$location = "/case/tabs.php";
+		$location = "/tabs.php";
 		return $location;
 	}
 }
@@ -1542,10 +1542,10 @@ sub checkLoggedIn {
 	
 	if($session eq ""){
 		if($reqPage ne ""){
-			$url = "/cgi-bin/case/logout.cgi?timeout=1&ref=" . $reqPage;
+			$url = "/cgi-bin/logout.cgi?timeout=1&ref=" . $reqPage;
 		}
 		else{
-			$url = "/cgi-bin/case/logout.cgi?timeout=1";
+			$url = "/cgi-bin/logout.cgi?timeout=1";
 		}
 		
 		print $info->redirect(-uri => $url);
@@ -1558,10 +1558,10 @@ sub checkLoggedIn {
 		$session->set('LASTACTIVITY', time());
 		
 		if($reqPage ne ""){
-			$url = "/cgi-bin/case/logout.cgi?timeout=1&ref=" . $reqPage;
+			$url = "/cgi-bin/logout.cgi?timeout=1&ref=" . $reqPage;
 		}
 		else{
-			$url = "/cgi-bin/case/logout.cgi?timeout=1";
+			$url = "/cgi-bin/logout.cgi?timeout=1";
 		}
 		
 		print $info->redirect(-uri => $url);

@@ -32,12 +32,12 @@ $caseid = getReqVal("caseid");
 
 list($ucn, $type) = sanitizeCaseNumber($ucn);
 
-createTab($ucn, "/cgi-bin/case/search.cgi?name=" . $ucn, 1, 1, "cases",
+createTab($ucn, "/cgi-bin/search.cgi?name=" . $ucn, 1, 1, "cases",
 		array(
 			"name" => "Related Case Search",
 			"active" => 1,
 			"close" => 1,
-			"href" => "/case/related_case_search/search_form.php?case=" . $ucn . '&caseid= ' . $caseid,
+			"href" => "/related_case_search/search_form.php?case=" . $ucn . '&caseid= ' . $caseid,
 			"parent" => $ucn
 		)
 );
@@ -45,7 +45,7 @@ createTab($ucn, "/cgi-bin/case/search.cgi?name=" . $ucn, 1, 1, "cases",
 $parties = array();
 	
 $dbh = dbConnect("showcase-prod");
-$schema = "ShowCase.dbo";
+$schema = "dbo";
 	
 $query = " SELECT
 			p.LastName,

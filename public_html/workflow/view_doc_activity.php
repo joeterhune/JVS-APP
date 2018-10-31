@@ -119,7 +119,7 @@ else{
 	}
 }
 
-createTab("Document Log - Document ID " . $doc_id, "/case/workflow/view_doc_activity.php?doc_id=" . $doc_id, 1, 1, "workflow");
+createTab("Document Log - Document ID " . $doc_id, "/workflow/view_doc_activity.php?doc_id=" . $doc_id, 1, 1, "workflow");
 
 $smarty->assign('doc_log', $doc_log);
 $smarty->assign('wfCount', $wfcount);

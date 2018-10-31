@@ -496,7 +496,7 @@ sub getFirstAppearance {
     
 	foreach my $event (@{$eventRef}) {
 		$event->{'CaseNumber'} = sanitizeCaseNumber($event->{'CaseNumber'});
-        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
         $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         
 		if ($event->{'CourtEventCode'} eq 'VOP') {
@@ -1503,7 +1503,7 @@ sub getVRBCalendar {
         	$warr = "";
         }
 
-        $event->{'ICMSLink'} = sprintf('%s<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $warr, $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'ICMSLink'} = sprintf('%s<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $warr, $event->{'CaseNumber'}, $event->{'CaseNumber'});
         $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'AttorneyName'}, $event->{'AttorneyPhone'}, $event->{'AttorneyEmail'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
@@ -2022,8 +2022,8 @@ sub getMagistrateCalendar {
         
         $event->{'Motion'} .= "</ul>";
 
-        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'AttorneyName'}, $event->{'AttorneyPhone'}, $event->{'AttorneyEmail'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
     }
@@ -2175,8 +2175,8 @@ sub getMediatorCalendar {
     		}
     	} 
 
-        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>", $event->{'AttorneyName'}, $event->{'LawFirm'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
     }
@@ -2570,8 +2570,8 @@ sub getExParteCalendar {
         
         $event->{'Motion'} .= "</ul>";
 
-        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'AttorneyName'}, $event->{'AttorneyPhone'}, $event->{'AttorneyEmail'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
     }
@@ -2764,8 +2764,8 @@ sub getMentalHealthCalendar {
     	}
 		
         $event->{'CaseNumber'} = sanitizeCaseNumber($event->{'CaseNumber'});
-        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/case/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'AttorneyName'}, $event->{'AttorneyPhone'}, $event->{'AttorneyEmail'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
     }

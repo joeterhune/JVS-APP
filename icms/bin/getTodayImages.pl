@@ -92,7 +92,7 @@ sub getDockets {
 
     my $xml;
     eval {
-		my $command = "/usr/bin/php $ENV{'PERL5LIB'}/getTmImages.php -c $caseNum";
+		my $command = "/usr/bin/php /var/jvs/icms/bin/getTmImages.php -c $caseNum";
 		$xml = `$command`;
     };
     

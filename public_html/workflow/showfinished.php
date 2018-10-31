@@ -96,7 +96,7 @@ else{
 	}
 }
 
-createTab("Finished Items - " . $queue, "/case/workflow/showfinished.php?queue=" . $queue, 1, 1, "workflow");
+createTab("Finished Items - " . $queue, "/workflow/showfinished.php?queue=" . $queue, 1, 1, "workflow");
 
 $smarty->assign('finished', $finished);
 $smarty->assign('wfCount', $wfcount);

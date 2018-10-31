@@ -17,7 +17,7 @@ if ($ucn=="") {
 
 list($ucn, $type) = sanitizeCaseNumber($ucn);
 
-fb($ucn,"UCN");
+
 
 $vars = array_keys($_REQUEST);
 

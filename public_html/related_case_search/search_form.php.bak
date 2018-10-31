@@ -1,0 +1,94 @@
+<?php
+
+require_once("../php-lib/common.php");
+require_once("../php-lib/db_functions.php");
+require_once("Smarty/Smarty.class.php");
+require_once("../workflow/wfcommon.php");
+
+checkLoggedIn();
+
+include "../icmslib.php";
+include "../caseinfo.php";
+
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
+
+$dbh = dbConnect("icms");
+
+$user = $_SESSION['user'];
+$myqueues = array($user);
+$queueItems = array();
+$sharedqueues = array();
+
+getSubscribedQueues($user, $dbh, $myqueues);
+getSharedQueues($user, $dbh, $sharedqueues);
+$allqueues = array_merge($myqueues,$sharedqueues);
+$wfcount = getQueues($queueItems,$allqueues,$dbh);
+
+$ucn = getReqVal("case");
+$caseid = getReqVal("caseid");
+
+list($ucn, $type) = sanitizeCaseNumber($ucn);
+
+createTab($ucn, "/cgi-bin/case/search.cgi?name=" . $ucn, 1, 1, "cases",
+		array(
+			"name" => "Related Case Search",
+			"active" => 1,
+			"close" => 1,
+			"href" => "/case/related_case_search/search_form.php?case=" . $ucn . '&caseid= ' . $caseid,
+			"parent" => $ucn
+		)
+);
+
+$parties = array();
+	
+$dbh = dbConnect("showcase-prod");
+$schema = "ShowCase.dbo";
+	
+$query = " SELECT
+			p.LastName,
+			p.FirstName,
+			p.MiddleName,
+			p.PartyTypeDescription
+		FROM
+			$schema.vAllParties p with(nolock)
+		INNER join $schema.vCase c with(nolock) 
+			on c.CaseID = p.CaseID
+		WHERE p.CaseID = :case_id
+		AND p.PartyType NOT IN ('JUDG', 'ASA', 'PD')
+		ORDER BY p.LastName,
+			p.FirstName,
+			p.MiddleName,
+			c.UCN";
+	
+getData($parties, $query, $dbh, array("case_id" => $caseid));
+
+foreach($parties as $key => $c){
+	//$parties[$key]['FirstName'] = ucwords(strtolower($c['FirstName']));
+	//$parties[$key]['LastName'] = ucwords(strtolower($c['LastName']));
+	//$parties[$key]['MiddleName'] = ucwords(strtolower($c['MiddleName']));
+	$parties[$key]['PartyTypeDescription'] = $c['PartyTypeDescription'];
+}
+
+//Remove duplicates
+$existsArray = array();
+foreach($parties as $key => $p){
+	if(in_array($p['FirstName'] . " " . $p['MiddleName'] . " " . $p['LastName'], $existsArray)){
+		unset($parties[$key]);
+	}
+	else{
+		$existsArray[] = $p['FirstName'] . " " . $p['MiddleName'] . " " . $p['LastName'];
+	}
+}
+
+$parties = array_values($parties);
+
+$smarty->assign('ucn', $ucn);
+$smarty->assign('partyList', $parties);
+$smarty->assign('wfCount', $wfcount);
+$smarty->assign('active', "cases");
+$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->display('top/header.tpl');
+echo $smarty->fetch('related_case_search/search_form.tpl');

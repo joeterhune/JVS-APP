@@ -29,7 +29,7 @@ $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
 $ucn = getReqVal('ucn');
 
-createTab($ucn, "/cgi-bin/case/search.cgi?name=" . $ucn, 1, 1, "cases",
+createTab($ucn, "/cgi-bin/search.cgi?name=" . $ucn, 1, 1, "cases",
 		array(
 			"name" => "Related Case Search",
 			"active" => 1,

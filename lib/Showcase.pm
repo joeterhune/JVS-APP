@@ -122,6 +122,7 @@ our @EXPORT_OK=qw(
     showcaseSearch
     getScCaseInfo
     scGetDocketItems
+	getDocketsWithImages
     showcaseCivilSearch
     getScCivilCaseInfo
     getPropertyAddress
@@ -2071,7 +2072,29 @@ sub getCourtEvents {
     }
 }
 
+sub getDocketsWithImages{
+	my $caseId = shift;
+	my $docketRef = shift;
+	my $dbh = shift;
+	my $schema = shift;
+	
+	if (!defined($schema)) {
+    	$schema = $DEFAULT_SCHEMA
+    };
+	
+	my $query = qq {
+            select
+                DocketID,0 AS ImageExists
+            from
+                $schema.vDocket with(nolock)
+            where
+                CaseID = ?
+				AND Image = 'Y'
+	};
 
+	getData($docketRef,$query,$dbh,{valref => [$caseId]});
+}
+	
 sub getDockets {
     my $case = shift;
     my $dbh = shift;
@@ -3614,12 +3637,12 @@ sub getScCivilCaseInfo {
     my $info = new CGI;
 	my $user = getUser();
 
-	createTab($casenum, "/cgi-bin/case/search.cgi?name=" . $casenum, 1, 1, "cases",
+	createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 		{ 
 			"name" => "Case Details",
 			"active" => 1,
 			"close" => 1,
-			"href" => "/cgi-bin/case/search.cgi?name=" . $casenum,
+			"href" => "/cgi-bin/search.cgi?name=" . $casenum,
 			"parent" => $casenum
 		}
 	);
@@ -3837,10 +3860,11 @@ sub getParties_civil {
 							AND a.Represented_PersonID = p1.PersonID
 						WHERE a.CaseID = ?";
 						
+
 	my @attorneys;
 	getData(\@attorneys, $attQuery, $dbh, {valref => [$caseid]});
 	
-	my $esdbh = dbConnect("eservice");
+	my $esdbh = dbConnect("ols");
 	
 	my @associations;
 	foreach my $att (@attorneys){
@@ -4542,7 +4566,7 @@ sub getEServiceAddresses {
 	my $caseid = shift;
 	
 	my $dbh = dbConnect($db);
-	my $esdbh = dbConnect("eservice");
+	my $esdbh = dbConnect("ols");
 	
 	my @parties;
     my @attorneys;

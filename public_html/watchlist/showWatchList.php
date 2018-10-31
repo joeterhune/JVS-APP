@@ -23,7 +23,7 @@ getSubscribedQueues($user, $fdbh, $myqueues);
 getSharedQueues($user, $fdbh, $sharedqueues);
 $allqueues = array_merge($myqueues, $sharedqueues);
 
-createTab("My Case Watchlist", "/case/watchlist/showWatchList.php", 1, 1, "index");
+createTab("My Case Watchlist", "/watchlist/showWatchList.php", 1, 1, "index");
 
 $queueItems = array();
 

@@ -93,7 +93,7 @@ function generate_form_fields($dbh,$formid,$FORMDATA,$chaddress,$countynum,$divi
 # generate_builtin_fields creates the hidden values for the built-in variables
 
 function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMDATA,$divisioncode,$docid, $signName) {
-    fb($divisioncode,"DIVISION");
+    
     $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
     
     $url = sprintf("%s/divInfo", (string) $config->{'icmsWebService'});
@@ -499,7 +499,7 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
         //echo "<input type=hidden id=$code name=$code value=\"$val\">\n";
         $val="";
     }
-    fb($data,"DATA");
+    
     $gbi->assign('data', $data);
     return $gbi->fetch('orders/generate_builtin_fields.tpl');
 }

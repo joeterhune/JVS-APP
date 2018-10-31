@@ -43,7 +43,7 @@ getSharedQueues($user, $cdbh, \@sharedqueues);
 my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
 
-createTab("My E-Filing Status", "/cgi-bin/case/eservice/showFilings.cgi", 1, 1, "index");
+createTab("My E-Filing Status", "/cgi-bin/eservice/showFilings.cgi", 1, 1, "index");
 my $session = getSession();
 
 my $wfcount = getQueues(\%queueItems, \@allqueues, $cdbh);

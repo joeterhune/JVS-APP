@@ -1,21 +1,16 @@
 <?php 
-
 require_once("php-lib/common.php");
-
 $xml = simplexml_load_file($icmsXml);
 $json = json_encode($xml);
 $config = json_decode($json, true);
-
 $error = "";
 $errorText = "";
-
 if(isset($_REQUEST['ref'])){
 	$reqPage = $_REQUEST['ref'];
 }
 else{
 	$reqPage = "";
 }
-
 if(!empty($_POST)){
 	
 	$reqPage = $_REQUEST['ref'];
@@ -41,14 +36,12 @@ if(!empty($_POST)){
 	$ui_pw = trim($_POST['password']);
 	
 	//Now verify their AD credentials
-        $ldaprdn  = $config['ldapConfig']['bindDn'];
-        $ldappass = $config['ldapConfig']['bindPw'];
+	$ldaprdn  = $config['ldapConfig']['bindDn'];
+	$ldappass = $config['ldapConfig']['bindPw'];
 	$searchBase = $config['ldapConfig']['userBase'];
-        $ldapFilterFormat = $config['ldapConfig']['filterFormat'];
-        $ldapFilter = sprintf($ldapFilterFormat, $ui_login);
-
+	$ldapFilterFormat = $config['ldapConfig']['filterFormat'];
+	$ldapFilter = sprintf($ldapFilterFormat, $ui_login);
 	$ldapconn = ldap_connect($ldapURL);
-
 	if(!$ldapconn){
 		$error = true;
 		$errorText = "There was an error connecting to the authentication server.<br/><br/>";
@@ -66,7 +59,6 @@ if(!empty($_POST)){
 	$attrs = array("description", "name", "mail");
 	$result = ldap_search($ad,$searchBase, 
 		$ldapFilter, $attrs);
-
 	$info = ldap_get_entries($ad, $result);
 		
 	$loginString = isset($info[0]['dn']) ? $info[0]['dn'] : null;
@@ -124,14 +116,11 @@ if(!empty($_POST)){
 		}
 	}
 }
-
 require_once('Smarty/Smarty.class.php');
-
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
-
 $smarty->assign("error", $error);
 $smarty->assign("errorText", $errorText);
 $smarty->assign("ref", $reqPage);

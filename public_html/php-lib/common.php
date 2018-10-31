@@ -80,7 +80,6 @@ $ranges = array(
     array('lower' => 91, 'upper' => 99999999, 'rangeString' => '91+ days'),
 );
 
-
 function log_this ($logApp, $logType, $logMsg, $logIP = null, $dbh = null) {
     if ($dbh == null) {
         $dbh = dbConnect("icms");
@@ -105,8 +104,6 @@ function log_this ($logApp, $logType, $logMsg, $logIP = null, $dbh = null) {
     doQuery($query, $dbh, array('app' => $logApp, 'type' => $logType, 'msg' => $logMsg, 'ipaddr' => $logIP));
 }
 
-
-
 function replaceHTMLElement($htmlString,$targetID, $replacement) {
     $dom = new DOMDocument();
     
@@ -115,7 +112,6 @@ function replaceHTMLElement($htmlString,$targetID, $replacement) {
     $element = $dom->getElementById($targetID);
     
 }
-
 
 // Get a session value and return it.  If the value isn't set, return NULL.
 function getSessVal($field) {
@@ -289,7 +285,6 @@ function sanitizeCaseNumber ($ucn){
     }
 }
 
-
 function getCaseDiv ($casenum, $type = null) {
     if ($type == null) {
         list($casenum,$type) = sanitizeCaseNumber($casenum);
@@ -342,7 +337,6 @@ function getCaseDivAndStyle ($casenum, $type = null) {
     }
 }
 
-
 function getBannerExtendedCaseId($casenum, $dbh = null) {
     $dbh = dbConnect("showcase-prod");
     $query = '
@@ -361,7 +355,6 @@ function getBannerExtendedCaseId($casenum, $dbh = null) {
     $rec['CaseStyle'] = preg_replace('/&/','&amp',$rec['CaseStyle']);
     return $rec;
 }
-
 
 function getShowcaseCaseInfo($casenum, $dbh = null) {
     if ($dbh == null) {
@@ -383,7 +376,6 @@ function getShowcaseCaseInfo($casenum, $dbh = null) {
     $rec['CaseStyle'] = preg_replace('/&/','&amp',$rec['CaseStyle']);
     return $rec;
 }
-
 
 function getPortalServiceList($casenum) {
     //ini_set('soap.wsdl_cache', WSDL_CACHE_NONE);
@@ -865,7 +857,6 @@ function array_sort($array, $on, $order = SORT_ASC){
 
 	return $new_array;
 }
-
 
 function getLinkedCases($caseid, $caseString = true, $caseList = false, $caseListAndStatus = false){
 	$dbh = dbConnect("showcase-prod");
@@ -1959,7 +1950,6 @@ function getUserQueues (&$queues, $dbh) {
     }
 }
 
-
 function buildName (&$name, $lastfirst = 0) {    
     if ($name == null) {
         return null;
@@ -2014,7 +2004,6 @@ function curlJson ($url, $postFields) {
     
     return $result;
 }
-
 
 function eFileInfo  ($user, $dbh) {
     $query = "
@@ -2074,7 +2063,6 @@ function getDivType($division, $dbh = null) {
     return $div['division_type'];
 }
 
-
 function getEsigs (&$sigs, $user) {
     // Returns information on the e-signatures this user is permitted to use
     $dbh = dbConnect("portal_info");
@@ -2118,7 +2106,6 @@ function getEsigs (&$sigs, $user) {
     
     return sizeof($sigs);
 }
-
 
 function getDocInfo ($docid, $dbh = null) {
     if ($dbh == null) {
@@ -2227,9 +2214,6 @@ function getTitle($sigUser, $docid, $dbh = null, $wdbh = null) {
 		return $sigInfo;
 	
 }
-
-
-
 
 function generateSignature($sigUser, $docid, $dbh = null, $wdbh = null) {
 	
@@ -2354,7 +2338,7 @@ function generateSignature($sigUser, $docid, $dbh = null, $wdbh = null) {
         imagettftext($newimg, $textheight+2, 0, 40,120,
                      $black, $font2, $titleString);
         
-        $outfile=tempnam("/var/www/html/tmp", "sig");
+        $outfile=tempnam("/var/jvs/public_html/tmp", "sig");
         $outfile .= ".jpg";
         ob_start();
         imagejpeg($newimg);
@@ -2437,7 +2421,7 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	//Sigh, they don't want this
 	$form_name = "";
 	
-	$h_fname = "/var/www/html/tmp/header-order-" . $ucn . "-" . uniqid();
+	$h_fname = "/var/jvs/public_html/tmp/header-order-" . $ucn . "-" . uniqid();
 	$h_file = fopen($h_fname . ".html", "w");
 	$h_html = "<!DOCTYPE html>
 			<head>
@@ -2466,7 +2450,7 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	fwrite($h_file, $h_html);
 	$finalHFileName = $h_fname . ".html";
 	
-	$f_fname = "/var/www/html/tmp/footer-order-" . $ucn . "-" . uniqid();
+	$f_fname = "/var/jvs/public_html/tmp/footer-order-" . $ucn . "-" . uniqid();
 	$f_file = fopen($f_fname . ".html", "w");
 	
 	//I don't like this but I found it online
@@ -2486,12 +2470,12 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	fwrite($f_file, $f_html);
 	$finalFFileName = $f_fname . ".html";
 	
-	$fname = "/var/www/html/tmp/order-" . $ucn . "-" . uniqid();
+	$fname = "/var/jvs/public_html/tmp/order-" . $ucn . "-" . uniqid();
 	$file = fopen($fname . ".html", "w");
 	fwrite($file, $formhtml);
 	$finalFileName = $fname . ".pdf";
 	
-	system("/usr/share/wkhtmltopdf/bin/wkhtmltopdf --footer-spacing 5 --header-spacing 5 --page-size Letter --header-html " . $finalHFileName . " --footer-html " . $finalFFileName . " --disable-smart-shrinking " . $margins . " --encoding utf-8 --user-style-sheet /var/www/html/case/orders/custom_forms.css " . $fname . ".html" . " " . $finalFileName);
+	system("/usr/share/wkhtmltopdf/bin/wkhtmltopdf --footer-spacing 5 --header-spacing 5 --page-size Letter --header-html " . $finalHFileName . " --footer-html " . $finalFFileName . " --disable-smart-shrinking " . $margins . " --encoding utf-8 --user-style-sheet /var/jvs/public_html/orders/custom_forms.css " . $fname . ".html" . " " . $finalFileName);
 
 	unlink($fname . ".html");
 	unlink($finalHFileName);
@@ -2516,14 +2500,12 @@ function getEmailFromAD ($user) {
     }
 }
 
-
 function encodeFile ($filename) {
     # Returns a Base64-encoded representation of $filename
     $binary = file_get_contents($filename);
     $encoded = base64_encode($binary);
     return $encoded;
 }
-
 
 function getFileType ($file) {
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -2549,13 +2531,12 @@ function returnJson($data) {
     print json_encode($data);
 }
 
-
-function initSmarty () {
+function initSmarty() {
+	global $templateDir,$compileDir,$cacheDir;
     $smarty = new Smarty;
     $smarty->setTemplateDir($templateDir);
     $smarty->setCompileDir($compileDir);
     $smarty->setCacheDir($cacheDir);
-    
     return $smarty;
 }
 
@@ -2671,10 +2652,10 @@ function checkLoggedIn() {
 			session_unset();
 			session_destroy();
 			if(!empty($reqPage)){
-				$url = "/cgi-bin/case/logout.cgi?timeout=1&ref=" . $reqPage;
+				$url = "/cgi-bin/logout.cgi?timeout=1&ref=" . $reqPage;
 			}
 			else{
-				$url = "/cgi-bin/case/logout.cgi?timeout=1";
+				$url = "/cgi-bin/logout.cgi?timeout=1";
 			}
 	
 			header("Location: " . $url);

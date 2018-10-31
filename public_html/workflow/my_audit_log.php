@@ -138,7 +138,7 @@ else{
 	}
 }
 
-createTab("My Activity Log - " . $queue, "/case/workflow/my_audit_log.php?queue=" . $queue, 1, 1, "workflow");
+createTab("My Activity Log - " . $queue, "/workflow/my_audit_log.php?queue=" . $queue, 1, 1, "workflow");
 
 $smarty->assign('audit_log', $audit_log);
 $smarty->assign('wfCount', $wfcount);

@@ -9,8 +9,6 @@ $url = sprintf("%s/isValidCase", (string) $conf->{'icmsWebService'});
 
 $ucn = getReqVal('ucn');
 
-fb($ucn,"IN UCN");
-
 $fields = array(
     'casenum' => urlencode($ucn)
 );

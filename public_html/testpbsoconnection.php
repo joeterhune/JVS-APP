@@ -11,7 +11,7 @@
 <body>
 <a href=/case/index.php><img src=/case/icmslogo.jpg border=0></a><p>
 
-<form name="theform" method=post action=/cgi-bin/case/testpbsosearch.cgi>
+<form name="theform" method=post action=/cgi-bin/testpbsosearch.cgi>
 
 <h2>
 <font face="Arial,Helvetica"><font color="#007f00">

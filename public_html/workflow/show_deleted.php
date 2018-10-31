@@ -98,7 +98,7 @@ else{
 	}
 }
 
-createTab("Deleted Items - " . $queue, "/case/workflow/show_deleted.php?queue=" . $queue, 1, 1, "workflow");
+createTab("Deleted Items - " . $queue, "/workflow/show_deleted.php?queue=" . $queue, 1, 1, "workflow");
 
 $smarty->assign('deleted', $deleted);
 $smarty->assign('wfCount', $wfcount);

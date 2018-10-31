@@ -54,7 +54,7 @@ $query = " 	SELECT c.CaseNumber AS ToCaseNumber,
 
 if(!empty($case_number)){
 	$caseRow = getDataOne($query, $dbh, array("case_number" => $case_number));
-	echo "<tr><td><a href=\"/cgi-bin/case/search.cgi?name=" . $caseRow['ToCaseNumber'] . "\" target=\"_blank\">" . $caseRow['ToCaseNumber'] . "</a></td><td>" . $caseRow['CaseType'] . "<td>" . $caseRow['CaseStatus'] . "</td><td>" . $caseRow['FileDate'] . "</td><td>" . $caseRow['CaseStyle'] . "<td>" . $caseRow['DivisionID'] . "</td><td><select class=\"partiesHere\" name=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "[]\" id=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "\" multiple> </td></tr>";
+	echo "<tr><td><a href=\"/cgi-bin/search.cgi?name=" . $caseRow['ToCaseNumber'] . "\" target=\"_blank\">" . $caseRow['ToCaseNumber'] . "</a></td><td>" . $caseRow['CaseType'] . "<td>" . $caseRow['CaseStatus'] . "</td><td>" . $caseRow['FileDate'] . "</td><td>" . $caseRow['CaseStyle'] . "<td>" . $caseRow['DivisionID'] . "</td><td><select class=\"partiesHere\" name=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "[]\" id=\"related~" . $caseRow['ToCaseNumber'] . "~" . $caseRow['CaseID']. "\" multiple> </td></tr>";
 }
 else{
 	echo "Error";	

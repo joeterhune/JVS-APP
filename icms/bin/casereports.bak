@@ -1,0 +1,15 @@
+#!/bin/bash
+export ORACLE_HOME=/usr/lib64/oracle/11.2/client64
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib
+
+DATE=`/bin/date +%Y%m%d`
+
+cd $ENV{'PERL5LIB'}
+# Showcase reports have been moved to screports.sh
+./buildjudge.pl
+./scciv.pl > results/civresults
+./scjuv.pl > results/juvresults
+./scpro.pl > results/proresults
+#./flagreports.pl > results/flagreports
+#./aw_ftp1.job > results/ftp
+./clearcache.job > results/cleanup

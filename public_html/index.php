@@ -148,7 +148,7 @@ $fdbh = null;
 					});
 					return false;
 				};
-				$('#theform').attr('action','/cgi-bin/case/calendars/showCal.cgi');
+				$('#theform').attr('action','/cgi-bin/calendars/showCal.cgi');
 				$('#div').val(division);
 				$('#theform').submit();
 				return true;
@@ -341,7 +341,7 @@ $fdbh = null;
 	    <tr>
 		<td colspan="3">
 		    <span class="h3">
-			<a href="/cgi-bin/case/flaggedCaseSearch.cgi">
+			<a href="/cgi-bin/flaggedCaseSearch.cgi">
 			    Flagged Case Search
 			</a>
 		    </span>
@@ -351,7 +351,7 @@ $fdbh = null;
         <tr>
 		<td colspan="3">
 		    <span class="h3">
-			<a href="/cgi-bin/case/casenotes/bulkflag.cgi">
+			<a href="/cgi-bin/casenotes/bulkflag.cgi">
 			    Bulk Case Flagging/Unflagging
 			</a>
 		    </span>
@@ -440,7 +440,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=crim">
+                        <a href="/cgi-bin/alldivs.cgi?type=crim">
                             All Criminal Divisions
                         </a>
                     </span>
@@ -450,7 +450,7 @@ foreach (array_keys($judges) as $ajudge) {
 		    <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=civ">
+                        <a href="/cgi-bin/alldivs.cgi?type=civ">
                             All Civil Divisions
                         </a>
                     </span>
@@ -460,7 +460,7 @@ foreach (array_keys($judges) as $ajudge) {
 		    <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=fam">
+                        <a href="/cgi-bin/alldivs.cgi?type=fam">
                             All Family Divisions
                         </a>
                     </span>
@@ -470,7 +470,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=juv">
+                        <a href="/cgi-bin/alldivs.cgi?type=juv">
                             All Juvenile Divisions
                         </a>
                     </span>
@@ -480,7 +480,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=pro">
+                        <a href="/cgi-bin/alldivs.cgi?type=pro">
                             All Probate Divisions
                         </a>
                     </span>
@@ -503,7 +503,7 @@ foreach (array_keys($judges) as $ajudge) {
 			<td>
 				<span class="h3">
 					Please use 
-					<a href="/cgi-bin/case/flaggedCaseSearch.cgi">
+					<a href="/cgi-bin/flaggedCaseSearch.cgi">
 						Flagged Case Search
 					</a>
 				</span>
@@ -664,7 +664,7 @@ foreach ($y as $divname) {
 		</tr>
 		
 		<tr>
-			<td><a href="/cgi-bin/case/calendars/trafficDocket.cgi">Traffic Dockets</a></td>
+			<td><a href="/cgi-bin/calendars/trafficDocket.cgi">Traffic Dockets</a></td>
 		</tr>
 
 

@@ -91,12 +91,12 @@ use Carp qw (cluck longmess);
 use CGI::Carp qw(fatalsToBrowser);
 use JSON;
 
-our $CAD_OU="Enterprise";
-our $LDAPHOST = ["ldaps://pbcgccdc2.pbcgov.org", "ldaps://pbcgccdc1.pbcgov.org"];
-our $LDAPBINDDN = "cn=cad icms,ou=Services,ou=CAD,ou=$CAD_OU,DC=PBCGOV,DC=ORG";
-our $LDAPBINDPW = "password99";
-our $LDAPBASE = "ou=Users,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
-our $LDAPSVCBASE = "ou=Services,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
+our $CAD_OU="Manatee";
+our $LDAPHOST = ["ldap://JUDSARDC05.jud12.local", "ldaps://JUDSARDC05.jud12.local"];
+our $LDAPBINDDN = "CN=MAN_JVS_Users,OU=Groups,OU=$CAD_OU,DC=JUD12,DC=LOCAL";
+our $LDAPBINDPW = "magi\$ter";
+our $LDAPBASE = "OU=Manatee,DC=JUD12,DC=LOCAL";
+our $LDAPSVCBASE = "CN=Users,DC=JUD12,DC=LOCAL";
 
 our $DEFAULT_SCHEMA = "dbo";
 

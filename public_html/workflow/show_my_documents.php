@@ -117,7 +117,7 @@ else{
 	}
 }
 
-createTab("Documents I've Created - " . $queue, "/case/workflow/show_my_documents.php?queue=" . $queue, 1, 1, "workflow");
+createTab("Documents I've Created - " . $queue, "/workflow/show_my_documents.php?queue=" . $queue, 1, 1, "workflow");
 
 $smarty->assign('my_docs', $my_docs);
 $smarty->assign('wfCount', $wfcount);
