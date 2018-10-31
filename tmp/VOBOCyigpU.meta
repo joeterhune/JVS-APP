@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+			  <RetrieveCaseDocsInput xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+			      xmlns="http://www.csisoft.com/2010/1.0/RetrieveCaseDocsInput.xsd">
+			          <UserID>SVCCTADMIN</UserID>
+			          <Password>TMNOSEALEDPASS</Password>
+			          <ObjectID>74105080</ObjectID>
+			  </RetrieveCaseDocsInput>
+			

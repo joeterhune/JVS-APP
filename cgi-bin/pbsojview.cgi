@@ -62,7 +62,7 @@ sub doit {
 	
 	my $wfcount = getQueues(\%queueItems, \@allqueues, $fdbh);
 	
-	createTab("PBSO Jacket/Inmate View - Jacket " . $jacket, "/cgi-bin/case/pbsojview.cgi?jacket=" . $jacket, 1, 1, "index");
+	createTab("PBSO Jacket/Inmate View - Jacket " . $jacket, "/cgi-bin/pbsojview.cgi?jacket=" . $jacket, 1, 1, "index");
 
 	my $session = getSession();
 
