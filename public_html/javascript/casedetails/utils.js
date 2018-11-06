@@ -37,6 +37,7 @@ $(document).ready(function () {
         var ucn = $(this).attr('data-casenum');
         var ucnobj = $(this).attr('data-ucnobj');
         var caseid = $(this).attr('data-caseid');
+		var docketId = $(this).attr('data-docketid');
         var tabTitle = $(this).attr('data-docname');
         var parentTab = $(this).attr('data-parentTab');
         var showTif = $(this).attr('data-showTif');
@@ -52,8 +53,9 @@ $(document).ready(function () {
         var pieces = ucnobj.split("|");
         var objID = pieces[1];
         var tabname = parentTab + '-' + objID;
-        
-        window.open('/cgi-bin/image-new.cgi?ucn=' + ucn + '&objid=' + objID +'&caseid=' + caseid + showTif, '_blank');
+        // Commented 11/05/2018 jmt calling Benchmark image handler
+        //window.open('/cgi-bin/image-new.cgi?ucn=' + ucn + '&objid=' + objID +'&caseid=' + caseid + showTif, '_blank');
+		window.open('/cgi-bin/bmImage.cgi?ucn=' + ucn + '&objid=' + objID +'&caseid=' + caseid + '&docketid='+ docketId + showTif, '_blank');
         
         //LK - I took this out for now 1/6/16
         //ViewImage(ucn,objID,ucn,tabTitle,1,parentTab,612,704,'Image',$(this).data('docketcode'));

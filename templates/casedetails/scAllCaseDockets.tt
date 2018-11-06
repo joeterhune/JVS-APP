@@ -137,7 +137,7 @@
                                                         <td class="left">[% docket.DocketText %]</td>
                                                         <td style="text-align: center">
                                                             [% IF docket.Image == 'Y' %]
-                                                            	<a class="imageLink" data-caseid="[% docket.CaseID %]" data-ucnobj="[% docket.UCNObj %]" data-casenum="[% key %]"
+                                                            	<a class="imageLink" data-caseid="[% docket.CaseID %]" data-docketid ="[% docket.ObjectID %]" data-ucnobj="[% docket.UCNObj %]" data-casenum="[% key %]"
                                                             	onclick="target='_blank'">Image</a>&nbsp;&nbsp;
                                                             <input class="docketcheck" type="checkbox" name="selected" value="[% docket.UCNObj %]"/>
                                                             [% ELSE %]
