@@ -154,10 +154,20 @@ my $ldap = ldapConnect();
 #$fields{'jsealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
 #$fields{'psealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
 
-$fields{'secretuser'} = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
-$fields{'sealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
-$fields{'jsealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
-$fields{'psealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
+############### Added 11/6/2018 jmt security from conf 
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+
+$fields{'secretuser'} = inGroup($icmsuser,$secGroup,$ldap);
+$fields{'sealeduser'} = inGroup($icmsuser,$sealedGroup,$ldap);
+$fields{'jsealeduser'} = inGroup($icmsuser,$sealedJuvGroup,$ldap);
+$fields{'psealeduser'} = inGroup($icmsuser,$sealedProbateGroup,$ldap);
+
+############### End Comment
 
 # Gather other items from the form
 foreach my $field ("name","citation","type") {
@@ -274,8 +284,8 @@ if (defined($params{'partyTypeLimit'})) {
 
 # Populates the "searchmask} element, which is a bitmask showing what needs
 # to be used building the queries.
-findSearchType (\%fields);
 
+findSearchType (\%fields);
 my @cases;
 
 if ($fields{'citationsearch'}) {
@@ -301,7 +311,7 @@ if ($fields{'citationsearch'}) {
                                   'viewer' => 'view.cgi'
             );
             my $tmpfile = "/tmp/" . writeTempFile(\%citationFields,\@cases);
-            print $info->redirect("/case/genlist.php?rpath=$tmpfile&lev=2");
+            print $info->redirect("/genlist.php?rpath=$tmpfile&lev=2");
             exit;
         }
     } else {
@@ -313,7 +323,7 @@ if ($fields{'citationsearch'}) {
     # OK, if we're here, it's not a citation search.
     
     print $info->header();
-    
+	
     if (sanitizeCaseNumber($fields{'name'}) eq "") {
         showcaseNameSearch(\%fields, \@cases);
     } else {
@@ -367,6 +377,8 @@ $data{'dTitle'} = sprintf ("%s Search %s for %s %s - ", $fields{'dtitle'}, $data
 # Strip the viewer from the case number; we don't need it any more.
 foreach my $case (@cases) {
     $case->{'CaseNumber'} = (split(";",$case->{'CaseNumber'}))[0];
+	###### Added 11/6/2018 jmt strip spaces from casenumber
+	$case->{'CaseNumber'} =~ s/ //g;
 }
 
 # We still need to write the file, as it will be handy in case of an export.
@@ -477,7 +489,7 @@ sub findSearchType {
     if ((!defined($fieldref->{'type'})) || ($fieldref->{'type'} eq "")) {
         if (($fieldref->{'name'} eq "") && ($fieldref->{'citation'} eq "")) {
         	my $info = new CGI;
-            print $info->redirect(-uri => "/case/");
+            print $info->redirect(-uri => "/");
             exit;
         }
     }

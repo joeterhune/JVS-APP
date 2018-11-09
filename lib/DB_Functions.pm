@@ -1067,7 +1067,7 @@ sub inGroup {
 
     # First, look up the DN of the user - we'll need it later
     my $ldapFilter = "(sAMAccountName=$user)";
-    my $ldapBase = "ou=Users,ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG";
+    my $ldapBase = $LDAPBASE;
 
     my @fields = ('distinguishedName');
     my @users;
@@ -1088,7 +1088,7 @@ sub inGroup {
 
     # Now get the DN for the group
     $ldapFilter = "(sAMAccountName=$group)";
-    $ldapBase = "ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG";
+    $ldapBase = $LDAPBASE;
 
     my @groups;
     ldapLookup(\@groups,$ldapFilter,$ldap,\@fields,$ldapBase);
