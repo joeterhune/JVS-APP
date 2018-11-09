@@ -91,8 +91,8 @@ $templateData['case_type'] = $divlist[$div]['PortalNameSpace'];
 $templateData['casestyle'] = $style;
 $templateData['countyid'] = 50;
 $templateData['court_id'] = $divlist[$div]['CourtTypeID'];
-$templateData['jud_circuit'] = "Fifteenth Circuit";
-$templateData['county'] = "Sarasota Beach County";
+$templateData['jud_circuit'] = "Twelfth Circuit";
+$templateData['county'] = "Sarasota County";
 $templateData['court_type'] = $divlist[$div]['PortalCourtType'];
 
 $query = "

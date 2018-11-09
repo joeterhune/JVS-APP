@@ -45,8 +45,8 @@ $data{'bar_id'} = $eFileInfo->{'bar_num'} . "FL";
 $data{'ClerkCase'} = $params{'casenum'};
 $data{'UCN'} = $params{'ucn'};
 $data{'county_id'} = 50;
-$data{'judicial_circuit'} = "Fifteenth Circuit";
-$data{'county'} = "Sarasota Beach County";
+$data{'judicial_circuit'} = "Twelfth Circuit";
+$data{'county'} = "Sarasota County";
 
 my $caseInfo = getCaseInfo($params{'casenum'});
 

@@ -743,7 +743,7 @@ sub rpt {
 
 
 	#
-	# 	Requires changes for Sarasota Beach County
+	# 	Requires changes for Sarasota County
 	#
    sub getinfo_pbc {
       #

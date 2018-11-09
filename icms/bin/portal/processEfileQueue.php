@@ -159,8 +159,8 @@ foreach ($filings as $filing) {
         $data['ClerkCase'] = $casenum;
         $data['UCN'] = $ucn;
         $data['county_id'] = 50;
-        $data['judicial_circuit'] = "Fifteenth Circuit";
-        $data['county'] = "Sarasota Beach";
+        $data['judicial_circuit'] = "Twelfth Circuit";
+        $data['county'] = "Sarasota";
         $data['CaseStyle'] = $caseInfo['CaseStyle'];
             
         // Get the portal namespace and court type for this case

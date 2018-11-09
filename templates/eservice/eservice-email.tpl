@@ -17,7 +17,7 @@
 
 <ul>
 	<li>
-		This email is from the Fifteenth Judicial Circuit
+		This email is from the Twelfth Judicial Circuit
 	</li>
 	<li>
 		Case Number:  {$ucn}

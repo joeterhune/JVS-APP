@@ -5,11 +5,11 @@ FIELDS
 medname~Mediator Name:~~TEXT~40~~~~~
 edate~Mediation Date:~~TEXT~15~~~~~
 etime~Mediation Time:~~TEXT~15~~~~~
-chaddress~Location:~~DROPDOWN~~~MAIN BRANCH Courthouse, 205 N. Dixie Highway, WPB, FL 33401:NORTH BRANCH Courthouse, 3188 PGA Blvd., Sarasota Beach Gardens, FL 33410:SOUTH BRANCH Courthouse, 200 W. Atlantic Ave., Delray Beach, FL 33444:WEST BRANCH Courthouse, 2950 State Road 15, Belle Glade, Florida 33430
+chaddress~Location:~~DROPDOWN~~~MAIN BRANCH Courthouse, 205 N. Dixie Highway, WPB, FL 33401:NORTH BRANCH Courthouse, 3188 PGA Blvd., Sarasota Gardens, FL 33410:SOUTH BRANCH Courthouse, 200 W. Atlantic Ave., Delray Beach, FL 33444:WEST BRANCH Courthouse, 2950 State Road 15, Belle Glade, Florida 33430
 medroom~Room #:~~DROPDOWN~~~6.2100:2717:2E-202:E-119
 
 # Return address for envelopes
-/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Sarasota Beach, FL  33401
+/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Sarasota, FL  33401
 #
 # If /nocheck is set, do not automatically check parties' checkboxes.
 #/nocheck

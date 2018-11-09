@@ -607,7 +607,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Fifteenth Circuit Website" class="externLink" data-url="http://www.15thcircuit.com/" data-target="Circuit15">Fifteenth Circuit Website</a>
+                                                    <a title="Twelfth Circuit Website" class="externLink" data-url="http://www.15thcircuit.com/" data-target="Circuit15">Twelfth Circuit Website</a>
                                                 </li>                  
                                             </ul>
                                         </td>
@@ -835,9 +835,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_county/codes/code_of_ordinances"
+                                                    <a title="Sarasota County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_county/codes/code_of_ordinances"
                                                        target="PBCOrdinances">
-                                                        Sarasota Beach County
+                                                        Sarasota County
                                                     </a>
                                                 </li>
                                             </ul>
@@ -892,9 +892,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach/codes/code_of_ordinances"
+                                                    <a title="Sarasota City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach/codes/code_of_ordinances"
                                                        target="PBOrdinances">
-                                                        Sarasota Beach
+                                                        Sarasota
                                                     </a>
                                                 </li>
                                             </ul>
@@ -916,9 +916,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_gardens/codes/code_of_ordinances"
+                                                    <a title="Sarasota Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_gardens/codes/code_of_ordinances"
                                                        target="PBGOrdinances">
-                                                        Sarasota Beach Gardens
+                                                        Sarasota Gardens
                                                     </a>
                                                 </li>
                                             </ul>
@@ -989,9 +989,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="West Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_Sarasota_beach/codes/code_of_ordinances"
+                                                    <a title="West Sarasota City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_Sarasota_beach/codes/code_of_ordinances"
                                                        target="WPBOrdinances">
-                                                        West Sarasota Beach
+                                                        West Sarasota
                                                     </a>
                                                 </li>
                                             </ul>

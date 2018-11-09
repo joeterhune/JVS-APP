@@ -38,9 +38,9 @@ for ($i=0;$i<count($userarr);$i++) {
 # collect county/division info
 #
 //$allcounties=load_conf_file("county_db_info.json");
-//$countyarr = array('50' => array('name' => 'Sarasota Beach'));
+//$countyarr = array('50' => array('name' => 'Sarasota'));
 //$countyjson = json_encode($countyarr);
-$allcounties = array('50' => array('name' => 'Sarasota Beach'));
+$allcounties = array('50' => array('name' => 'Sarasota'));
 # sub-optimal buildinf of countylist array...
 $custdivarr=array();
 $countylist=array_keys((array)$allcounties);

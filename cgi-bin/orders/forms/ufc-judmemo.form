@@ -104,14 +104,14 @@ relcase12CloseDate~Case 12:  Closed Date:~~TEXT~20~
 relcase12Note~Case 12: Note~~TEXT~50~
 #
 # Return address for envelopes
-/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Sarasota Beach, FL  33401
+/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Sarasota, FL  33401
 #
 # If /nocheck is set, do not automatically check parties' checkboxes.
 /nocheck
 # Extra parties to be copied on all versions of the form
 /extraparties
-DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST Sarasota BEACH~FL~33401
-FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST Sarasota BEACH~FL~33406
+DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST SARASOTA~FL~33401
+FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST SARASOTA~FL~33406
 /endextras
 # Use RTF format for this form.
 USERTF

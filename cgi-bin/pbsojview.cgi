@@ -98,7 +98,7 @@ sub doit {
 	}</script>
 
 
-<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota Beach Sheriff's Office Jacket/Inmate View </h2>";
+<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota Sheriff's Office Jacket/Inmate View </h2>";
 
 	write_jacketIdentifier($jacket);
 	print "<p>";

@@ -255,7 +255,7 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
 			case "ddallcities":
             case "courthouse_city":
                 $val = $divInfo['City'];
-				if($val=="") $val = "West Sarasota Beach"; // default to west Sarasota if not found
+				if($val=="") $val = "West Sarasota"; // default to west Sarasota if not found
                 break;
             case "courthouse_state":
                 $val = $divInfo['State'];

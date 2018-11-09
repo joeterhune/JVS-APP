@@ -312,7 +312,7 @@ getData(\@list,$resqry,$pbsoconn);
 
 my $rows = scalar(@list);
 
-my $dtitle1 = qq{Sarasota Beach County Sheriff's Office Booking Information<br/>for $type matching: $name};
+my $dtitle1 = qq{Sarasota County Sheriff's Office Booking Information<br/>for $type matching: $name};
 
 if($custody eq "incustody") {
     $dtitle1 .= " and In PBSO Custody ";

@@ -6,7 +6,7 @@
 	</div>
 	
 	<div class="h1">
-	    Sarasota Beach County
+	    Sarasota County
 	</div>
 	
 	<p class="instructions">
