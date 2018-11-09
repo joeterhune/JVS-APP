@@ -865,7 +865,7 @@ sub readHash {
 sub redirectOutput {
 	my $prog = shift;
 
-	my $basepath = /var/jvs/icms/bin/results";
+	my $basepath = "/var/jvs/icms/bin/results";
 
 	open OUTPUT, '>', "$basepath/$prog.stdout.txt" ||
 		die "Unable to redirect STDOUT to $basepath/$prog.stdout.txt: $!\n\n";
@@ -1185,16 +1185,17 @@ sub prettifyString {
 sub sanitizeCaseNumber {
     my $casenum = uc(stripWhiteSpace(shift));
     
-    # Strip leading "50" and any dashes.
-    $casenum =~ s/^50//g;
+    # Strip leading "58" and any dashes.
+    $casenum =~ s/^58//g;
     $casenum =~ s/-//g;
+	######## Added 11/6/2018 jmt Strip spaces. benchmark uses spaces.
+	$casenum =~ s/ //g;
     
     if ($casenum =~ /^(\d{1,6})(\D\D)(\d{0,6})(.*)/) {
         my $year = $1;
         my $type = $2;
         my $seq = $3;
         my $suffix = $4;
-        
         # If we have a 2-digit year, adjust it (we'll use 60 as the split point)
         if ($year < 100) {
             if ($year > 60) {
@@ -1205,26 +1206,39 @@ sub sanitizeCaseNumber {
         }
         
         if (inArray(\@SCCODES,"'$type'")) {
-            # If it's a Showcase code, prepend the 50
-            $year = sprintf("50-%04d", $year);
+            # If it's a Showcase code, prepend the 58
+            #$year = sprintf("58-%04d", $year);
+			########## Modified 11/6/2018 jmt removing dashes for benchmark
+			$year = sprintf("58%04d", $year);
             if ($suffix =~ /(\w\w\w\w)(\D\D)/) {
-                $suffix = sprintf("%s-%s", $1, $2);
+			   
+                #$suffix = sprintf("%s-%s", $1, $2);
+				########## Modified 11/6/2018 jmt removing dashes for benchmark
+				 $suffix = sprintf("%s%s", $1, $2);
             }
         } elsif ($type eq "AP") {
 			if ($seq > 900000) {
 				# It's a criminal appeal
-				$year = sprintf("50-%04d", $year);
+				#$year = sprintf("58-%04d", $year);
+				########## Modified 11/6/2018 jmt removing dashes for benchmark
+				$year = sprintf("58%04d", $year);
 				if ($suffix =~ /(\w\w\w\w)(\D\D)/) {
-					$suffix = sprintf("%s-%s", $1, $2);
+					#$suffix = sprintf("%s-%s", $1, $2);
+					########## Modified 11/6/2018 jmt removing dashes for benchmark
+					$suffix = sprintf("%s%s", $1, $2);
 				}
 			}
 		}
         
         
         if ((!defined($suffix)) || ($suffix eq ''))  {
-            return sprintf("%s-%s-%06d", $year, $type, $seq);
+          #  return sprintf("%s%s%06d", $year, $type, $seq);
+		  ########## Modified 11/6/2018 jmt removing dashes for benchmark
+		  return sprintf("%s%s%06d", $year, $type, $seq);
         } else {
-            return sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
+            #return sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
+			########## Modified 11/6/2018 jmt removing dashes for benchmark
+			return sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
         }  
     }
 }
@@ -1241,10 +1255,17 @@ sub convertCaseNumber {
     # them without the dashes.  This routine will be called when we need to be sure
     # the number we're working with has the dashes.
     if ($casenum =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-        return sprintf("%04d-%s-%06d", $1, $2, $3);
+        #return sprintf("%04d-%s-%06d", $1, $2, $3);
+		########## Modified 11/6/2018 jmt removing dashes for benchmark
+		return sprintf("%04d%s%06d", $1, $2, $3);
     }
-	elsif($btoSC eq 1 && ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/)){
-		return sprintf("%04d-%s-%06d", $2, $3, $4);
+	#elsif($btoSC eq 1 && ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/)){
+	########## Modified 11/6/2018 jmt removing dashes for benchmark
+		elsif($btoSC eq 1 && ($casenum =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/)){
+
+		#return sprintf("%04d-%s-%06d", $2, $3, $4);
+		########## Modified 11/6/2018 jmt removing dashes for benchmark
+		return sprintf("%04d%s%06d", $2, $3, $4);
 	}else {
         # No change necessary.  Return the original case
         return $casenum;
@@ -1294,7 +1315,7 @@ sub isShowcase {
     my $casenum = shift;
     
     my $testCn = sanitizeCaseNumber($casenum);
-    if ($testCn =~ /^50/) {
+    if ($testCn =~ /^58/) {
         return 1;
     }
     return 0;

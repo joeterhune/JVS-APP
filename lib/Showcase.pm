@@ -328,8 +328,8 @@ my $showpSealed = "((c.Sealed = 'N') OR (c.Sealed = 'Y' AND c.CourtType in ('GA'
 my $excludeSecret = " and (c.CaseType not in (" . join(",", @SECRETTYPES) . ") or c.CaseType is null)";
 my $criminalPhrase = " and c.CourtType in (" . join(",", @SCCODES, "'AP'") . ") ";
 
-# expecting:  50-yyyy-XX-xxxxxx-AXXX-MB format
-# case numbers are preceded by '50' in showcase...
+# expecting:  58yyyyXXxxxxxxXXXAMB format
+# case numbers are preceded by '58' in showcase...
 # sc done
 sub convertCaseNumToDisplay {
     my $casenum = shift;
@@ -408,7 +408,7 @@ sub citationSearch {
                 $citations{$key}->{$detail} = $details{$key}->{$detail};
             }
             # Convert to "old style" case numbers
-            $citations{$key}->{CaseNumber} =~ s/^50-//g;
+            $citations{$key}->{CaseNumber} =~ s/^58-//g;
             $query = qq {
                 select
                     CONVERT(varchar,max(EffectiveDate),101) as LastActivity
@@ -1063,7 +1063,7 @@ sub showcaseNameSearch{
 		}
 
 		# And add it to the "final" array
-		#$case->{'CaseNumber'} =~ s/^50-//g;
+		#$case->{'CaseNumber'} =~ s/^58-//g;
 		push(@{$caseref}, $case);
 	}
 }
@@ -1109,8 +1109,8 @@ sub showcaseSearch {
 		#my $casenum=$fieldref->{'name'};
       my $casenum = sanitizeCaseNumber($fieldref->{'name'});
 		$casenum =~ s/-//g;
-		if ($casenum !~ /^50/) {
-			$casenum="50".$casenum;
+		if ($casenum !~ /^58/) {
+			$casenum="58".$casenum;
 		}
       
 		$query = qq {
@@ -1197,8 +1197,8 @@ sub showcaseSearch {
 
 		my $casenum;
 
-		if ($fieldref->{'name'} =~ /^50/) {
-			$fieldref->{'name'} =~ s/^50//g;
+		if ($fieldref->{'name'} =~ /^58/) {
+			$fieldref->{'name'} =~ s/^58//g;
 		}
 
 		if ($fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\*)/) {
@@ -1209,7 +1209,7 @@ sub showcaseSearch {
 			$seq = $3;
 			$year = fixyear($year);
 			# Be sure to convert to uppercase
-			$casenum = uc(sprintf("50%04d%s%s",$year,$type,$seq));
+			$casenum = uc(sprintf("58%04d%s%s",$year,$type,$seq));
 		} else {
 			# Wildcard search on case number - yyyyttdddddd
 			# (padding dddddd with leading zeroes as needed)
@@ -1220,7 +1220,7 @@ sub showcaseSearch {
 			$suffix =~ s/-//g;
 			$year = fixyear($year);
 			# Be sure to convert them to uppercase
-			$casenum = uc(sprintf("50%04d%s%06d%s", $year, $type, $seq, $suffix));
+			$casenum = uc(sprintf("58%04d%s%06d%s", $year, $type, $seq, $suffix));
 		}
 
 		$query = qq {
@@ -1407,7 +1407,7 @@ sub showcaseSearch {
 		}
 
 		# And add it to the "final" array
-		$case->{'CaseNumber'} =~ s/^50-//g;
+		$case->{'CaseNumber'} =~ s/^58-//g;
 		push(@{$caseref}, $case);
 	}
 }
@@ -2165,7 +2165,8 @@ sub getDockets {
                     ELSE 'Book ' + Book+ ', Page ' + Page
                 END as BookLocation,
                 CaseID,
-                CaseNumber
+                CaseNumber,
+				UCN
             from
                 $schema.vDocket with(nolock)
             where
@@ -2503,7 +2504,7 @@ sub getCaseUsingUCN {
     
     my $query;
     
-    if ($ucn =~ /(50)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
+    if ($ucn =~ /(58)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
         my $casenum = "$1-$2-$3-$4-$5-$6";
         
         $query = qq {
@@ -2907,7 +2908,7 @@ sub getScCaseInfo {
     $data{'caseinfo'} = $caseref;
     
     $data{'shortcase'} = $casenum;
-    #$data{'shortcase'} =~ s/^50-//g;
+    #$data{'shortcase'} =~ s/^58-//g;
     
     if (!inArray(\@SCACTIVE,$caseref->{CaseStatus})) {
         if ($caseref->{'JudgeAtDisposition'} ne $data{divjudge}) {
@@ -3065,7 +3066,6 @@ sub showcaseCivilSearch {
 		my $inString = join(",", @{$fieldref->{'causetype'}});
         $divLimitSearch = "and CaseType in ($inString) ";
     }
-
 	# Temp storage for data
 	my $temp = [];
 	
@@ -3073,7 +3073,6 @@ sub showcaseCivilSearch {
         #
 		# Case Number Search
 		#
-
 		my $casenum = sanitizeCaseNumber($fieldref->{'name'});
         
         # If we can determine that this is a criminal case, short-circuit this
@@ -3093,13 +3092,13 @@ sub showcaseCivilSearch {
 		}
         
 		$casenum =~ s/-//g;
-		if ($casenum !~ /^50/) {
-			$casenum="50".$casenum;
+		if ($casenum !~ /^58/) {
+			$casenum="58".$casenum;
 		}
 
         $query = qq {
 			select
-				DISTINCT c.CaseNumber,
+				DISTINCT c.UCN,
 				c.CaseID
 			from
                 $schema.vCase c with(nolock) 
@@ -3155,7 +3154,8 @@ sub showcaseCivilSearch {
 		if (scalar(@{$temp}) == 1) {
          
 			# We have a single match.  Redirect to scview.
-			my $c = $temp->[0]->{'CaseNumber'};
+			my $c = $temp->[0]->{'UCN'};
+			$c =~ s/ //g; 
 			my $d = $temp->[0]->{'CaseID'};
 			my $output = getScCivilCaseInfo($c, $d);
             #my %result;
@@ -3172,14 +3172,20 @@ sub showcaseCivilSearch {
             print $output;
 			exit;
 		}
+		if (scalar(@{$temp}) == 0) {
+			            my $info = new CGI;
+            print $info->header;
+			print "<h1>No Records Found. Please try again.</h1>";
+		}
 	} elsif ($fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\*)/ ||
-			 $fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\D+){0,3}/ ) {        
+			 $fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\D+){0,3}/ ) 
+	{        
 		my ($year, $type, $seq, $suffix);
 
 		my $casenum;
 
-		if ($fieldref->{'name'} =~ /^50/) {
-			$fieldref->{'name'} =~ s/^50//g;
+		if ($fieldref->{'name'} =~ /^58/) {
+			$fieldref->{'name'} =~ s/^58//g;
 		}
 
 		if ($fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\*)/) {
@@ -3190,7 +3196,7 @@ sub showcaseCivilSearch {
 			$seq = $3;
 			$year = fixyear($year);
 			# Be sure to convert to uppercase
-			$casenum = uc(sprintf("50%04d%s%s",$year,$type,$seq));
+			$casenum = uc(sprintf("58%04d%s%s",$year,$type,$seq));
 
 			# If we can determine that this is a criminal case, short-circuit this
 			# evaluation and move along.
@@ -3226,7 +3232,7 @@ sub showcaseCivilSearch {
 
 			$year = fixyear($year);
 			# Be sure to convert them to uppercase
-			$casenum = uc(sprintf("50%04d%s%06d%s", $year, $type, $seq, $suffix));
+			$casenum = uc(sprintf("58%04d%s%06d%s", $year, $type, $seq, $suffix));
 		}
 
 		$query = qq {
@@ -3298,18 +3304,20 @@ sub showcaseCivilSearch {
 
 		if (scalar(@{$temp}) == 1) {
             my $c = $temp->[0]->{'CaseNumber'};
+			######## Added 11/6/2018 strip spaces
+			$c =~ s/ //g;
             $c = substr($c,3);
             my $d = $temp->[0]->{'CaseID'};
             # We have a single match.  Redirect to scview.
             print "Location: view.cgi?ucn=$c&caseid=$d&lev=2\n\n";
             exit;
         }
-      } else {
-               print "Content-type: text/html\n\n";
-               print "Wrong format used for the name or case number - couldn't ".
-               "understand '$fieldref->{name}'.<p>\n";
-               exit;
-      }
+	} else {
+		print "Content-type: text/html\n\n";
+		print "Wrong format used for the name or case number - couldn't ".
+		"understand '$fieldref->{name}'.<p>\n";
+		exit;
+	}
 
     foreach my $case (@{$temp}) {
 		$case->{'AGE'} = getageinyears($case->{'DOB'});
@@ -3375,7 +3383,8 @@ sub showcaseCivilSearch {
 		}
 
 		# And add it to the "final" array
-		$case->{'CaseNumber'} =~ s/^50-//g;
+		$case->{'CaseNumber'} =~ s/^58-//g;
+		$case->{'CaseNumber'} =~ s/ //g;
 		push(@{$caseref}, $case);
 	}
 }
@@ -3409,7 +3418,7 @@ sub getScCivilCaseInfo {
 	$data{'showTif'} = inGroup($icmsuser, 'CAD-ICMS-TIF', $ldap);
 	$data{'odpuser'} = $odpuser;
     
-    #my $sccasenum="50-".$ucn;
+    #my $sccasenum="58-".$ucn;
 
     #my $scucn=$sccasenum;
     #$scucn=~s#-##g;
@@ -4308,7 +4317,7 @@ sub getSCCaseNumber {
     my $schema = getDbSchema($db);
     my $where;
     
-    if ($case =~ /^50-/) {
+    if ($case =~ /^58-/) {
     	if ($case =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
     		$where = " CaseNumber = '$case' ";
     	}
@@ -4319,10 +4328,10 @@ sub getSCCaseNumber {
     else{
     	$case =~ s/-//g;
 	    if ($case =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-	    	$where = " LegacyCaseNumber = '$case' OR UCN LIKE '50$case%'";
+	    	$where = " LegacyCaseNumber = '$case' OR UCN LIKE '58$case%'";
 	    }
 	    else{
-    		$where = " LegacyCaseNumber LIKE '%$case%' OR UCN LIKE '50$case%'";
+    		$where = " LegacyCaseNumber LIKE '%$case%' OR UCN LIKE '58$case%'";
     	}
     }
     
@@ -4582,7 +4591,7 @@ sub getEServiceAddresses {
         if ($party->{'PartyType'} =~ /ATTY|AGAL/) {
             EService::getAttorneyAddresses($case, $party->{'EmailAddresses'}, $esdbh, $party->{'BarNumber'}, \$party->{'isEservice'}, $caseid);
             my $portal_ucn = $case;
-            if ($case =~ /^50/) {
+            if ($case =~ /^58/) {
 		        $portal_ucn =~ s/-//g;
 		    } 
 		    
