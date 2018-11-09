@@ -50,7 +50,7 @@ $| = 1;
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 my %srsstatus; # just status of cases we're interested in
 my %caselist; # set in buildcaselist
 

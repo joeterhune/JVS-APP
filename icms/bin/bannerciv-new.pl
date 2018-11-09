@@ -49,7 +49,7 @@ $| = 1;
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 #my %allsrs;    # contains all cases for this report with the corresponding srs status
 my %srsstatus; # just status of cases we're interested in
 my %caselist; # set in buildcaselist
@@ -445,7 +445,7 @@ sub xmlDump {
 		$copy{$XMLKey} = $caseRef->{$key};
 	}
 	
-	my $path = "/var/www/Palm/civ/civ.xml";
+	my $path = "/var/www/Sarasota/civ/civ.xml";
 	
 	print "Dumping data to $path...\n\n";
 	
@@ -461,7 +461,7 @@ sub xmlDump {
 sub xmlRead {
 	my $caseRef = shift;
 	
-	my $path = "/var/www/Palm/civ/civ.xml";
+	my $path = "/var/www/Sarasota/civ/civ.xml";
 	
 	print "Reading stored data from $path...\n";
 	

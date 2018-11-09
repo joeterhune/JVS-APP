@@ -66,7 +66,7 @@ $| = 1;
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 
 my %allcases; # set in buildallcases
 my %caselist; # set in buildcaselist

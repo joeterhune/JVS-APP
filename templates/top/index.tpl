@@ -372,7 +372,7 @@
                     arr = selOpt.split("~");
                     tabname = "divRpt_" + arr[0];
                     tabtitle = "Division " + arr[0];
-                    rpath = "/Palm/" + arr[1] + "/div" + arr[0];
+                    rpath = "/Sarasota/" + arr[1] + "/div" + arr[0];
                     url = "/gensumm.php";
                     postData = {rpath: rpath, tabname: tabname, divName: arr[0]};
                 }

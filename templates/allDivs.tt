@@ -12,7 +12,7 @@
 	        <ul>
 	            [% FOREACH division IN courtType.divs %]
 	            <li>
-	                <a href="/gensumm.php?rpath=/Palm/[% data.pathpart %]/div[% division.DivisionID %]/index.txt&divName=[% division.DivisionID %]">
+	                <a href="/gensumm.php?rpath=/Sarasota/[% data.pathpart %]/div[% division.DivisionID %]/index.txt&divName=[% division.DivisionID %]">
 	                    [% division.DivisionID %]
 	                </a>
 	            </li>

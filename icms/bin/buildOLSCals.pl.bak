@@ -123,7 +123,7 @@ foreach my $div (@OLSDivs) {
         my $scp = Net::SCP->new($target, $scpUser);
         $scp->put($calFileName, $targetFile);
         $targetFile = sprintf("/var/www/html/scheduling/div%s/data/divcs.txt", lc($div), $div);
-        my $srcFile = sprintf("/var/www/Palm/civ/div%s/divcs.txt", uc($div));
+        my $srcFile = sprintf("/var/www/Sarasota/civ/div%s/divcs.txt", uc($div));
         $scp->put($srcFile, $targetFile);
         $scp->quit;
     }

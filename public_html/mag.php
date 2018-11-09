@@ -67,10 +67,10 @@ foreach ($divarr as $adiv) {
 	list($ydiv,$ydesc)=explode(",",$adiv);
 	$divInfo = array();
 	# line 6 of the index.txt file, 1st param name, 2nd param count
-	$civpath= "/var/www/html/case/Palm/civ/div$ydiv/index.txt";
-	$crimpath="/var/www/html/case/Palm/crim/div$ydiv/index.txt";
-	$juvpath="/var/www/html/case/Palm/juv/div$ydiv/index.txt";
-	$propath="/var/www/html/case/Palm/pro/div$ydiv/index.txt";
+	$civpath= "/var/www/html/case/Sarasota/civ/div$ydiv/index.txt";
+	$crimpath="/var/www/html/case/Sarasota/crim/div$ydiv/index.txt";
+	$juvpath="/var/www/html/case/Sarasota/juv/div$ydiv/index.txt";
+	$propath="/var/www/html/case/Sarasota/pro/div$ydiv/index.txt";
 	if (file_exists($civpath) && ($ydesc == "Civil") || ($ydesc == "Family") || ($ydesc == "DOR")) {
 		$path=$civpath;
 		$divInfo['divType'] = "civ";

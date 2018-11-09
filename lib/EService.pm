@@ -819,7 +819,7 @@ sub createFilingXml {
     $data{'UCN'} = $ucn;
     $data{'county_id'} = 50;
     $data{'judicial_circuit'} = "Fifteenth Circuit";
-    $data{'county'} = "Palm Beach";
+    $data{'county'} = "Sarasota Beach";
 
     if (!defined($caseInfo)) {
         $caseInfo = getCaseInfo($casenum);

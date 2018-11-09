@@ -284,8 +284,8 @@ $_smarty_tpl->_assignInScope('vrbUrl', "http://vrb.15thcircuit.com");
 				</div>
 				<ul class="nav nav-tabs navbar navbar-right hidden-sm hidden-xs">
 					<!--<a class="btn btn-default" href="file://///c:/OIVFiles/index.html" target="_blank">OIV</a> -->
-					<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
-					<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
+					<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
+					<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
 					<!--<a class="btn btn-default"href="<?php echo $_smarty_tpl->tpl_vars['vrbUrl']->value;?>
 /scheduler/calendar" target="_blank">VRB</a> -->
 					<a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-question-circle"></i> Help <span class="caret"></span></a>

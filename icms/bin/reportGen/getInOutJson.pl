@@ -118,7 +118,7 @@ foreach my $div (keys %rptData) {
     
     # Now write the file.  Since this is itself historical, we will put it into the top level of the directory,
     # NOT into a particular month
-    my $jsonfile = sprintf("/var/www/Palm/%s/div%s/inOut.json", $dir, $div);
+    my $jsonfile = sprintf("/var/www/Sarasota/%s/div%s/inOut.json", $dir, $div);
     
     print "Writing $jsonfile...\n";
     writeJsonFile(\%dataset, $jsonfile);

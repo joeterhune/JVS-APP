@@ -10,7 +10,7 @@
     });
     
     function showDivRpt(division,month,divtype,rpttype,range,lop) {
-        var rpath = "case/Palm/" + divtype + "/div" + division;
+        var rpath = "case/Sarasota/" + divtype + "/div" + division;
 	    var url = "/genlist.php?rpath=" + rpath + "&divname=" + division + "&rpttype=" + rpttype + "&yearmonth=" + month;   
 	    
 	    if (lop != undefined) {

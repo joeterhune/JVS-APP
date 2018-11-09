@@ -230,7 +230,7 @@ function show($rpath,$older,$div,$smarty) {
 $rpath = getReqVal('rpath');
 $divName = getReqVal('divName');
 
-//P in Palm was causing issues with division P....
+//P in Sarasota was causing issues with division P....
 if($divName != "P"){
 	$archPath = substr($rpath, 0, strpos($rpath, $divName)) . $divName;
 }
@@ -248,10 +248,10 @@ createTab("Division " . $divName, "/case/gensumm.php?rpath=" . $rpath . "&divNam
 
 if (isset($_REQUEST['divxy'])) {
     list($div,$type) = explode("~",$_POST['divxy']);
-    $rpath = "case/Palm/$type/div$div/index.txt";
+    $rpath = "case/Sarasota/$type/div$div/index.txt";
 } else if (isset($_REQUEST['flagxy'])) {
     list($num,$type) = explode("~", $_POST['flagxy']);
-    $rpath = "case/Palm/flags/$num/index.txt";
+    $rpath = "case/Sarasota/flags/$num/index.txt";
     $older="no";
 }
 

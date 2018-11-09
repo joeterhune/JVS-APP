@@ -32,7 +32,7 @@ use CGI::Cookie;
 require Exporter;
 our @ISA = qw(Exporter);
 
-our $reportTopDir = "/var/www/Palm";
+our $reportTopDir = "/var/www/Sarasota";
 
 our @EXPORT_OK = qw(
     $templateDir

@@ -4,7 +4,7 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.72 [en] (Windows NT 5.0; I) [Netscape]">
    <meta name="Author" content="Default">
-   <title>Palm Beach County Jail Inmate Lookup - connection test</title>
+   <title>Sarasota Beach County Jail Inmate Lookup - connection test</title>
    <link rel="stylesheet" type="text/css" name="stylin" href="/case/icms1.css">  
 </head>
 <?php $backlev=$lev-1; ?>
@@ -15,7 +15,7 @@
 
 <h2>
 <font face="Arial,Helvetica"><font color="#007f00">
-<span class=h2>Palm Beach County Sheriff's Office Database Test Connection</span></font></font></h2>
+<span class=h2>Sarasota Beach County Sheriff's Office Database Test Connection</span></font></font></h2>
 
 <table border="0">
 <tr><td>Jacket #:&nbsp;&nbsp;<td><input type=text name="jacket" size=30>

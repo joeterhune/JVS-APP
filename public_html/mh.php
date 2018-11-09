@@ -17,7 +17,7 @@ foreach ($arr as $line) {
 
   if ((($casetype=="DR") || ($seccasetype[1]=="DR")) &&($div=="UFCL")) {
     $label="Linked Cases";
-    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
   }
 }
 foreach ($arr as $line) {
@@ -26,7 +26,7 @@ foreach ($arr as $line) {
 
   if ((($casetype=="DR") || ($seccasetype[1]=="DR")) &&($div=="UFCT")) {
     $label="Transfered Cases";
-    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
   }
 }
 foreach ($arr as $line) {
@@ -35,7 +35,7 @@ foreach ($arr as $line) {
 
   if ((($casetype=="DR") || ($seccasetype[1]=="DR")) &&($div=="UFJM")) {
     $label = "Judicial Memo";
-    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
   }
 }
 ?>

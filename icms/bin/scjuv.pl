@@ -56,7 +56,7 @@ my $dbh = dbConnect($dbName);
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 #my %allcases; # set in buildallcases
 my %caselist; # set in buildcaselist
 my %divlist;  # set in buildcaselist
@@ -1180,7 +1180,7 @@ sub doit() {
 	}
 	
 	if (defined($readCaseList)) {
-		open(INFILE, "/var/www/Palm/civ/caselist.txt");
+		open(INFILE, "/var/www/Sarasota/civ/caselist.txt");
 		while (my $line = <INFILE>) {
 			chomp $line;
 			my ($case, $data) = split("\`", $line);

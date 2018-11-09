@@ -67,7 +67,7 @@ else{
             <link rel="stylesheet" type="text/css" href="/case/icms1.css?1.2">
             <link rel="stylesheet" href="/case/style/ICMS.css?1.5">
             <link rel="stylesheet" href="/case/style/ICMS2.css?1.3">
-            <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+            <script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
             <script src="/case/javascript/vrb.js?1.1" type="text/javascript"></script>
         </head>
     </html>

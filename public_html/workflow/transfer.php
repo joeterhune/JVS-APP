@@ -75,8 +75,8 @@ if(!empty($cqRow) && !empty($cqRow['email_address'])){
 		$text .= "<li><strong>PLEASE NOTE:</strong>You must be connected to the County network (either at a courthouse, or by VPN) <u>to access the emergency filing in Step 3 below</u>.</li>";
 		$text .= "<li>If you are away from a courthouse, you will be required to log into your VPN to access JVS.</li>";
 		$text .= "<ul>";
-		$text .= "<li>For instructions on how to log into your VPN from your Judicial iPad, click <a href=\"https://e-services.co.palm-beach.fl.us/scheduling/style/images/ipad-vpn.png\" target=\"_blank\">here</a>.</li>";
-		$text .= "<li>If you are using a Windows-based desktop or laptop away from a courthouse, <a href=\"https://vpn.co.palm-beach.fl.us/my.policy\" target=\"_blank\">click here to access the VPN login page</a>.</li>";
+		$text .= "<li>For instructions on how to log into your VPN from your Judicial iPad, click <a href=\"https://e-services.co.Sarasota-beach.fl.us/scheduling/style/images/ipad-vpn.png\" target=\"_blank\">here</a>.</li>";
+		$text .= "<li>If you are using a Windows-based desktop or laptop away from a courthouse, <a href=\"https://vpn.co.Sarasota-beach.fl.us/my.policy\" target=\"_blank\">click here to access the VPN login page</a>.</li>";
 		$text .= "</ul>";
 		$text .= "</ul>";
 		$text .= "<u>To access the <span style=\"color:red\"><strong>" . $cqRow['queue_type'] . " Queue</strong></span></u>:";

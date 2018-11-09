@@ -81,7 +81,7 @@ my $newcase;
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 # contains all cases for this report with the corresponding srs status
 my %allsrs;
 # just status of cases we're interested in

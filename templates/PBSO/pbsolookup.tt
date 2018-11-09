@@ -42,11 +42,11 @@
     <input type="hidden" name="referer" value="/index.php"/>
     
     <span class="h1">
-        Palm Beach County Sheriff's Office Inmate Lookup
+        Sarasota Beach County Sheriff's Office Inmate Lookup
     </span>
     
     <p class="instructions">
-        This page allows you to find Palm Beach Sheriff Office's booking information for a particular person.
+        This page allows you to find Sarasota Beach Sheriff Office's booking information for a particular person.
     </p>
     
     <table style="border: none">

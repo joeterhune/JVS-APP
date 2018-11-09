@@ -42,7 +42,7 @@ my $MSGS=1;   # will spit out diag msgs if set to 1
 # No output buffering
 $| = 1;
 
-my $county="Palm";
+my $county="Sarasota";
 my $outpath="/var/www/$county/pro";
 my $webpath="/case/$county/pro";
 

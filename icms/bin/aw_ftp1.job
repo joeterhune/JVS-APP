@@ -1,12 +1,12 @@
 #!/bin/sh
 
-cat /var/www/Palm/civ/partylist.txt /var/www/Palm/civ/dummy.txt /var/www/Palm/juv/partylist.txt /var/www/Palm/pro/partylist.txt > /var/tmp/partylist.txt
-cat /var/www/Palm/civ/styles.txt /var/www/Palm/pro/styles.txt /var/www/Palm/juv/styles.txt > /var/tmp/styles.txt
+cat /var/www/Sarasota/civ/partylist.txt /var/www/Sarasota/civ/dummy.txt /var/www/Sarasota/juv/partylist.txt /var/www/Sarasota/pro/partylist.txt > /var/tmp/partylist.txt
+cat /var/www/Sarasota/civ/styles.txt /var/www/Sarasota/pro/styles.txt /var/www/Sarasota/juv/styles.txt > /var/tmp/styles.txt
 
 # Push out reports files to other ICMS boxen
 for HOST in icms-dev icms-gcc
 do
-	rsync -avz --delete /var/www/Palm $HOST:/var/www/
+	rsync -avz --delete /var/www/Sarasota $HOST:/var/www/
 done
 
 # Copy divcs.txt files into place
@@ -15,7 +15,7 @@ do
 	LCDIV=`echo $DIV | tr '[A-Z]' '[a-z]'`
 	for HOST in 151.132.50.80 151.132.51.80
 	do
-		scp -p /var/www/html/case/Palm/civ/div$DIV/divcs.txt $HOST:/var/www/html/scheduling/div$LCDIV/data/
+		scp -p /var/www/html/case/Sarasota/civ/div$DIV/divcs.txt $HOST:/var/www/html/scheduling/div$LCDIV/data/
 	done
-    scp -p /var/www/html/case/Palm/civ/div$DIV/divcs.txt 151.132.36.155:/var/www/rich/scheduling/div$LCDIV/data/
+    scp -p /var/www/html/case/Sarasota/civ/div$DIV/divcs.txt 151.132.36.155:/var/www/rich/scheduling/div$LCDIV/data/
 done

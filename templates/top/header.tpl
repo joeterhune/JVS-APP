@@ -358,8 +358,8 @@
 					</div>
 					<ul class="nav nav-tabs navbar pull-left">
 						<!--<a class="btn btn-default" href="file://///c:/OIVFiles/index.html" target="_blank">OIV</a> -->
-						<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
-						<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
+						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
+						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
 						<!--<a class="btn btn-default"href="{$vrbUrl}/scheduler/calendar" target="_blank">VRB</a> -->
 						<a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-question-circle"></i> Help <span class="caret"></span></a>
 						<ul class="dropdown-menu" aria-labeledby="Help Dropdown">

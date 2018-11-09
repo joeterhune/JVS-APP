@@ -793,7 +793,7 @@ sub buildReturnAddr {
 
 	my $addrinfo = getDataOne($query,$dbh,[uc($div)]);
 
-	my $addr = sprintf("Palm Beach Couty %s - Division %s~%s~%s, %s %s", $addrinfo->{courthouse_name}, $div,
+	my $addr = sprintf("Sarasota Beach Couty %s - Division %s~%s~%s, %s %s", $addrinfo->{courthouse_name}, $div,
 					   $addrinfo->{'courthouse_addr'}, $addrinfo->{'courthouse_city'}, $addrinfo->{'courthouse_state'},
 					   $addrinfo->{'courthouse_zip'});
 

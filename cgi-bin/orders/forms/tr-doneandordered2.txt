@@ -1,4 +1,4 @@
-\i<b>DONE AND ORDERED</b> at %ddcity%, Palm Beach County, Florida, 
+\i<b>DONE AND ORDERED</b> at %ddcity%, Sarasota Beach County, Florida, 
 \uon this %today%.
 %esig%
 \m%sig%

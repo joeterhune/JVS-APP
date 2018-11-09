@@ -45,7 +45,7 @@ $| = 1;
 
 my $outpath;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 
 my $icmsdb='ok'; # status of icms database when run - 'ok' or 'bad'
 

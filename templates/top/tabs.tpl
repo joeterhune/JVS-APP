@@ -16,7 +16,7 @@
 	
         <link rel="stylesheet" type="text/css" href="/style/normalize.css"/>
         <link rel="stylesheet" type="text/css" href="/javascript/bootstrap/3.2.0/css/bootstrap.css"/>
-        <link href="https://e-services.co.palm-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
+        <link href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
         
         <link rel="stylesheet" type="text/css" href="/icms1.css?1.2" />
         <link rel="stylesheet" type="text/css" href="/style/reports.css?1.2" />
@@ -32,17 +32,17 @@
         <link rel="stylesheet" href="/style/toastr.min.css?1.1" />
         <link rel="stylesheet" href="/style/fullcalendar.css?1.1" type="text/css" />
         <link rel="stylesheet" href="/style/eservice.css?1.5" type="text/css" />
-        <link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap-datetimepicker.min.css"/>
+        <link rel="stylesheet" type="text/css" href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/bootstrap/bootstrap-datetimepicker.min.css"/>
 		
         <script src="/javascript/jquery/jquery-1.11.0.js" type="text/javascript"></script>
         <script src="/javascript/bootstrap/3.2.0/js/bootstrap.min.js" type="text/javascript"></script>
-        <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
-        <script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
-        <script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter-2.16.1.js" type="text/javascript"></script>
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.widgets-2.16.1.js" type="text/javascript"></script>
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.tablesorter.pager.min.js" type="text/javascript"></script>
-        <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
+        <script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/bootstrap/bootstrap-datetimepicker.min.js" type="text/javascript"></script>
+        <script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
+        <script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.tablesorter-2.16.1.js" type="text/javascript"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.tablesorter.widgets-2.16.1.js" type="text/javascript"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.tablesorter.pager.min.js" type="text/javascript"></script>
+        <script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
         <script src="/javascript/jquery.shim.js?1.1"></script>
         <script src="/javascript/docviewer.js?1.1"></script>
         <script src="/javascript/notes.js?1.1"></script>
@@ -52,7 +52,7 @@
                 CKEDITOR.timestamp = +new Date;
         </script>
         <script src="/javascript/ckeditor/adapters/jquery.js"></script>
-        <script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.placeholder.js"></script>
+        <script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.placeholder.js"></script>
         <script src="/icms.js?1.1" type="text/javascript"></script>
         <script src="/javascript/casenotes/notesAndFlags.js?1.4" type="text/javascript"></script>
         <script src="/javascript/ICMS.js?1.1" type="text/javascript"></script>
@@ -489,8 +489,8 @@
 				
                     
 					<!--<a class="btn btn-default" href="file://///c:/OIVFiles/index.html" target="_blank">OIV</a> -->
-					<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
-					<a class="btn btn-default" href="https://e-services.co.palm-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
+					<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
+					<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
 					<!-- <a class="btn btn-default"href="{$vrbUrl}/scheduler/calendar" target="_blank">VRB</a> -->
 					<a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-question-circle"></i> Help <span class="caret"></span></a>
 					<ul class="dropdown-menu" aria-labeledby="Help Dropdown">
@@ -835,9 +835,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_county/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_county/codes/code_of_ordinances"
                                                        target="PBCOrdinances">
-                                                        Palm Beach County
+                                                        Sarasota Beach County
                                                     </a>
                                                 </li>
                                             </ul>
@@ -892,9 +892,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach/codes/code_of_ordinances"
                                                        target="PBOrdinances">
-                                                        Palm Beach
+                                                        Sarasota Beach
                                                     </a>
                                                 </li>
                                             </ul>
@@ -916,9 +916,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_gardens/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_gardens/codes/code_of_ordinances"
                                                        target="PBGOrdinances">
-                                                        Palm Beach Gardens
+                                                        Sarasota Beach Gardens
                                                     </a>
                                                 </li>
                                             </ul>
@@ -989,9 +989,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="West Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_palm_beach/codes/code_of_ordinances"
+                                                    <a title="West Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_Sarasota_beach/codes/code_of_ordinances"
                                                        target="WPBOrdinances">
-                                                        West Palm Beach
+                                                        West Sarasota Beach
                                                     </a>
                                                 </li>
                                             </ul>

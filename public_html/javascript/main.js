@@ -24,7 +24,7 @@ function gojudge2() {
 	var theform=document.forms['mainSearchForm'];
     var x;
 	x=theform.judgexy.options[theform.judgexy.selectedIndex].value;
-    window.location="/gensumm.php?rpath=case/Palm/crim/div"+x+"/index.txt"
+    window.location="/gensumm.php?rpath=case/Sarasota/crim/div"+x+"/index.txt"
     return false;
 }
 
@@ -47,7 +47,7 @@ function godiv(type) {
 	var theform=document.forms['mainSearchForm'];
 	var x = $("select[name=divxy_" + type + "] option:selected").val();
     var arr=x.split("~");
-    window.location="/gensumm.php?rpath=/Palm/"+arr[1]+"/div"+arr[0]+"/index.txt&divName=" + arr[0];
+    window.location="/gensumm.php?rpath=/Sarasota/"+arr[1]+"/div"+arr[0]+"/index.txt&divName=" + arr[0];
     return false;
 }
 
@@ -55,7 +55,7 @@ function go_civ_traffic() {
 	/*var theform=document.forms['mainSearchForm'];
 	var x = $("select[name=divxy_" + type + "] option:selected").val();
     var arr=x.split("~");
-    window.location="/gensumm.php?rpath=/Palm/"+arr[1]+"/div"+arr[0]+"/index.txt&divName=" + arr[0];
+    window.location="/gensumm.php?rpath=/Sarasota/"+arr[1]+"/div"+arr[0]+"/index.txt&divName=" + arr[0];
     return false;*/
 	window.location="/cgi-bin/calendars/trafficDocket.cgi";
     return false;
@@ -65,7 +65,7 @@ function goflag() {
 	var theform=document.forms['mainSearchForm'];
     var x=theform.flagxy.options[theform.flagxy.selectedIndex].value;
     var arr=x.split("~");
-    window.location="/gensumm.php?rpath=case/Palm/flags/"+arr[0]+
+    window.location="/gensumm.php?rpath=case/Sarasota/flags/"+arr[0]+
 	"/index.txt&older=no";
     return false;
 }

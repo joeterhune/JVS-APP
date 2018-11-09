@@ -10,9 +10,9 @@
 #			<h2>No division assigned</h2>
 #			<ul>
 #			php start tag
-#				echo "<li><a href=gensumm.php?rpath=case/Palm/pro/div/index.txt>Probate</a>";
-#				echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div/index.txt>Juvenile</a>";	
-#				echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div/index.txt>Other</a>";
+#				echo "<li><a href=gensumm.php?rpath=case/Sarasota/pro/div/index.txt>Probate</a>";
+#				echo "<li><a href=gensumm.php?rpath=case/Sarasota/juv/div/index.txt>Juvenile</a>";	
+#				echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div/index.txt>Other</a>";
 #			php end tag
 #			</ul>
 # 09/06/11 lms Allow any Probate divisions that pop in... must be 2 chars div, and start with "I"
@@ -57,7 +57,7 @@ foreach ($arr as $line) {
   if ((($casetype=="CA") || (isset($seccasetype[1]) && $seccasetype[1]=="CA")) &&
       ($div!="AW")&&($div!="AV")&&($div!="AX")&&($div!="AZ"))  { 
     if (($div !="")&&($div!="AC")&&($div!="AK")&&($div!="AP")) {
-    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$div</a>";
     }
   }
 }
@@ -72,7 +72,7 @@ foreach ($arr as $line) {
    $seccasetype=explode(',',$casetype);
    if (  ($casetype=="CA" || (isset($seccasetype[1]) && $seccasetype[1]=="CA")) &&
        ($div=="AW" || $div=="AV") ) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$div</a>";
    }
 }
 ?>
@@ -89,7 +89,7 @@ foreach ($arr as $line) {
 	($casetype=="MH")||(isset($sccase[1]) && $scase[1]=="MH"))
        && (  substr($div,0,1) == "I"  ) && (strlen($div) == 2 )
    ) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/pro/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/pro/div$div/index.txt>$div</a>";
    }
 }
 
@@ -107,7 +107,7 @@ foreach ($arr as $line) {
     if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
 	($div!="FE") &&($div!="AP") &&($div!="AW") &&($div!="JA") &&($div!= "JK") &&
 	($div!="JL") && ($div!="JM")&&($div!="JO")&&($div!="JS")&&($div!="AK") ) {
-    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$div</a>";
   }
   }
 }
@@ -116,7 +116,7 @@ foreach ($arr as $line) {
    $seccasetype=explode(',',$casetype);
    if ( (($casetype=="DA") || (isset($seccasetype[1]) && $seccasetype[1]=="DA")) &&
        (($div=="NO")||($div=="WE")) ) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$div</a>";
    }
 }
 
@@ -133,7 +133,7 @@ foreach ($arr as $line) {
    if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR"))
        &&($div=="UFCL")) {
       $label="Linked Cases";
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
    }
 }
 foreach ($arr as $line) {
@@ -143,7 +143,7 @@ foreach ($arr as $line) {
    if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
        ($div=="UFCT")) {
       $label="Transferred Cases";
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
       }
 }
 foreach ($arr as $line) {
@@ -153,7 +153,7 @@ foreach ($arr as $line) {
    if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
        ($div=="UFJM")) {
       $label = "Judicial Memo";
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$label</a>";
    }
 }
 ?>
@@ -167,10 +167,10 @@ foreach ($arr as $line) {
    $seccasetype=explode(',',$casetype);
    if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR"))&&
        (($div=="JA") || ($div== "JK")||($div=="JL")||($div=="JM")||($div=="JO")||($div=="JS"))  ) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/juv/div$div/index.txt>$div</a>";
    } else if (($casetype=="CJ") ||(isset($seccasetype[1]) && $seccasetype[1]=="CJ")||
 	      ($casetype=="DP")||(isset($seccasetype[1]) && $seccasetype[1]=="DP")) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/juv/div$div/index.txt>$div</a>";
    }
 }
 
@@ -184,7 +184,7 @@ foreach ($arr as $line) {
    list($div,$casetype,$name)=explode('~',$line);
    $seccasetype=explode(',',$casetype);
    if ( ($casetype=="CC") || (isset($seccasetype[1]) && $seccasetype[1]=="CC") ) {
-      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+      echo "<li><a href=gensumm.php?rpath=case/Sarasota/civ/div$div/index.txt>$div</a>";
    }
 }
 ?>

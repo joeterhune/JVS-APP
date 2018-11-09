@@ -7,7 +7,7 @@ checkLoggedIn();
 
 $courtTypeGraphs = array (
     'Circuit Civil' => array(
-        'dataPath' => '/var/www/Palm/civ',
+        'dataPath' => '/var/www/Sarasota/civ',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -39,7 +39,7 @@ $courtTypeGraphs = array (
         )
     ),
 	'Foreclosure' => array(
-		'dataPath' => '/var/www/Palm/civ',
+		'dataPath' => '/var/www/Sarasota/civ',
 		'graphTypes' => array(
 			'pend' => array (
 				'template' => 'pend.tpl',
@@ -71,7 +71,7 @@ $courtTypeGraphs = array (
 		)
 	),
     'County Civil' => array(
-        'dataPath' => '/var/www/Palm/civ',
+        'dataPath' => '/var/www/Sarasota/civ',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -96,7 +96,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Felony' => array(
-        'dataPath' => '/var/www/Palm/crim',
+        'dataPath' => '/var/www/Sarasota/crim',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -115,7 +115,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Misdemeanor' => array(
-        'dataPath' => '/var/www/Palm/crim',
+        'dataPath' => '/var/www/Sarasota/crim',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -134,7 +134,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Family' => array(
-        'dataPath' => '/var/www/Palm/civ',
+        'dataPath' => '/var/www/Sarasota/civ',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -167,7 +167,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Juvenile' => array(
-        'dataPath' => '/var/www/Palm/juv',
+        'dataPath' => '/var/www/Sarasota/juv',
         'graphTypes' => array(
             'penddep' => array (
                 'template' => 'pend.tpl',
@@ -200,7 +200,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Probate' => array(
-        'dataPath' => '/var/www/Palm/pro',
+        'dataPath' => '/var/www/Sarasota/pro',
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',

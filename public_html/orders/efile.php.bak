@@ -92,7 +92,7 @@ $templateData['casestyle'] = $style;
 $templateData['countyid'] = 50;
 $templateData['court_id'] = $divlist[$div]['CourtTypeID'];
 $templateData['jud_circuit'] = "Fifteenth Circuit";
-$templateData['county'] = "Palm Beach County";
+$templateData['county'] = "Sarasota Beach County";
 $templateData['court_type'] = $divlist[$div]['PortalCourtType'];
 
 $query = "

@@ -70,9 +70,9 @@ if(isset($dbh)) {
 		<link rel="stylesheet" type="text/css" href="/case/style/jquery-ui.css">
 		<link rel="stylesheet" type="text/css" href="/case/icms1.css">
 
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.8.3.min.js" type="text/javascript"></script>
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.3.min.js" type="text/javascript"></script>
-		<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/date.js" type="text/javascript"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.8.3.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-ui-1.10.3.min.js" type="text/javascript"></script>
+		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/date.js" type="text/javascript"></script>
 		<script src="/case/icms.js" type="text/javascript"></script>
 
 		<script type="text/javascript">

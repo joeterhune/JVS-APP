@@ -712,7 +712,7 @@ sub rpt {
     }
 
     #
-    # 	Requires changes for Palm Beach County
+    # 	Requires changes for Sarasota Beach County
     #
     sub getinfo_pbc {
 	my $ucn = shift;

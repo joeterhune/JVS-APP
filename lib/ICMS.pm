@@ -358,7 +358,7 @@ sub onlinediv {
 
 #
 # Check if user belongs to particular group by reading ldapgroups.txt.
-# Almost the same as the one in AuthPalm.
+# Almost the same as the one in AuthSarasota.
 #
 sub groupcheck {
 	my($user,$group)=@_;

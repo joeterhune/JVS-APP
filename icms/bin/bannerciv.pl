@@ -56,7 +56,7 @@ $| = 1;
 my $outpath;
 my $outpath2;
 my $webpath;
-my $county="Palm";
+my $county="Sarasota";
 #my %allsrs;    # contains all cases for this report with the corresponding srs status
 my %srsstatus; # just status of cases we're interested in
 my %allcases; # set in buildallcases

@@ -46,7 +46,7 @@ $data{'ClerkCase'} = $params{'casenum'};
 $data{'UCN'} = $params{'ucn'};
 $data{'county_id'} = 50;
 $data{'judicial_circuit'} = "Fifteenth Circuit";
-$data{'county'} = "Palm Beach County";
+$data{'county'} = "Sarasota Beach County";
 
 my $caseInfo = getCaseInfo($params{'casenum'});
 

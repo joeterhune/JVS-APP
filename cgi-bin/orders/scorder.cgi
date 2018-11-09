@@ -491,8 +491,8 @@ my $caseid=$ucn;
 print <<EOS;
 <title>Create Form Order</title>
 <link rel="stylesheet" type="text/css" href="/case/icms1.css">
-<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.js"></script>
-<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
+<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.js"></script>
+<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
 <script src="/case/icms.js?1.1" type="text/javascript"></script>
 <script src="/case/javascript/main.js?1.1" type="text/javascript"></script>
 </head>

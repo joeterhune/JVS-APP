@@ -36,7 +36,7 @@ foreach ($arr as $line) {
 
   if ((($casetype=="CF") || ($seccasetype[1]=="CF")) && ($div!="CFMH")) {
        if ($div!="CFTD" && $div!="KK2") { # exclude CF and KK2 for Noel
-          echo "<li><a href=gensumm.php?rpath=case/Palm/crim/div$div/index.txt>$div</a>";
+          echo "<li><a href=gensumm.php?rpath=case/Sarasota/crim/div$div/index.txt>$div</a>";
 	   }
   }
 }
@@ -50,7 +50,7 @@ foreach ($arr as $line) {
   $seccasetype=explode(',',$casetype);
 
   if ((($casetype=="CF") || ($seccasetype[1]=="CF")) && ($div=="CFMH")) {
-    echo "<li><a href=gensumm.php?rpath=case/Palm/crim/div$div/index.txt>$div</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/crim/div$div/index.txt>$div</a>";
   }
 }
 ?>
@@ -70,7 +70,7 @@ foreach ($arr as $line) {
 	   (($casetype=="IN") || ($seccasetype[1]=="IN")) ) {
 	   # Noel wants KK2 excluded
 	   if($div!="KK2") {
-	   	  echo "<li><a href=gensumm.php?rpath=case/Palm/crim/div$div/index.txt>$div</a>";
+	   	  echo "<li><a href=gensumm.php?rpath=case/Sarasota/crim/div$div/index.txt>$div</a>";
 	   }
   }
 }
@@ -85,7 +85,7 @@ foreach ($arr as $line) {
   list($div,$casetype,$name)=explode('~',$line);
   $seccasetype=explode(',',$casetype);
   if ( ((($casetype=="MM") || ($seccasetype[1]=="MM")) && ($div=="F")) ) {
-    echo "<li><a href=gensumm.php?rpath=case/Palm/crim/div$div/index.txt>$div</a>";
+    echo "<li><a href=gensumm.php?rpath=case/Sarasota/crim/div$div/index.txt>$div</a>";
   }
 }
 ?>

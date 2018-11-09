@@ -284,9 +284,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_county/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_county/codes/code_of_ordinances"
                                                        target="PBCOrdinances">
-                                                        Palm Beach County
+                                                        Sarasota Beach County
                                                     </a>
                                                 </li>
                                             </ul>
@@ -341,9 +341,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach/codes/code_of_ordinances"
                                                        target="PBOrdinances">
-                                                        Palm Beach
+                                                        Sarasota Beach
                                                     </a>
                                                 </li>
                                             </ul>
@@ -365,9 +365,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Palm Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_gardens/codes/code_of_ordinances"
+                                                    <a title="Sarasota Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_gardens/codes/code_of_ordinances"
                                                        target="PBGOrdinances">
-                                                        Palm Beach Gardens
+                                                        Sarasota Beach Gardens
                                                     </a>
                                                 </li>
                                             </ul>
@@ -438,9 +438,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="West Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_palm_beach/codes/code_of_ordinances"
+                                                    <a title="West Sarasota Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_Sarasota_beach/codes/code_of_ordinances"
                                                        target="WPBOrdinances">
-                                                        West Palm Beach
+                                                        West Sarasota Beach
                                                     </a>
                                                 </li>
                                             </ul>

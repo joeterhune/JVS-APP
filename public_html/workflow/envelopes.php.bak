@@ -250,8 +250,8 @@ $divType = (preg_match('/CIRCUIT|FAMILY|JUVENILE|PROBATE|FELONY|FORECLOSURE/', $
 
 if(empty($_POST)){
 	$sName = $divAddr['FullName'] . ", " . $divType . " JUDGE";
-	$sAdd = "PALM BEACH COUNTY " . $divAddr['CourthouseName'] . "<br/>" . $divAddr['Address'] . "<br/>" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];
-	$sAddOrig = "PALM BEACH COUNTY " . $divAddr['CourthouseName'] . "\r\n" . $divAddr['Address'] . "\r\n" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];;
+	$sAdd = "Sarasota BEACH COUNTY " . $divAddr['CourthouseName'] . "<br/>" . $divAddr['Address'] . "<br/>" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];
+	$sAddOrig = "Sarasota BEACH COUNTY " . $divAddr['CourthouseName'] . "\r\n" . $divAddr['Address'] . "\r\n" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];;
 }
 else{
 	$sender = trim($_REQUEST['custom_sender_name']);
@@ -269,7 +269,7 @@ else{
 		$sAddOrig = $senderAdd;
 	}
 	else{
-		$sAdd = "PALM BEACH COUNTY " . $divAddr['CourthouseName'] . "<br/>" . $divAddr['Address'] . "<br/>" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];
+		$sAdd = "Sarasota BEACH COUNTY " . $divAddr['CourthouseName'] . "<br/>" . $divAddr['Address'] . "<br/>" . $divAddr['City'] . ", " . $divAddr['State'] . " " . $divAddr['ZIP'];
 		$sAddOrig = $sAdd;
 	}
 }

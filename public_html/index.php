@@ -92,13 +92,13 @@ $fdbh = null;
 		15th Circuit Case Management System
     </title>
 	
-	<link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap.css"/>
-	<link href="https://e-services.co.palm-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
+	<link rel="stylesheet" type="text/css" href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/bootstrap/bootstrap.css"/>
+	<link href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
 	<link rel="stylesheet" type="text/css" href="icms1.css?1.1" />
-	<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
-	<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
-	<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
-	<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
+	<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+	<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
+	<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
 	<script src="/case/icms.js" type="text/javascript"></script>
     <script src="/case/javascript/main.js" type="text/javascript"></script>
 </head>

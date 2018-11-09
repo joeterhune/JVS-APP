@@ -12,11 +12,11 @@ ocase~Other Case No.:~~TEXT~25~~~~
 #
 /selectkids~2
 # Return address for envelopes
-/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Palm Beach, FL  33401
+/returnAddress~Unified Family Court~205 N. Dixie Hwy.~West Sarasota Beach, FL  33401
 # Extra parties to be copied on all versions of the form
 /extraparties
-DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST PALM BEACH~FL~33401
-FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST PALM BEACH~FL~33406
+DONALD ANDREW PICKET, ESQ.~325 CLEMATIS ST, STE B, 2ND FLOOR~~WEST Sarasota BEACH~FL~33401
+FLORIDA DEPARTMENT OF REVENUE~881 SOUTH CONGRESS AVE.~~WEST Sarasota BEACH~FL~33406
 /endextras
 # If /nocheck is set, do not automatically check parties' checkboxes.
 /nocheck

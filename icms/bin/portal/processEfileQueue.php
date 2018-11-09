@@ -160,7 +160,7 @@ foreach ($filings as $filing) {
         $data['UCN'] = $ucn;
         $data['county_id'] = 50;
         $data['judicial_circuit'] = "Fifteenth Circuit";
-        $data['county'] = "Palm Beach";
+        $data['county'] = "Sarasota Beach";
         $data['CaseStyle'] = $caseInfo['CaseStyle'];
             
         // Get the portal namespace and court type for this case

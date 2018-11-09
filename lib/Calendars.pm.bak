@@ -157,7 +157,7 @@ sub getCaseStyles {
 	my $caseref = shift;
 
 	$division = uc($division);
-	my $divcs = "/var/www/html/case/Palm/civ/div".$division."/divcs.txt";
+	my $divcs = "/var/www/html/case/Sarasota/civ/div".$division."/divcs.txt";
 
 	open (DIVCS, $divcs);
 	while (my $line = <DIVCS>) {
