@@ -61,7 +61,7 @@ use DB_Functions qw (
 	inGroup
 	ldapConnect
 );
-
+use XML::Simple;
 use EService qw(
 	getAttorneyAddresses
 	getProSeAddresses
@@ -82,12 +82,21 @@ sub doit {
 
 	my $icmsuser = getUser();
 	
+############### Added 11/6/2018 jmt security from conf 
+	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $icmsuser = $info->remote_user;
+	
     my $ldap = ldapConnect();
-    my $secretuser = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
-    my $sealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
-    my $jsealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
-    my $odpuser = inGroup($icmsuser,'CAD-ICMS-ODPS',$ldap);
-    my $psealeduser = 1; #inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
+    my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
+    my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
+    my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
+    my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);    my $psealeduser = 1; #inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
 
 	print $info->header({-expires => 0, -type => 'text/html'});
     my $caseid = $info->param('caseid');

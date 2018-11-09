@@ -2734,12 +2734,18 @@ sub getScCaseInfo {
    log_this('JVS', 'caselookup', 'User ' . $icmsuser . ' viewed case ' . $inUCN, $ENV{'REMOTE_ADDR'});
     
    my $ldap = ldapConnect();
-   my $secretuser = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
-   my $sealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
-   my $jsealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
-   my $psealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
-   $data{'odpuser'} = inGroup($icmsuser,'CAD-ICMS-ODPS',$ldap);
-   $data{'notesuser'} = inGroup($icmsuser,'CAD-ICMS-NOTES',$ldap);
+    ############### Added 11/6/2018 jmt security from conf 
+	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+	
+   $data{'odpuser'} = inGroup($icmsuser,$odpsgroup,$ldap);
+   $data{'notesuser'} = inGroup($icmsuser,$notesgroup,$ldap);
     
    my $dbh = dbConnect($db);
    my $schema = getDbSchema($db);
