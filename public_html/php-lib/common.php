@@ -236,7 +236,7 @@ function sanitizeCaseNumber ($ucn){
     
     # Strip leading "50" and any dashes.
     $casenum = preg_replace("/-/","",$casenum);
-    $casenum = preg_replace("/^50/","",$casenum);
+    $casenum = preg_replace("/^58/","",$casenum); //58 for sarasota
     
     if (preg_match("/^(\d{1,6})(\D\D)(\d{0,6})(.*)/", $casenum, $matches)) {
         $year = $matches[1];
@@ -256,9 +256,14 @@ function sanitizeCaseNumber ($ucn){
 		# If it's a Showcase code, prepend the 50 - they're all SC codes now!
         if (preg_match("/(\S\S\S\S)(\S\S)/",$suffix,$smatches) || 
         		(preg_match("/(\S\D\S\S)(\S\S)/",$suffix,$smatches))) {
-        	$year = sprintf("50-%04d", $year);
+/*         	##### modified 11/7/2018 jmt formatting for benchmark also 58 for sarasota
+			$year = sprintf("50-%04d", $year);
 		    $suffix = sprintf("%s-%s", $smatches[1], $smatches[2]);
 		    $retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
+ */			$year = sprintf("58%04d", $year);
+		    $suffix = sprintf("%s%s", $smatches[1], $smatches[2]);
+		    $retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
+
         }
         else{
         	$dbh = dbConnect("showcase-prod");
@@ -266,14 +271,16 @@ function sanitizeCaseNumber ($ucn){
         	if(strlen($casenum) < 12){
         		$casenum = $year . $type . str_pad($seq, 6, "0", STR_PAD_LEFT);
         	}
-        	
+        	if(substr( $casenum, 0, 2 ) != "58" ){
+				$casenum = "58" . $casenum;
+			}
         	$query = "
             select
                 CaseNumber
             from
                 vCase with(nolock)
             where
-                ( LegacyCaseNumber = :casenum OR UCN LIKE '50" . $casenum . "%' )
+                ( LegacyCaseNumber = :casenum OR UCN LIKE '" . $casenum . "%' ) // changed 50 to 58 for sarasota
         	";
         	
         	$caseInfo = getDataOne($query, $dbh, array('casenum' => $casenum));
