@@ -12,8 +12,8 @@ if(!empty($_POST)){
 	
 	$plaintext = strip_tags($_POST['message']);
     
-    $recips = "CAD-HELP@pbcgov.org";
-    //$recips = "lkries@pbcgov.org";
+    $recips = "CAD-HELP@jud12.flcourts.org";
+    //$recips = "lkries@jud12.flcourts.org";
     	
     $uid = md5(uniqid(time()));
 

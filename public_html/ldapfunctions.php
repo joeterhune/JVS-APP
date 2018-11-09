@@ -13,11 +13,11 @@
 //
 
 $CAD_OU="Enterprise";
-$LDAPHOST = "ldaps://pbcgccdc1.pbcgov.org";
-$LDAPBINDDN = "cn=cad icms,ou=Services,ou=CAD,ou=$CAD_OU,DC=PBCGOV,DC=ORG";
+$LDAPHOST = "ldaps://pbcgccdc1.jud12.flcourts.org";
+$LDAPBINDDN = "cn=cad icms,ou=Services,ou=CAD,ou=$CAD_OU,DC=jud12.flcourts,DC=ORG";
 $LDAPBINDPW = "password99";
-$LDAPBASE = "ou=Users,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
-$LDAPSVCBASE = "ou=Services,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
+$LDAPBASE = "ou=Users,ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
+$LDAPSVCBASE = "ou=Services,ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
 
 function inGroup($user,$group) {
 	global $LDAPHOST;
@@ -51,7 +51,7 @@ function inGroup($user,$group) {
 
 		# Get the DN of the group
 		$ldapFilter = "(sAMAccountName=$group)";
-		$ldapBase = "ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG";
+		$ldapBase = "ou=CAD,ou=Enterprise,dc=jud12.flcourts,dc=ORG";
 
 		$result = ldap_search($ldap,$ldapBase,$ldapFilter,$fields);
 		$groups = ldap_get_entries($ldap,$result);

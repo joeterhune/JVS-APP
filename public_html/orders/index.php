@@ -116,7 +116,7 @@ if ((!array_key_exists('DocType', $orderObj)) || ($orderObj['DocType'] == 'IGO' 
 
 $smarty->assign('doc_type', $orderObj['DocType']);
 
-$fromAddr = sprintf("CAD-Division%s@pbcgov.org", $div);
+$fromAddr = sprintf("CAD-Division%s@jud12.flcourts.org", $div);
 
 // Is it an existing document?
 if ($orderObj['docid'] != '') {

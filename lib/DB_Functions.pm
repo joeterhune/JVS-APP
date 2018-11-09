@@ -970,7 +970,7 @@ sub checkCaseAccess {
 		$group = "CAD-ICMS-SEC";
 	}
 
-	my $filter = "(&(sAMAccountName=$user)(memberOf=CN=$group,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org))";
+	my $filter = "(&(sAMAccountName=$user)(memberOf=CN=$group,OU=Services,OU=CAD,OU=Enterprise,DC=jud12.flcourts,DC=org))";
 
 	ldapLookup(\@accessList,$filter,$ldap,['sAMAccountName']);
 

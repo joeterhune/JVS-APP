@@ -1,6 +1,6 @@
 #!/bin/sh
 
-RECIP=rhaney@pbcgov.org
+RECIP=rhaney@jud12.flcourts.org
 DATE=`/bin/date +%Y%m%d`
 RESULTDIR=/var/jvs/icms/bin/results
 

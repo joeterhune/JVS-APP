@@ -4,7 +4,7 @@ require_once('Smarty/Smarty.class.php');
 $wsdl = "https://test.myflcourtaccess.com/wsdl/BulkFilingReviewService.wsdl";
 
 $filerEmails = array (
-    'rhaney@pbcgov.org',
+    'rhaney@jud12.flcourts.org',
     'rich@haneys.net'
 );
 

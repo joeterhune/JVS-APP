@@ -45,12 +45,12 @@ if (!scalar(@cases)) {
 	my @recips = (
 		{
 			fullname => "Rich Haney",
-			email_addr => 'rhaney@pbcgov.org'
+			email_addr => 'rhaney@jud12.flcourts.org'
 		}
 	);
 	my $sender = {
 				  fullname => "ICMS Alerts",
-				  email_addr => 'cad-icmsalert@pbcgov.org'
+				  email_addr => 'cad-icmsalert@jud12.flcourts.org'
 				 };
 	my $subject = "ALERT: Showcase Shows No Cases Files Yesterday ($yesterday)";
 	my $body = "The Showcase reporting database is showing that there were no ".

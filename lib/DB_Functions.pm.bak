@@ -92,11 +92,11 @@ use CGI::Carp qw(fatalsToBrowser);
 use JSON;
 
 our $CAD_OU="Enterprise";
-our $LDAPHOST = ["ldaps://pbcgccdc2.pbcgov.org", "ldaps://pbcgccdc1.pbcgov.org"];
-our $LDAPBINDDN = "cn=cad icms,ou=Services,ou=CAD,ou=$CAD_OU,DC=PBCGOV,DC=ORG";
+our $LDAPHOST = ["ldaps://pbcgccdc2.jud12.flcourts.org", "ldaps://pbcgccdc1.jud12.flcourts.org"];
+our $LDAPBINDDN = "cn=cad icms,ou=Services,ou=CAD,ou=$CAD_OU,DC=jud12.flcourts,DC=ORG";
 our $LDAPBINDPW = "password99";
-our $LDAPBASE = "ou=Users,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
-our $LDAPSVCBASE = "ou=Services,ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
+our $LDAPBASE = "ou=Users,ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
+our $LDAPSVCBASE = "ou=Services,ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
 
 our $DEFAULT_SCHEMA = "dbo";
 
@@ -970,7 +970,7 @@ sub checkCaseAccess {
 		$group = "CAD-ICMS-SEC";
 	}
 
-	my $filter = "(&(sAMAccountName=$user)(memberOf=CN=$group,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org))";
+	my $filter = "(&(sAMAccountName=$user)(memberOf=CN=$group,OU=Services,OU=CAD,OU=Enterprise,DC=jud12.flcourts,DC=org))";
 
 	ldapLookup(\@accessList,$filter,$ldap,['sAMAccountName']);
 
@@ -1067,7 +1067,7 @@ sub inGroup {
 
     # First, look up the DN of the user - we'll need it later
     my $ldapFilter = "(sAMAccountName=$user)";
-    my $ldapBase = "ou=Users,ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG";
+    my $ldapBase = "ou=Users,ou=CAD,ou=Enterprise,dc=jud12.flcourts,dc=ORG";
 
     my @fields = ('distinguishedName');
     my @users;
@@ -1088,7 +1088,7 @@ sub inGroup {
 
     # Now get the DN for the group
     $ldapFilter = "(sAMAccountName=$group)";
-    $ldapBase = "ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG";
+    $ldapBase = "ou=CAD,ou=Enterprise,dc=jud12.flcourts,dc=ORG";
 
     my @groups;
     ldapLookup(\@groups,$ldapFilter,$ldap,\@fields,$ldapBase);

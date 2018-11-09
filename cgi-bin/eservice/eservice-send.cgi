@@ -433,7 +433,7 @@ sub notifyGeeks {
     move($fileXml, "/var/www/portalRetries/");
     
     my @recipients = (
-        { email_addr => 'lkries@pbcgov.org' }
+        { email_addr => 'WebHelp@jud12.flcourts.org' }
     );
     
     my $subject = "IMPORTANT!! Portal e-Filing Error!";

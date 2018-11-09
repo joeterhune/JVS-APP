@@ -677,7 +677,7 @@ foreach ($y as $divname) {
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:cad-web@pbcgov.com">cad-web@pbcgov.com</a>
+		Please e-mail <a href="mailto:cad-web@jud12.flcourts.com">cad-web@jud12.flcourts.com</a>
 		to report any problems with this system.
 	</div>
 

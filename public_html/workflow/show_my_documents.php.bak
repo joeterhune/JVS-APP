@@ -86,8 +86,8 @@ $query = "
     from
         workflow
     where
-        REPLACE(creator, '@pbcgov.org', '') = :queue
-		and queue <> REPLACE(creator, '@pbcgov.org', '')
+        REPLACE(creator, '@jud12.flcourts.org', '') = :queue
+		and queue <> REPLACE(creator, '@jud12.flcourts.org', '')
     order by
         creation_date desc
 ";

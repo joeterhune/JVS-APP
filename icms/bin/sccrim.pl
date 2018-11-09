@@ -1572,11 +1572,11 @@ sub doit() {
 	if ((!defined($dbh)) && ($retries >= $RETRY_MAX)) {
 		my @recips;
 		my $recip = {
-			"email_addr" => 'cad-alllinuxadmins@pbcgov.org'
+			"email_addr" => 'cad-alllinuxadmins@jud12.flcourts.org'
 		};
 		push(@recips,$recip);
 		my $sender = {
-			"email_addr" => 'cad-icmsalert@pbcgov.org'
+			"email_addr" => 'cad-icmsalert@jud12.flcourts.org'
 		};
 		my $subject = "Showcase Criminal Report Unable to Establish DB Connection";
 		my $msgbody = "The Showcase reporting script ($0) was unable to establish a database connection, after $retries ".

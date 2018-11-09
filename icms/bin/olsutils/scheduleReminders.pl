@@ -131,7 +131,7 @@ sub sendMessages {
 
         $smtp->mail($conf->{fromAddress});
         $smtp->to($message->{sch_contact_email});
-        $smtp->bcc('rhaney@pbcgov.org');
+        $smtp->bcc('rhaney@jud12.flcourts.org');
         $smtp->data();
         if (defined($conf->{contentType})) {
             $smtp->datasend("Content-Type: $conf->{contentType}\n");

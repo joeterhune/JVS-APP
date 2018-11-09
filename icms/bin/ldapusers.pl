@@ -112,7 +112,7 @@ $ldap=Net::LDAP->new($LDAPHOST);
 my $res = builduserlist(\%userlist);
 
 # Hack.  Force cad-nagios, which isn't in the User container
-$userlist{'cad-nagios'}="CN=CAD Nagios,OU=Services,OU=CAD,ou=$CAD_OU,DC=pbcgov,DC=org~66048~";
+$userlist{'cad-nagios'}="CN=CAD Nagios,OU=Services,OU=CAD,ou=$CAD_OU,DC=jud12.flcourts,DC=org~66048~";
 
 if( $res != 1 ) {
     $ldap->unbind();

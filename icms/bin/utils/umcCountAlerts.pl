@@ -136,7 +136,7 @@ foreach my $div (@divs) {
 	
 	my %sender = (
 		'fullname' => 'CAD-WEB',
-		'email_addr' => 'cad-web@pbcgov.org'
+		'email_addr' => 'cad-web@jud12.flcourts.org'
 	);
 	
 	sendMessage([\%recip], \%sender, undef, $subject, $body, undef, 0, 0);

@@ -52,12 +52,12 @@ sub listmembers {
     #my $cookie;
 
 	my @users;
-	my $filter = "(memberOf=CN=$groupname,OU=Services,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org)";
+	my $filter = "(memberOf=CN=$groupname,OU=Services,OU=CAD,OU=Enterprise,DC=jud12.flcourts,DC=org)";
 	ldapLookup(\@users,$filter,$ldap,["sAMAccountName"],$LDAPBASE);
 
 	# Special cases - add all members of CAD-Judges to CAD-ICMS-SEALED
 	if ($groupname eq "CAD-ICMS-SEALED") {
-		my $filter = "(memberOf=CN=CAD-Judges,OU=Groups,OU=Users,OU=CAD,OU=Enterprise,DC=pbcgov,DC=org)";
+		my $filter = "(memberOf=CN=CAD-Judges,OU=Groups,OU=Users,OU=CAD,OU=Enterprise,DC=jud12.flcourts,DC=org)";
 		ldapLookup(\@users,$filter,$ldap,["sAMAccountName"],$LDAPBASE);
 	}
 

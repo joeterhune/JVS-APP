@@ -4,7 +4,7 @@
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:CAD-HELP@pbcgov.org">CAD-HELP@pbcgov.org</a>
+		Please e-mail <a href="mailto:CAD-HELP@jud12.flcourts.org">CAD-HELP@jud12.flcourts.org</a>
 		to report any problems with this system.
 	</div>
 

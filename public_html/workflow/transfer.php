@@ -86,15 +86,15 @@ if(!empty($cqRow) && !empty($cqRow['email_address'])){
 		$text .= "<li>Once logged in, view the " . $cqRow['queue_type'] . " Queue to access and review the filing. </li>";
 		$text .= "<li>After review, e-sign and e-file/e-serve the pleading.</li>";
 		$text .= "</ol>";
-		$text .= "<em>If you have any questions or require assistance (including after-hours), please e-mail <a href=\"mailto:CAD-HELP@pbcgov.org\">CAD-HELP@pbcgov.org</a> or call 561-318-1012.</em>";
+		$text .= "<em>If you have any questions or require assistance (including after-hours), please e-mail <a href=\"mailto:CAD-HELP@jud12.flcourts.org\">CAD-HELP@jud12.flcourts.org</a> or call 561-318-1012.</em>";
 		
 		$plaintext = str_replace("<br>", "\r\n", $text);
 	
-		//$from_mail = $fromqueue . "@pbcgov.org";
+		//$from_mail = $fromqueue . "@jud12.flcourts.org";
 		$from_mail = $cqRow['email_address'];
 		
 		$header = "From: ".$from_mail."\r\n";
-		//$header .= "cc: nchessman@pbcgov.org\r\n";
+		//$header .= "cc: nchessman@jud12.flcourts.org\r\n";
 		$header .= "MIME-Version: 1.0\r\n";
 		$header .= "X-Priority: 1 (Highest)\r\n";
 		$header .= "X-MSMail-Priority: High\r\n";

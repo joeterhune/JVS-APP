@@ -88,8 +88,8 @@ if (strpos($creator, "@") === false) { # not an e-mail address; work queue user!
 	
 	$ffile = createOrderPDF($formhtml, $ucn, $row['formname'], $isTemplate);
 	
-	$from = "CAD-Division" . $div . "@pbcgov.org";
-	//$from = "lkries@pbcgov.org";
+	$from = "CAD-Division" . $div . "@jud12.flcourts.org";
+	//$from = "lkries@jud12.flcourts.org";
 	
     if (mail_attachment($ffile, $creator, $from, "", "REJECTED PROPOSED ORDER: $ucn", "The attached order has been rejected by the court for the following reason:<br><br>$comments<br><br>")) {
         #

@@ -159,8 +159,8 @@ if (!defined($division)) {
     $division = $divs[0];
 }
 
-my $ldapFilter = "(|(mail=CAD-Division$division*\@pbcgov.org)(mail=CAD-CaseManager$division*\@pbcgov.org))";
-my $ldapBase = "ou=CAD,ou=$CAD_OU,dc=PBCGOV,dc=ORG";
+my $ldapFilter = "(|(mail=CAD-Division$division*\@jud12.flcourts.org)(mail=CAD-CaseManager$division*\@jud12.flcourts.org))";
+my $ldapBase = "ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
 my @ldapFields = (
 	"displayName",
 	"mail",
@@ -223,14 +223,14 @@ foreach my $sender (@senderTmp) {
 if($division eq "AC"){
 	my %newSender;
 	$newSender{'telephoneNumber'} = "";
-	$newSender{'mail'} = "CriminalAppeals\@pbcgov.org";
+	$newSender{'mail'} = "CriminalAppeals\@jud12.flcourts.org";
 	$newSender{'displayName'} = "Criminal Appeals";
     push(@senders, \%newSender);
 }
 elsif($division eq "AY"){
 	my %newSender;
 	$newSender{'telephoneNumber'} = "";
-	$newSender{'mail'} = "CivilAppeals\@pbcgov.org";
+	$newSender{'mail'} = "CivilAppeals\@jud12.flcourts.org";
 	$newSender{'displayName'} = "Civil Appeals";
     push(@senders, \%newSender);
 }

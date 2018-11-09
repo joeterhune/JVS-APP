@@ -127,7 +127,7 @@ foreach my $casenum (sort keys %newFilings) {
         
         my %sender = (
             'fullname' => 'CAD-WEB',
-            'email_addr' => 'cad-web@pbcgov.org'
+            'email_addr' => 'cad-web@jud12.flcourts.org'
         );
         
         $data{'icms_user'} = $rec->{'icms_user'};

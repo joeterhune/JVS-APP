@@ -1,3 +1,4 @@
 *.komodoproject
 conf/ICMS.xml
 templates_c
+*.db

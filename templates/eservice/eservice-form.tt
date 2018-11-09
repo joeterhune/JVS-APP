@@ -1096,7 +1096,7 @@
 [% ELSE %]
 <div style="margin-top: 100px; text-align: center">
     There are no divisional addresses defined for division [% data.division %]! Please contact
-    <a href="mailto:cad-help@pbcgov.org">cad-help</a> regarding this issue.
+    <a href="mailto:cad-help@jud12.flcourts.org">cad-help</a> regarding this issue.
 </div>
 [% END %]
     </div>

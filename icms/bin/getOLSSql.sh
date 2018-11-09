@@ -27,4 +27,4 @@ do
 done
 
 NOW=`date`
-echo "Database load completed at $NOW." | /usr/lib/sendmail rhaney@pbcgov.org
+echo "Database load completed at $NOW." | /usr/lib/sendmail rhaney@jud12.flcourts.org

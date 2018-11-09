@@ -175,7 +175,7 @@ $fdbh = null;
 					});
 					return false;
 				}
-				$.blockUI({message: '<h1><img src="/case/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+				$.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
 				$('#theform').submit();
 				return true;
 			});
@@ -677,7 +677,7 @@ foreach ($y as $divname) {
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:cad-web@pbcgov.com">cad-web@pbcgov.com</a>
+		Please e-mail <a href="mailto:cad-web@jud12.flcourts.com">cad-web@jud12.flcourts.com</a>
 		to report any problems with this system.
 	</div>
 
