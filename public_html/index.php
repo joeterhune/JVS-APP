@@ -175,7 +175,7 @@ $fdbh = null;
 					});
 					return false;
 				}
-				$.blockUI({message: '<h1><img src="/case/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+				$.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
 				$('#theform').submit();
 				return true;
 			});
