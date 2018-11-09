@@ -78,7 +78,12 @@ sub doit {
     my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
     my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
     my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
-    
+	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+   
     # Does the user just want to show a single TIF image instead of doing
     # the PDF conversion?
     my $showTif = 0;
@@ -111,7 +116,7 @@ sub doit {
         
         my $user = $info->remote_user();
         
-        if (inGroup($user,'CAD-ICMS-SEALED',$ldap)) {
+        if (inGroup($user,$sealedGroup,$ldap)) {
             my $canView = 0;
             my @divs;
             
@@ -141,7 +146,7 @@ sub doit {
                 $TMPASS = $conf->{'TrakMan'}->{'sealed'}->{'password'};
                 $TMUSER = $conf->{'TrakMan'}->{'sealed'}->{'userid'};
             }
-        } elsif ((inGroup($info->remote_user(),'CAD-ICMS-SEALED-JUV'),$ldap)) {
+        } elsif ((inGroup($info->remote_user(),$sealedJuvGroup),$ldap)) {
             # User can see ONLY Juvenile sealed
             if ($casenum =~ /^(\d{1,6})(\D\D)(\d{0,6})(.*)/) {
                 if (inArray(['CJ','DP'], $2)) {

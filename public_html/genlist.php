@@ -92,7 +92,7 @@ function loaddata($rpath, &$config, &$res, $ageRange = null) {
     global $classMaps;
     global $colMaps;
     global $ranges;
-    
+    global $LDAPSECGROUP;
     //I am fudging this fix in here due to the plus sign for county civil 96+
     if(strpos($rpath, "_96") !== false){
     	$rpath = str_replace("_96 .txt", "_96+.txt", $rpath);
@@ -149,7 +149,8 @@ function loaddata($rpath, &$config, &$res, $ageRange = null) {
     $config['secretUser'] = 1;
     if ($secexists) {
         $secuserid = $_SESSION['user'];
-        $config['secretUser'] = inGroup($secuserid,'CAD-ICMS-SEC');
+		$secgroup = $LDAPSECGROUP;
+        $config['secretUser'] = inGroup($secuserid,$secgroup);
     }
     
     $i=0;

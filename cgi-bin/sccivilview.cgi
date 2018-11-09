@@ -90,6 +90,8 @@ sub doit {
 	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
 	my $icmsuser = $info->remote_user;
 	
     my $ldap = ldapConnect();
@@ -128,8 +130,8 @@ sub doit {
     $data{'backlev'} = $lev - 1;
     $data{'nextlev'} = $lev + 1;
     $data{'ucn'} = $ucn;
-	$data{'notesuser'} = inGroup(getUser(), 'CAD-ICMS-NOTES', $ldap);
-	$data{'showTif'} = inGroup(getUser(), 'CAD-ICMS-TIF', $ldap);
+	$data{'notesuser'} = inGroup(getUser(), $notesgroup, $ldap);
+	$data{'showTif'} = 0;
 	$data{'odpuser'} = $odpuser;
 	my $caseid = $info->param("caseid");
 	$data{'caseid'} = $caseid;

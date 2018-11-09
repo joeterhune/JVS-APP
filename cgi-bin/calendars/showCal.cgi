@@ -58,6 +58,7 @@ use Showcase qw (
 	$db
 );
 use JSON;
+use XML::Simple;
 
 checkLoggedIn();
 
@@ -84,8 +85,11 @@ my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
 
 my $wfcount = getQueues(\%queueItems, \@allqueues, $cdbh);
+############### Added 11/6/2018 jmt security from conf 
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 
-my $secretUser = inGroup($user,'CAD-ICMS-SEC');
+my $secretUser = inGroup($user,$secGroup);
 
 if ($params{'calType'} eq 'fapcal') {
 	my $fapch = $params{'fapch'};

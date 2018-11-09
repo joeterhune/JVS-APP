@@ -3400,6 +3400,16 @@ sub getScCivilCaseInfo {
     my $caseid = shift;
     
     my $icmsuser = getUser();
+	############### Added 11/6/2018 jmt security from conf 
+	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
     
     log_this('JVS', 'caselookup', 'User ' . $icmsuser . ' viewed case ' . $inUCN, $ENV{'REMOTE_ADDR'});
 	
@@ -3407,11 +3417,11 @@ sub getScCivilCaseInfo {
     my $schema = getDbSchema($db);
     
     my $ldap = ldapConnect();
-    my $secretuser = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
-    my $sealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
-    my $jsealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
-    my $psealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
-    my $odpuser = inGroup($icmsuser,'CAD-ICMS-ODPS',$ldap);
+    my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
+    my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
+    my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
+    my $psealeduser = inGroup($icmsuser,$sealedProbateGroup,$ldap);
+    my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
 
     my $ucn=convertCaseNumToDisplay(clean($inUCN));
     my $casenum = $ucn;
@@ -3420,8 +3430,8 @@ sub getScCivilCaseInfo {
     
     my %data;
     $data{'ucn'} = $ucn;
-	$data{'notesuser'} = inGroup($icmsuser, 'CAD-ICMS-NOTES', $ldap);
-	$data{'showTif'} = inGroup($icmsuser, 'CAD-ICMS-TIF', $ldap);
+	$data{'notesuser'} = inGroup($icmsuser, $notesgroup, $ldap);
+	$data{'showTif'} = 0;
 	$data{'odpuser'} = $odpuser;
     
     #my $sccasenum="58-".$ucn;

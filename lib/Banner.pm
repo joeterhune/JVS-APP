@@ -1990,6 +1990,12 @@ sub getBannerCaseInfo {
 	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+	
+    my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
+    my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
+    my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
+    my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
 
     my $ucn=uc(clean($inUCN));
     
@@ -1999,8 +2005,8 @@ sub getBannerCaseInfo {
     
     my %data;
     $data{'ucn'} = $ucn;
-	$data{'notesuser'} = inGroup($icmsuser, 'CAD-ICMS-NOTES', $ldap);
-	$data{'showTif'} = inGroup($icmsuser, 'CAD-ICMS-TIF', $ldap);
+	$data{'notesuser'} = inGroup($icmsuser, $notesgroup, $ldap);
+	$data{'showTif'} = 0;
 	$data{'odpuser'} = $odpuser;
 
 	# UCN should be of format YYYY-CF-NNNNNN-A

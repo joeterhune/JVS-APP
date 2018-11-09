@@ -43,7 +43,7 @@ use Common qw (
 use POSIX qw (
     strftime
 );
-
+use XML::Simple;
 checkLoggedIn();
 
 #
@@ -53,6 +53,9 @@ my $DEBUG=0;
 my $info=new CGI;
 my $user = getUser();
 my $session = getSession();
+############### Added 11/6/2018 jmt security from conf 
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
 
 my $dbh=dbConnect("icms");
 my %data;
@@ -98,7 +101,7 @@ my $ldap = ldapConnect();
 get_group_memberships($user, \%GROUPS, $ldap);
 $data{'groups'} = \%GROUPS;
 
-if (inGroup($user, 'CAD-ICMS-ODPS', $ldap)) {
+if (inGroup($user, $odpsgroup, $ldap)) {
     $data{'formedit'} = 1;
 }
 

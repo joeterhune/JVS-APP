@@ -86,6 +86,7 @@ sub doit {
 	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
 	my $icmsuser = $info->remote_user;
 	
     my $ldap = ldapConnect();
@@ -116,8 +117,8 @@ sub doit {
     $data{'backlev'} = $lev - 1;
     $data{'nextlev'} = $lev + 1;
     $data{'ucn'} = $ucn;
-	$data{'notesuser'} = inGroup($info->remote_user(), 'CAD-ICMS-NOTES', $ldap);
-	$data{'showTif'} = inGroup($info->remote_user(), 'CAD-ICMS-TIF', $ldap);
+	$data{'notesuser'} = inGroup($info->remote_user(), notesgroup, $ldap);
+	$data{'showTif'} = 0;
 	$data{'odpuser'} = $odpuser;
 
 	# UCN should be of format YYYY-CF-NNNNNN-A

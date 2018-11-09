@@ -29,6 +29,7 @@ use DB_Functions qw (
 	inGroup
 	ldapConnect
 );
+use XML::Simple;
 
 sub casenumtoucn {
     my($casenum)=@_;
@@ -56,8 +57,13 @@ my $info=new CGI;
 # flag if this user is a SECRET group user - can see adoptions, termination of
 # parental rights, and tuberculosis cases
 my $ldap = ldapConnect();
-my $secretuser = inGroup($info->remote_user(),'CAD-ICMS-SEC',$ldap);
-my $sealeduser = inGroup($info->remote_user(),'CAD-ICMS-SEALED',$ldap);
+############### Added 11/6/2018 jmt security from conf 
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+
+my $secretuser = inGroup($info->remote_user(),$secGroup,$ldap);
+my $sealeduser = inGroup($info->remote_user(),$sealedGroup,$ldap);
 
 print $info->header();
 

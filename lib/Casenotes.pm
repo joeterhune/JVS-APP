@@ -45,7 +45,7 @@ use Showcase qw (
     getSCCaseNumber
     getCaseID
 );
-
+use XML::Simple;
 use Date::Calc qw (:all Parse_Date);
 
 sub getFlags {
@@ -139,8 +139,11 @@ sub casenotes {
     my $lev = shift;
     my $div = shift;
     my $ldap = shift;
-    
-    my $notesuser = inGroup(getUser(),'CAD-ICMS-NOTES',$ldap);
+  ############### Added 11/6/2018 jmt security from conf 
+	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+  
+    my $notesuser = inGroup(getUser(),$notesgroup,$ldap);
     my @flaglist;
     my @noteslist;
     

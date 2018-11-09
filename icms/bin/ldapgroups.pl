@@ -24,21 +24,33 @@ use DB_Functions qw (
 	$LDAPHOST
 	$LDAPSVCBASE
 );
-
+use XML::Simple;
 use Common qw (
 	inArray
 );
-
+############### Added 11/6/2018 jmt security from conf 
+	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
+	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
+	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
+	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
+	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
+	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
+	my $usergroup = $conf->{'ldapConfig'}->{'usergroup'};
+	my $juvgroup = $conf->{'ldapConfig'}->{'juvgroup'};
+	my $oacsgroup = $conf->{'ldapConfig'}->{'oacsgroup'};
+	my $tifgroup = $conf->{'ldapConfig'}->{'tifgroup'};
 my @ADGroups = (
-	'CAD-ICMS-GROUP',
-	'CAD-ICMS-JUV',
-	'CAD-ICMS-NOTES',
-	'CAD-ICMS-SEC',
-	'CAD-ICMS-ODPS',
-	'CAD-ICMS-OACS',
-	'CAD-ICMS-SEALED',
-	'CAD-ICMS-SEALED-JUV',
-	'CAD-ICMS-TIF'
+	$usergroup,
+	$juvgroup,
+	$notesgroup,
+	$secGroup,
+	$odpsgroup,
+	$oacsgroup,
+	$sealedGroup,
+	$sealedJuvGroup,
+	$tifgroup
 );
 
 my %grouplist = "";
