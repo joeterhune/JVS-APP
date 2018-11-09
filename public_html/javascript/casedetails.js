@@ -3,9 +3,8 @@
 var VRBURL = "https://demo-vrb.15thcircuit.com";
 
 function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
-    getFlags(casenum);
-    getNotes(casenum);
-    
+    getFlags(ucn);
+    getNotes(ucn);
     $('#docketdiv_' + casenum).block({
         message: '<h1><img src="/images/busy.gif"/> Please Wait... loading dockets </h1>', fadeIn: 0
     });
@@ -16,13 +15,13 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         async: true,
         success: function(data) {
             content = data.html;
-            casenum = data.casenum;
+            casenum = data.casenum; // casenum replaced with ucn below
             
-            $('#docketdiv_' + casenum).html(content);
+            $('#docketdiv_' + ucn).html(content);
                 
-            docketCount = $('#dockets_' + casenum).find('tr').length;
+            docketCount = $('#dockets_' + ucn).find('tr').length;
 				
-            $('#dockets_' + casenum).tablesorter({
+            $('#dockets_' + ucn).tablesorter({
                 widgets: ['zebra','filter'],
                 sortList: [[1,1],[2,1]],
                 widgetOptions: {
@@ -34,11 +33,11 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
             });
             pdforder = $.cookie("pdforder");
             if ((pdforder == undefined) || (pdforder == 'desc')) {
-                $('#buildDesc_' + casenum).attr('checked',true);
+                $('#buildDesc_' + ucn).attr('checked',true);
             } else {
-                $('#buildAsc_' + casenum).attr('checked',true);
+                $('#buildAsc_' + ucn).attr('checked',true);
             }
-            $('#docketdiv_' + casenum).unblock();
+            $('#docketdiv_' + ucn).unblock();
             return true;
         }
     });
@@ -50,7 +49,7 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         success: function(data) {
             json = $.parseJSON(data);
             content = json.html;
-            $('#pbsodiv_' + casenum).html(content);
+            $('#pbsodiv_' + ucn).html(content); // casenum replaced with ucn
         }
     });
     
@@ -60,7 +59,7 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         async: true,
         success: function(data) {
             var content = data.html;
-            $('#relatedcasesdiv_' + casenum).html(content);
+            $('#relatedcasesdiv_' + ucn).html(content); // casenum replaced with ucn
             return true;
         }
     });
@@ -72,32 +71,43 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         success: function (data) {
             json = $.parseJSON(data);
             content = json.html;
-            $('#fullOtherCaseDiv_' + casenum).html(content);
-            $('#othercases_' + casenum).tablesorter({widgets: ['zebra'], sortList: [[0,1]],headers: {4: {sorter: false}}});
+            $('#fullOtherCaseDiv_' + ucn).html(content);// casenum replaced with ucn
+            $('#othercases_' + ucn).tablesorter({widgets: ['zebra'], sortList: [[0,1]],headers: {4: {sorter: false}}});
         }
     });
-    return true;
+    
+	    // Get Docket Images
+	$.ajax({
+        url: "/cgi-bin/bmGetCaseImages.cgi",
+        data: {ucn: ucn, caseid: caseid},
+        async: true,
+        success: function(data) {
+            return true;
+        }
+    });
+
+	return true;
 }
 
 
 
 function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
-    getFlags(casenum);
-    getNotes(casenum);
-    
+    getFlags(ucn);
+    getNotes(ucn);
+   
     $.ajax({
         url: "/cgi-bin/scCivilGetDocket.cgi",
-        data: {casenum: casenum, casetype: casetype, caseid: caseid},
+        data: {casenum: ucn, casetype: casetype, caseid: caseid},
         async: true,
         success: function(data) {
             var content = data.html;
-            var casenum = data.casenum;
+            var casenum = data.casenum; // casenum replaced with ucn
             
-            $('#docketdiv_' + casenum).html(content);
+            $('#docketdiv_' + ucn).html(content);
                 
-            var docketCount = $('#dockets_' + casenum).find('tr').length;
+            var docketCount = $('#dockets_' + ucn).find('tr').length;
 				
-            $('#dockets_' + casenum).tablesorter({
+            $('#dockets_' + ucn).tablesorter({
                 widgets: ['zebra','filter'],
                 sortList: [[1,1],[2,1]],
                 widgetOptions: {
@@ -108,9 +118,9 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
                 headers: {7: {sorter: false, filter: false}, 8: {sorter: false, filter: false}}});
             var pdforder = $.cookie("pdforder");
             if ((pdforder == undefined) || (pdforder == 'desc')) {
-                $('#buildDesc_' + casenum).attr('checked',true);
+                $('#buildDesc_' + ucn).attr('checked',true);
             } else {
-                $('#buildAsc_' + casenum).attr('checked',true);
+                $('#buildAsc_' + ucn).attr('checked',true);
             }
             return true;
         }
@@ -123,7 +133,7 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
         success: function(data) {
             var content = data.html;
             var casenum = data.casenum;
-            $('#registrydiv_' + casenum).html(content);
+            $('#registrydiv_' + ucn).html(content); // casenum replaced with ucn
             return true;
         }
     });
@@ -134,7 +144,7 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
         async: true,
         success: function(data) {
             var content = data.html;
-            $('#relcasediv_' + casenum).html(content);
+            $('#relcasediv_' + ucn).html(content); // casenum replaced with ucn
             return true;
         }
     });
@@ -177,6 +187,16 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
         }
     });
 
+	$.ajax({
+        url: "/cgi-bin/bmGetCaseImages.cgi",
+        data: {ucn: ucn, caseid: caseid},
+        async: true,
+        success: function(data) {
+            return true;
+        }
+    });
+
+	
     return true;
 }
 
@@ -317,3 +337,4 @@ function getCreds(creds) {
         }
     })
 }
+
