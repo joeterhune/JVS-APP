@@ -2734,16 +2734,20 @@ sub getScCaseInfo {
    log_this('JVS', 'caselookup', 'User ' . $icmsuser . ' viewed case ' . $inUCN, $ENV{'REMOTE_ADDR'});
     
    my $ldap = ldapConnect();
-    ############### Added 11/6/2018 jmt security from conf 
+	############### Added 11/6/2018 jmt security from conf 
 	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
-	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
 	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
-	
+   
+   my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
+   my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
+   my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
+   my $psealeduser = inGroup($icmsuser,$sealedProbateGroup,$ldap);
+
    $data{'odpuser'} = inGroup($icmsuser,$odpsgroup,$ldap);
    $data{'notesuser'} = inGroup($icmsuser,$notesgroup,$ldap);
     
@@ -3405,7 +3409,6 @@ sub getScCivilCaseInfo {
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
-	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
 	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
@@ -3422,7 +3425,7 @@ sub getScCivilCaseInfo {
     my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
     my $psealeduser = inGroup($icmsuser,$sealedProbateGroup,$ldap);
     my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
-
+	print Dumper $ldap;
     my $ucn=convertCaseNumToDisplay(clean($inUCN));
     my $casenum = $ucn;
 	

@@ -92,8 +92,8 @@ use CGI::Carp qw(fatalsToBrowser);
 use JSON;
 
 our $CAD_OU="Manatee";
-our $LDAPHOST = ["ldap://JUDSARDC05.jud12.local", "ldaps://JUDSARDC05.jud12.local"];
-our $LDAPBINDDN = "CN=MAN_JVS_Users,OU=Groups,OU=$CAD_OU,DC=JUD12,DC=LOCAL";
+our $LDAPHOST = ['ldap://JUDSARDC05.jud12.local', 'ldaps://JUDSARDC05.jud12.local'];
+our $LDAPBINDDN = 'jud12\XeroxLDAP';
 our $LDAPBINDPW = "magi\$ter";
 our $LDAPBASE = "OU=Manatee,DC=JUD12,DC=LOCAL";
 our $LDAPSVCBASE = "CN=Users,DC=JUD12,DC=LOCAL";
