@@ -2,4 +2,4 @@
 conf/ICMS.xml
 templates_c
 *.db
-lib/DB_functions.pm
+lib/DB_functions.*
