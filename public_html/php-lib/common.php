@@ -584,7 +584,7 @@ function getEServiceList(&$partylist, $ucn, &$psl) {
     $attorneys = &$partylist['Attorneys'];
     $parties = &$partylist['Parties'];
     
-    $olsdbh = dbConnect("eservice");
+    $olsdbh = dbConnect("ols");
     
     foreach ($attorneys as $attorney) {
         $barnum = $attorney['BarNumber'];

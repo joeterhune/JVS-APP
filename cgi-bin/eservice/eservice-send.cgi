@@ -505,7 +505,7 @@ sub getRecipients {
 	my $newRecips = shift;
 	my $store = shift;
 
-	my $dbh = dbConnect("eservice");
+	my $dbh = dbConnect("ols");
 	
 	$casenum =~ s/^50-//g;
 	$casenum =~ s/-//g;

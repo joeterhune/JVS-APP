@@ -284,7 +284,7 @@ sub getSystemType {
     my $config = shift;
     
     if (!defined($config)) {
-        $config = getConfig("/usr/local/icms/etc/ICMS.xml");
+        $config = getConfig(("$ENV{'APP_ROOT'}/conf/ICMS.xml"));
     }
     
     if (defined($config->{'systemType'})) {

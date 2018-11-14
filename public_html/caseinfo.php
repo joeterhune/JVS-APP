@@ -3138,7 +3138,7 @@ function build_cc_list($icms,$ucn, &$parties) {
 }
 
 function getSuppressedAddresses($ucn){
-   $dbh = dbConnect("eservice");
+   $dbh = dbConnect("ols");
    $results = array();
    $sup = array();
    
@@ -3156,7 +3156,7 @@ function getSuppressedAddresses($ucn){
 }
 
 function getAdditionalAddresses($ucn){
-   $dbh = dbConnect("eservice");
+   $dbh = dbConnect("ols");
    $results = array();
    
    $query = "  SELECT email_addr
@@ -3169,7 +3169,7 @@ function getAdditionalAddresses($ucn){
 }
 
 function getAgencyAddresses($ucn) {
-    $edbh = dbConnect("eservice");
+    $edbh = dbConnect("ols");
     $sdbh = dbConnect("showcase-prod");
     $schema = getDbSchema("showcase-prod");
     $addressRef = array();
@@ -3343,7 +3343,7 @@ function get_case_style_easy($ucn) {
    $db=db_connect("$countynum");
    $dbtype=$counties->{$countynum}->{database_type};
    $caseid=find_case_id($icms,$db,$ucn,$dbtype);
-   $schedb=db_connect("eservice");
+   $schedb=db_connect("ols");
    # leaving schedb as null -- not actually used yet anyway
    $parties=get_parties($db,"",$ucn,$caseid,$dbtype,$unused);
    foreach ($parties as $party) {

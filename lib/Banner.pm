@@ -2250,7 +2250,7 @@ sub getParties {
 	my @parties;
 	getData(\@parties,$query,$dbh, {valref => [$case]});
 	
-	my $esdbh = dbConnect("eservice");
+	my $esdbh = dbConnect("ols");
 
 	# Build a list of attorney associations and other cases
     my %otherCases;

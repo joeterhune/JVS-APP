@@ -66,7 +66,7 @@ my %params = $info->Vars;
 
 my @recipients;
 
-my $esdbh = dbConnect("eservice");
+my $esdbh = dbConnect("ols");
 my $jdbh = dbConnect("judge-divs");
 my $dbh = dbConnect(getShowcaseDb());
 

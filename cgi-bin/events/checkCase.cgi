@@ -27,7 +27,7 @@ my $info = new CGI;
 
 my %params = $info->Vars;
 
-my $dbh = dbConnect("eservice");
+my $dbh = dbConnect("ols");
 
 my $tmpcase = $params{'casenum'};
 

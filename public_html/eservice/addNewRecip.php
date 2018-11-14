@@ -10,7 +10,7 @@ if ((!isset($casenum)) || (!isset($email))) {
     $result['status'] = "Failure";
     $result['message'] = "Either case number or email (or both) was not specified.";
 } else {
-    $dbh = dbConnect("eservice");
+    $dbh = dbConnect("ols");
     
     $query = "
         replace into

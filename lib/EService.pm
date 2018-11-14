@@ -562,7 +562,7 @@ sub getAgencyAddresses {
     my $hasORCC = 0;
     
     if (!defined($dbh)) {
-        $dbh = dbConnect("eservice");
+        $dbh = dbConnect("ols");
     }
     
     my $caseinfo = getCaseInfo($casenum);

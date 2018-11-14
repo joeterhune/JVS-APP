@@ -24,7 +24,7 @@ my %params = $info->Vars;
 my $casenum = $params{'casenum'};
 my $email = $params{'email'};
 
-my $dbh = dbConnect("eservice");
+my $dbh = dbConnect("ols");
 
 my $query = qq {
     delete from
