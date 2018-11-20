@@ -55,10 +55,9 @@ use Showcase qw{
 };
 
 use JSON;
-
 use CGI;
 use CGI::Carp qw(fatalsToBrowser);
-
+use Data::Dumper;
 checkLoggedIn();
 
 my $info = new CGI;
@@ -97,10 +96,10 @@ if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
 }
 
 my $casenum = sanitizeCaseNumber($ucn);
-
 #$casenum =~ s/-//g;
 my $caseid = $params{'caseid'};
 $casenum = getSCCaseNumber($casenum);
+
 
 if(!defined($caseid)){
 	$caseid = getCaseID($casenum);
@@ -119,11 +118,12 @@ my $user = getUser();
 my $href;
 
 if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
-	$href .= "/cgi-bin/case/eservice/eService.cgi?fromWF=1&efileCheck=1&clerkFile=1&ucn=" . $ucn . "&docid=" . $doc_id;
+	$href .= "/cgi-bin/eservice/eService.cgi?fromWF=1&efileCheck=1&clerkFile=1&ucn=" . $ucn . "&docid=" . $doc_id;
 }
 else{
-	$href = "/cgi-bin/case/eservice/eService.cgi?case=" . $casenum . "&caseid=" . $caseid . "&showOnly=" . $showOnly;
+	$href = "/cgi-bin/eservice/eService.cgi?case=" . $casenum . "&caseid=" . $caseid . "&showOnly=" . $showOnly;
 }
+
 
 createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 { 
@@ -133,6 +133,8 @@ createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 	"href" => $href,
 	"parent" => $casenum
 });
+
+
 $session = getSession();
 
 my $fdbh = dbConnect("icms");
@@ -144,12 +146,12 @@ getSubscribedQueues($user, $fdbh, \@myqueues);
 getSharedQueues($user, $fdbh, \@sharedqueues);
 my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
-
 my $wfcount = getQueues(\%queueItems, \@allqueues, $fdbh);
 
 my $caseinfo = getCaseInfo($casenum, $dbh, $caseid);
 
 my $query;
+
 
 my $division = $caseinfo->{'DivisionID'};
 if (!defined($division)) {
@@ -158,9 +160,11 @@ if (!defined($division)) {
     getDivsLDAP(\@divs, $user);
     $division = $divs[0];
 }
+my $ldapFilter = "(|(mail=jterhune\@jud12.flcourts.org)(mail=jterhune\@jud12.flcourts.org))";
 
-my $ldapFilter = "(|(mail=CAD-Division$division*\@jud12.flcourts.org)(mail=CAD-CaseManager$division*\@jud12.flcourts.org))";
-my $ldapBase = "ou=CAD,ou=$CAD_OU,dc=jud12.flcourts,dc=ORG";
+# Todo -- setup distribution emails
+#my $ldapFilter = "(|(mail=CAD-Division$division*\@jud12.flcourts.org)(mail=CAD-CaseManager$division*\@jud12.flcourts.org))";
+my $ldapBase = "ou=Manatee,dc=JUD12,dc=LOCAL";
 my @ldapFields = (
 	"displayName",
 	"mail",
@@ -200,6 +204,7 @@ my $mag_email_query = qq {
     and
     	active = 1
 };
+
 getData(\@mag_email_temp, $mag_email_query, $jdbh, {valref => [$user]});
 
 if(scalar(@mag_email_temp) > 0){
@@ -248,7 +253,7 @@ if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
 	$params{'doc_title'} = $docData->{'title'};
 	
 	#Need to regenerate PDF first... 
-	my $orderResp = `/usr/bin/php /var/www/html/case/orders/genpdf.php -e Y -d $params{'doc_id'} -u "$casenum"`;
+	my $orderResp = `/usr/bin/php /var/jvs/public_html/orders/genpdf.php -e Y -d $params{'doc_id'} -u "$casenum"`;
 	my $orderJSON = decode_json($orderResp);
 	$params{'pdf'} = $orderJSON->{'filename'};
 	
@@ -354,6 +359,7 @@ if (!defined($params{'showOnly'})) {
     }
 }
 
+
 if (defined($params{'filingid'})) {
     $refile = 1;
     $data{'filingid'} = $params{'filingid'};
@@ -364,14 +370,14 @@ if (defined($params{'filingid'})) {
 
 $data{'systemType'} = getSystemType();
 
-$data{'UCN'} = $caseinfo->{'CaseNumber'};
+$data{'UCN'} = $caseinfo->{'ucn'};
 
 #LK - Taking this out 3/1/16
 #if (scalar(@senders)) {
 	getAllAddresses($casenum,\@recipients,$esdbh,$caseid);
     
-    if ($caseinfo->{'CaseNumber'} =~ /^50/) {
-        $ucn = $caseinfo->{'CaseNumber'};
+    if ($caseinfo->{'ucn'} =~ /^58/) {
+        $ucn = $caseinfo->{'ucn'};
         $ucn =~ s/-//g;
     } 
     
@@ -425,11 +431,11 @@ $data{'UCN'} = $caseinfo->{'CaseNumber'};
             }
         }
     }
-    
+
     # Are there any agency addresses?
     my @agencyAddrs;
     getAgencyAddresses($caseinfo->{'CaseNumber'}, \@agencyAddrs, $esdbh, $caseid);
-    
+  
     if (scalar(@agencyAddrs)) {
     	foreach my $address (@agencyAddrs) {
             $address->{'from_portal'} = 0;
@@ -476,7 +482,8 @@ $data{'UCN'} = $caseinfo->{'CaseNumber'};
             }
     	}
     }
-    
+
+ 
     # Look up any stored "additional" addresses
     my @addl;
     $query = qq {
