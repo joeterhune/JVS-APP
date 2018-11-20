@@ -95,8 +95,7 @@ my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
 
 my $wfcount = getQueues(\%queueItems, \@allqueues, $dbh);
-
-createTab("Flags and Notes", "/casenotes/addnote.cgi?ucn=" . $params{'ucn'}, 1, 1, "cases");
+createTab("Flags and Notes", "/casenotes/addnote.cgi?ucn=" . $params{'casenum'}, 1, 1, "cases");
 my $session = getSession();
 
 my $note = $params{'note'};
@@ -108,9 +107,10 @@ $note =~ s/\n/<br\/>/g;
 $params{'dateval'} = ISO_date($params{'dateval'});
 
 my $querycase = $params{'casenum'};
-if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
-}
+# modified 11/20/2018 jmt benchmark has no dashes
+#if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
+#    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
+#}
 
 my @vals = ($querycase,getUser(),$params{'date'},$note,$params{'division'}, $private);
 
@@ -146,12 +146,11 @@ my %data;
 updateSummaries($params{'casenum'}, $dbh);
 
 $data{'status'} = "Success";
-$data{'ucn'} = $params{'casenum'};
+$data{'ucn'} = $params{'casenum'}; #modified 10/20/2018 jmt data(unc) to casenum
 $data{'wfCount'} = $wfcount;
 $data{'active'} = "cases";
 $data{'tabs'} = $session->get('tabs');
 
-print $info->header;
 
 doTemplate(\%data, "$templateDir/top", "header.tt", 1);
 doTemplate(\%data,"$templateDir/casenotes","addnote2.tt",1);
