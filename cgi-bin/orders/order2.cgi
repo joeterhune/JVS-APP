@@ -15,7 +15,7 @@
 # 10/7/10 added support for page headers
 # 10/8/10 added logging via ordergenlog table
 # 10/22/10 added #include functionality...non-nesting, please!
-# 10/28/10 lms 	Modified for 15th circuit.
+# 10/28/10 lms 	Modified for 12th circuit.
 # 04/11    lms 	getting back to PBC modifications
 # 04/11    lms 	add underline support: <u></u> tags and /t tag for title
 #		(centered, bold, underlined)
@@ -307,7 +307,7 @@ sub check_time {
     return $time;
     }
 
-# modified for 15th - - 8th had addr parts on separate lines.  we want just
+# modified for 12th - - 8th had addr parts on separate lines.  we want just
 #one line for all parts, separated by commas.
 sub buildaddrlist {
     my($i,$addrline,$x,$realcount,$ta);
@@ -357,7 +357,7 @@ sub buildaddrlist {
     }
 }
 
-# new for 15th - extra cc list - built from user entry on the form
+# new for 12th - extra cc list - built from user entry on the form
 # - - /copystart, /copyend in DFIELDS section to define and using %copylist%
 # in form text
 sub buildextracc {
@@ -373,7 +373,7 @@ sub buildextracc {
     }
 }
 
-# new for 15th - selectable children list (for ufc) - built from user entry
+# new for 12th - selectable children list (for ufc) - built from user entry
 # on the form - - /selectkids section to define and using %selectkids% in
 # form text
 sub buildkids {
@@ -484,7 +484,7 @@ sub varsub {
 	} elsif ($vars{$varname}) {
 	    $vv=$vars{$varname};
 	    $vv=trim($vv);
-	    # for 15th, we won't bold all variables - - put bold in forms, where desired
+	    # for 12th, we won't bold all variables - - put bold in forms, where desired
 	    $line=~s/%$varname%/$vv/g;
 	} else {
 	    # was "UNKNOWN" - lms changed this to underscores
@@ -536,8 +536,8 @@ sub rpt {
     my $boxbottom=36;
     my $leading=15; # was 13
     my $fontsize=12; # was 14 for 8th
-    my $regfont=12;  # regular font size - new for 15th
-    my $adafont=14;  # ada font size - new for 15th
+    my $regfont=12;  # regular font size - new for 12th
+    my $adafont=14;  # ada font size - new for 12th
     my $border=8;
     my $hangmode=0;
     my $bullet;
@@ -682,7 +682,7 @@ sub rpt {
    sub writeheading {
       $pagenum++;
       $page->string($f1,10,$boxleft-36,$boxtop+30,$ucn);		# these were +50 for 8th
-      #$page->stringc($f1,10,$boxcenterx,$boxtop+30,$formdesc);  # 15th doesn't want this
+      #$page->stringc($f1,10,$boxcenterx,$boxtop+30,$formdesc);  # 12th doesn't want this
       $page->stringr($f1,10,$boxrightx+36,$boxtop+30,"Page $pagenum");
    }
 
@@ -978,7 +978,7 @@ sub rpt {
 					foreach $pline (@parr) {
 						$lines[$linenum++]="$boxleft~$pline~1";
 					}
-					#$lines[$linenum++]="$boxleft~~1";  # don't sep with blank line for 15th district
+					#$lines[$linenum++]="$boxleft~~1";  # don't sep with blank line for 12th district
 					if (!$blockflag) {
 					   $paraend=$linenum-1;
 					   push @paralist,"$parastart~$paraend";
@@ -986,7 +986,7 @@ sub rpt {
 				}
 			 }
 			 elsif ($line=~/^%copylist%/) { # another special case--multi-line field
-				# new for 15th circuit - to show additional copy to lines from form (not case data)
+				# new for 12th circuit - to show additional copy to lines from form (not case data)
 				#$parastart=$linenum;
 				#for ($pp=0;$pp<@extracc;$pp++) {
 				#	@parr=split '~',$extracc[$pp];
@@ -1007,7 +1007,7 @@ sub rpt {
 					foreach $pline (@parr) {
 						$lines[$linenum++]="$boxleft~$pline~1";
 					}
-					#$lines[$linenum++]="$boxleft~~1";  # don't sep with blank line for 15th district
+					#$lines[$linenum++]="$boxleft~~1";  # don't sep with blank line for 12th district
 					if (!$blockflag) {
 					   $paraend=$linenum-1;
 					   push @paralist,"$parastart~$paraend";
@@ -1018,7 +1018,7 @@ sub rpt {
 
 			 }
 			 elsif ($line=~/^%selectkids%/) { # another special case--multi-line field
-				# new for 15th circuit - to show selected children is a specified format
+				# new for 12th circuit - to show selected children is a specified format
 				# no block tags allowed!
 				$parastart=$linenum;
 				for ($pp=0;$pp<@kidslist;$pp++) {
@@ -1113,7 +1113,7 @@ sub rpt {
 		}
 	}
    #
-   # Address list page (new, for 15th)
+   # Address list page (new, for 12th)
    #
    if ($paddresses eq "on") {
    	  # write the 1st (up to) 40 addresses on a page

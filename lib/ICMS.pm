@@ -1595,7 +1595,7 @@ sub reportfooter {
   $outpath2=~s#/\d\d\d\d\-\d\d##;
   print $fh <<EOS;
 </table>
-<p><font size=-1><a href=$outpath2/archive.html>Older Reports</a></font><p><font size=-2><i>Court Technology Department, 15th Judicial Circuit of Florida</i></font>
+<p><font size=-1><a href=$outpath2/archive.html>Older Reports</a></font><p><font size=-2><i>Court Technology Department, 12th Judicial Circuit of Florida</i></font>
 EOS
 }
 
@@ -1858,7 +1858,7 @@ sub buildarchive {
     $mtext=monthname($month);
     print OUTFILE "<h3><a href=$fname>$mtext, $year</a></h3>";
   }
-  print OUTFILE "<p><hr><i>Court Technology Department, 15th Judicial Circuit of Florida</i>";
+  print OUTFILE "<p><hr><i>Court Technology Department, 12th Judicial Circuit of Florida</i>";
   close(OUTFILE);
 }
 

@@ -6,6 +6,7 @@ BEGIN {
 
 use strict;
 use warnings;
+
 use CGI::Carp qw(fatalsToBrowser);
 use XML::Simple;
 use JSON;
@@ -39,7 +40,7 @@ use Common qw(
 use Showcase qw (
     $db
 );
-
+use Data::Dumper;
 use File::Temp qw (tempfile);
 
 use MIME::Base64;
@@ -556,7 +557,6 @@ sub getAgencyAddresses {
     my $addressRef = shift;
 	my $dbh = shift;
 	my $caseid = shift;
-    
     my $hasPD = 0;
     my $hasSA = 0;
     my $hasORCC = 0;
@@ -564,9 +564,8 @@ sub getAgencyAddresses {
     if (!defined($dbh)) {
         $dbh = dbConnect("ols");
     }
-    
-    my $caseinfo = getCaseInfo($casenum);
-    
+
+    my $caseinfo = getCaseInfo($casenum,$dbh);
     my $div = $caseinfo->{'DivisionID'};
     my $case_type = $caseinfo->{'CaseType'};
     

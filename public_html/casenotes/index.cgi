@@ -52,10 +52,11 @@ $data{'casenum'} = $params{'ucn'};
 createTab("Flags and Notes", "/casenotes/index.cgi?ucn=" . $params{'ucn'} . "&div=" . $params{'div'}, 1, 1, "cases");
 my $session = getSession();
 
-if ($data{'casenum'} =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-	# It's a banner-type casenum, without dashes.  Convert it.
-	$data{'casenum'} = sprintf("%04d-%s-%06d", $1, $2, $3);
-}
+# modified 11/20/2018 jmt bench mark has no dashes
+#if ($data{'casenum'} =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
+	# It's a banner-type casenum, without dashes.  Convert it.		
+	#$data{'casenum'} = sprintf("%04d-%s-%06d", $1, $2, $3);
+#}
 
 $data{'lev'} = $params{'lev'};
 $data{'division'} = $params{'div'};

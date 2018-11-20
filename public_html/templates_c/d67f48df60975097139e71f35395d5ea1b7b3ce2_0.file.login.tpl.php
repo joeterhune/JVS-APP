@@ -37,7 +37,7 @@ $_smarty_tpl->_assignInScope('vrbUrl', "http://vrb.15thcircuit.com");
         <meta http-equiv="X-UA-Compatible" content="IE=Edge" >
 
         <title>
-        	15th Circuit Case Management System
+        	12th Circuit Case Management System
         </title>
 	
         <link rel="stylesheet" type="text/css" href="/style/normalize.css"/>

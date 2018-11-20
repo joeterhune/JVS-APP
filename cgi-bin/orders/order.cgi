@@ -805,7 +805,7 @@ if ($rpttype ne "") {
         # show fields if it's on the fieldname list for the form,
         # OR if it's mdate, since mdate appears on all forms
         #if ($fieldq=~/,$fieldname,/ or $fieldname eq "mdate") {
-        #  15th won't use mdate!  no certificate of service here...
+        #  12th won't use mdate!  no certificate of service here...
         my $cookval;
         if ($fieldq=~/,$fieldname,/) {
             # support for initval in TEXT field

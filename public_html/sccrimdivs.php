@@ -6,7 +6,7 @@
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <meta name="GENERATOR" content="Mozilla/4.72 [en] (Windows NT 5.0; I) [Netscape]">
    <meta name="Author" content="Default">
-   <title>15th Circuit Case Management System</title>
+   <title>12th Circuit Case Management System</title>
    <link rel="stylesheet" type="text/css" name="stylin" href="icms1.css">
 <script src="icms.js" language="javascript" type="text/javascript"></script>
 </head>

@@ -64,6 +64,7 @@ use PBSO2 qw (
     getMugshotWithJacketId
     getInmateIdFromBooking
 );
+use CGI;
 
 use JSON;
 
@@ -4336,16 +4337,16 @@ sub getSCCaseNumber {
     my $schema = getDbSchema($db);
     my $where;
     
-    if ($case =~ /^58-/) {
-    	if ($case =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
-    		$where = " CaseNumber = '$case' ";
+    if ($case =~ /^58/) {
+    	if ($case =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
+    		$where = " ucn = '$case' ";
     	}
     	else{
     		$where = " CaseNumber LIKE '%$case%' ";
     	}
     }
     else{
-    	$case =~ s/-//g;
+    	$case =~ s/ //g;
 	    if ($case =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
 	    	$where = " LegacyCaseNumber = '$case' OR UCN LIKE '58$case%'";
 	    }
@@ -4355,14 +4356,13 @@ sub getSCCaseNumber {
     }
     
     my $query = qq {
-	    			 SELECT CaseNumber
+	    			 SELECT ucn
 	    			 FROM $schema.vCase
 	    			 WHERE $where
     			};
     			
     my $result = getDataOne($query, $dbh);
-    
-    return $result->{'CaseNumber'};
+    return $result->{'ucn'};
 }
 
 sub getCaseID {

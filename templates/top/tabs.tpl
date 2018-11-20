@@ -11,7 +11,7 @@
         <meta name="Author" content="Default" />
 
         <title>
-        	15th Circuit Case Management System
+        	12th Circuit Case Management System
         </title>
 	
         <link rel="stylesheet" type="text/css" href="/style/normalize.css"/>
@@ -218,7 +218,7 @@
 				 		if(param2[0] == "ucn"){
 				 			$("#searchname").val(param2[1]);
 				 			$('.search').click();
-				 			window.history.pushState("", "15th Circuit Case Management", location.protocol + '//' + location.host + location.pathname);
+				 			window.history.pushState("", "12th Circuit Case Management", location.protocol + '//' + location.host + location.pathname);
 				 		}
 				 	}
 				 }
