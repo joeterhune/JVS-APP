@@ -76,9 +76,10 @@ my $added = 0;
 $params{'dateval'} = ISO_date($params{'dateval'});
 
 my $querycase = $params{'casenum'};
-if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
-}
+# modified 10/21/2018 jmt casenumbers in benchmark don't have dashes
+#if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
+#    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
+#}
 
 foreach my $flag (@flagTypes) {
 	my $query = qq {
