@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib $ENV{'PERL5LIB'};
 }
 
 use strict;
@@ -18,7 +18,6 @@ use Common qw (
     returnJson
     getUser
 );
-
 use CGI;
 
 my $info = new CGI;
