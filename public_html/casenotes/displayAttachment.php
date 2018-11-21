@@ -2,8 +2,8 @@
 // $Id$
 
 
-require_once("/usr/local/icms-web/case/php-lib/common.php");
-require_once("/usr/local/icms-web/case/php-lib/db_functions.php");
+require_once("/var/jvs/public_html/php-lib/common.php");
+require_once("/var/jvs/public_html/php-lib/db_functions.php");
 
 extract($_REQUEST);
 
@@ -44,7 +44,7 @@ if (isset($docid)) {
 }
 
 if(!empty($filerec['filename'])){
-	$fileloc = sprintf("/case/uploads/%s/%s", strtolower($filerec['creator']), $filerec['filename']);
+	$fileloc = sprintf("/uploads/%s/%s", strtolower($filerec['creator']), $filerec['filename']);
 	
 	// Get the MIME type of the file
 	$finfo = finfo_open(FILEINFO_MIME_TYPE);
