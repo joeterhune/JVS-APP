@@ -263,8 +263,8 @@ function sanitizeCaseNumber ($ucn){
 		    $retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
  */			$year = sprintf("58%04d", $year);
 		    $suffix = sprintf("%s%s", $smatches[1], $smatches[2]);
-		    #$retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
 		    $retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
+
         }
         else{
         	$dbh = dbConnect("showcase-prod");
@@ -277,15 +277,16 @@ function sanitizeCaseNumber ($ucn){
 			}
         	$query = "
             select
-                CaseNumber
+                UCN
             from
                 vCase with(nolock)
             where
                 ( LegacyCaseNumber = :casenum OR UCN LIKE '" . $casenum . "%' ) 
         	";
         	// changed 50 to 58 for sarasota
+			// 1/22/19 jmt using ucn instead of Casenumber
         	$caseInfo = getDataOne($query, $dbh, array('casenum' => $casenum));
-        	$retval = $caseInfo['CaseNumber'];
+        	$retval = $caseInfo['UCN'];
         }
         
         $dbtype = "showcase";
