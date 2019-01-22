@@ -15,6 +15,7 @@ use Common qw (
     uploadFile
     encodeFile
 );
+use XML::Simple;
 use DB_Functions qw (
     dbConnect
     doQuery
@@ -29,9 +30,10 @@ use CGI;
 use File::Basename;
 
 my $info = new CGI;
-
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
 my $user = getUser();
-if (!inGroup($user, "CAD-ICMS-NOTES")) {
+if (!inGroup($user, $notesGroup)) {
     print $info->header;
     print "You do not have rights to use this function.\n";
     exit;

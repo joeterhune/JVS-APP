@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib $ENV{'PERL5LIB'};
 };
 
 use strict;
@@ -96,6 +96,7 @@ if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
 }
 
 my $casenum = sanitizeCaseNumber($ucn);
+
 #$casenum =~ s/-//g;
 my $caseid = $params{'caseid'};
 $casenum = getSCCaseNumber($casenum);
@@ -434,7 +435,8 @@ $data{'UCN'} = $caseinfo->{'ucn'};
 
     # Are there any agency addresses?
     my @agencyAddrs;
-    getAgencyAddresses($caseinfo->{'CaseNumber'}, \@agencyAddrs, $esdbh, $caseid);
+    
+    getAgencyAddresses($caseinfo->{'ucn'}, \@agencyAddrs, $esdbh, $caseid); 
   
     if (scalar(@agencyAddrs)) {
     	foreach my $address (@agencyAddrs) {

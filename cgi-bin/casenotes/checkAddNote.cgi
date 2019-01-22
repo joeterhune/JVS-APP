@@ -13,6 +13,7 @@ use Common qw (
     getUser
     checkLoggedIn
 );
+use XML::Simple;
 use CGI::Carp qw (fatalsToBrowser);
 use DB_Functions qw (
     getData
@@ -34,9 +35,10 @@ use Showcase qw (
 checkLoggedIn();
 
 my $info = new CGI;
-
+my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
 my $user = getUser();
-if (!inGroup($user, "CAD-ICMS-NOTES")) {
+if (!inGroup($user, $notesGroup)) {
     print $info->header;
     print "You do not have rights to use this function.\n";
     exit;

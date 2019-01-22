@@ -137,6 +137,23 @@ function getData(&$arrayref, $query, $dbh, $args = null, $key = null, $flatten =
     }
 }
 
+# Added 11/26/2018 jmt Is Valid Case Number
+
+function isValidCase($caseNumber){
+    
+    $dbh = dbConnect("showcase-prod");
+    $query ="
+        select 
+            ucn 
+        from 
+            vCase
+        where
+            casenumber = :casenumber
+        
+    ";
+    return doQuery($query,$dbh,array('casenumber' => $caseNumber));
+    
+}
 
 function doQuery($query, $dbh, $args = null) {
     try {

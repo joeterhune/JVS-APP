@@ -3426,7 +3426,6 @@ sub getScCivilCaseInfo {
     my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
     my $psealeduser = inGroup($icmsuser,$sealedProbateGroup,$ldap);
     my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
-	print Dumper $ldap;
     my $ucn=convertCaseNumToDisplay(clean($inUCN));
     my $casenum = $ucn;
 	

@@ -236,6 +236,7 @@ function sanitizeCaseNumber ($ucn){
     
     # Strip leading "50" and any dashes.
     $casenum = preg_replace("/-/","",$casenum);
+    $casenum = preg_replace("/ /","",$casenum);
     $casenum = preg_replace("/^58/","",$casenum); //58 for sarasota
     
     if (preg_match("/^(\d{1,6})(\D\D)(\d{0,6})(.*)/", $casenum, $matches)) {
@@ -262,8 +263,8 @@ function sanitizeCaseNumber ($ucn){
 		    $retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
  */			$year = sprintf("58%04d", $year);
 		    $suffix = sprintf("%s%s", $smatches[1], $smatches[2]);
+		    #$retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
 		    $retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
-
         }
         else{
         	$dbh = dbConnect("showcase-prod");
@@ -280,9 +281,9 @@ function sanitizeCaseNumber ($ucn){
             from
                 vCase with(nolock)
             where
-                ( LegacyCaseNumber = :casenum OR UCN LIKE '" . $casenum . "%' ) // changed 50 to 58 for sarasota
+                ( LegacyCaseNumber = :casenum OR UCN LIKE '" . $casenum . "%' ) 
         	";
-        	
+        	// changed 50 to 58 for sarasota
         	$caseInfo = getDataOne($query, $dbh, array('casenum' => $casenum));
         	$retval = $caseInfo['CaseNumber'];
         }

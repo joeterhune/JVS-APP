@@ -560,7 +560,6 @@ sub getAgencyAddresses {
     my $hasPD = 0;
     my $hasSA = 0;
     my $hasORCC = 0;
-    
     if (!defined($dbh)) {
         $dbh = dbConnect("ols");
     }
