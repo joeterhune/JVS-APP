@@ -1,0 +1,1413 @@
+[% INCLUDE top/header.tt %]
+<script src="/javascript/casenotes/notesAndFlags.js?1.6" type="text/javascript"></script>
+<script src="/javascript/casedetails.js?2.2" type="text/javascript"></script>
+<script src="/javascript/casedetails/utils.js?1.9" type="text/javascript"></script>
+<div style="padding-left:1%">
+<script type="text/javascript">
+            $(document).ready(function() {
+            	sc_civilGetAsync('[% data.ucn %]', '[% data.caseinfo.CaseNumber %]', '[% data.caseinfo.CaseType %]', '[% data.caseinfo.CaseID %]');
+
+                $("table thead th:eq(6)").data("sorter", false);
+
+                $('#warrants_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#olsevents_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#charges_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#events_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#related_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#reopens_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('#otherdocs_[% data.ucn %]').tablesorter({widgets: ['zebra']});
+                $('.otherCases').tablesorter({widgets: ['zebra']});
+                
+                $('table').on("click", ".checkallboxes", function () {
+					$(this).closest('table').find(':checkbox').prop('checked', true);
+				});
+				$('table').on("click", ".uncheckallboxes", function () {
+					$(this).closest('table').find(':checkbox').prop('checked', false);
+				});
+				
+                $('#docketdiv_[% data.ucn %]').on("click", ".toggleDocket", function () {
+					$('#docketTable_[% data.ucn %]').toggle();
+					var position = $('#docketdiv_[% data.ucn %]').position();
+                    scroll(0,position.top);
+				}); 
+                
+                $('#docketdiv_[% data.ucn %]').on("click", ".showmulti", function () {
+                    if ($('#docketform_[% data.ucn %]').find("input[type=checkbox]:checked").length == 0) {
+                        $('#dialogSpan').html("Please select one or more items to view.");
+                        $('#dialogDiv').dialog({
+                            resizable: false,
+                            minheight: 150,
+                            width: 500,
+                            modal: true,
+                            title: 'No Items Selected',
+                            buttons: {
+                            	"OK": function() {
+                            		$(this).dialog( "close" );
+                            		return false;
+                            	}
+                            }
+                        });
+                        return false;
+                    }
+					
+					// Set the pdforder cookie
+                    var pdfradio = $("input[name='pdforder']:checked");
+                    var pdforder = $(pdfradio).val();
+                    $.cookie("pdforder", $(pdfradio).val(), { expires: new Date(2999, 12, 31, 23, 59, 59)});
+                    
+                    return true;
+                });
+                
+                $(document).on('click','.docLink', function(e) {
+	                e.preventDefault();
+	                // Handle clicking on the document name.
+	                var ucn = $(this).data('casenum');
+	                var docid = $(this).data('docid');
+	                var is_order = $(this).data('is_order');
+	                window.location.href = "/orders/preview.php?fromWF=1&ucn=" + ucn + "&docid=" + docid + "&isOrder=" + is_order;
+	            });
+	            
+	            $(document).on("click", ".showAllDocs", function () {
+	            	$.each($('#otherdocs_[% data.ucn %] *').not(':visible'), function() {
+						$(this).addClass('toHide');
+						$(this).show();
+					});
+					
+					$('.showAllDocs').hide();
+					$('.hideDocs').show();
+					$("#otherdocs_[% data.ucn %]").trigger("update");
+				}); 
+				
+				$(document).on("click", ".hideDocs", function () {
+	            	$.each($('.toHide'), function() {
+						$(this).removeClass('toHide');
+						$(this).hide();
+					});
+					
+					$('.showAllDocs').show();
+					$('.hideDocs').hide();
+					$("#otherdocs_[% data.ucn %]").trigger("update");
+				}); 
+				
+				if($('#otherdocs_[% data.ucn %] tr:hidden').length < 1){
+					$('.showAllDocs').hide();
+				}
+            });
+			
+            </script>
+            
+            <style type="text/css">
+            	.toggleJuvCMData, .toggleChildPlacements {
+            		background-color:#800020;
+            	}
+            	
+            	#juvCMData tbody th, #juvCMData thead th{
+            		color:#800020;
+            		border-color:#800020;
+            		background-color:#cc99a5;
+            	}
+            </style>
+            
+			<div style="height: 100%; position: relative; margin-top:1%;">
+                
+                <div class="drawer full" style="height: 100%; float: left">
+                    <div class="drawer-controls">
+                        <i class="fa fa-arrow-left decrease"></i>
+                        <i class="fa fa-arrow-right increase"></i>
+                    </div>
+                    
+                    [% IF data.caseinfo.Sealed == 'Y' %]
+                    <div>
+                        <span style="color: red; font-weight: bold"><i class="fa fa-user-secret"></i> THIS CASE IS SEALED</span>
+                    </div>
+                    [% END %]
+
+                    <div class="main-details" style="height: 100%">
+                        
+                        <div style="float: left">
+                            <button class="btn btn-primary printTab printHide" data-print="main-details" data-orientation="portrait"><i class="fa fa-print"></i> Print This</button>
+                        </div>
+                        
+                        <div style="float: right; z-index: 9999">
+                            <a class="helpLink" data-context="casedetails">
+                                <img class="toolbarBtn" style="height: 20px !important; width: 20px;" alt="Help" title="Help" src="/images/help_icon.png">
+                            </a>
+                        </div>
+                        
+                        <br class="clearfix"/><br class="clearfix"/>
+
+                        <div>
+                            <div class="container-fluid">
+                                <table class="table">
+                                    <tr>
+                                        <td>
+                                            <div style="position: relative; width: 100%;">
+                                                <div id="casesummary_[% data.ucn %]" style="width: 40%; float:left;">
+                                                    <table class="summary">
+                                                        <tr>
+                                                            <td colspan="2" class="title">
+                                                                [% IF data.openwarrants %]
+	                                                                <a href="#warrants_[% data.ucn %]">
+	                                                                    <img src="/asterisk.png"
+	                                                                         alt="Open Warrants" />
+	                                                                </a>
+                                                            	[% END %] Case # [% data.ucn %]
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Judge</td>
+                                                            <td>[% data.judge %]</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Division</td>
+                                                            <td>
+                                                                [% data.caseinfo.DivisionID %]
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Case Type</td>
+                                                            <td>[% data.caseinfo.CaseType %]: [% data.caseinfo.CaseTypeDesc %]</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Status</td>
+                                                            <td>[% data.caseinfo.CaseStatus %]</td>
+                                                        </tr>
+                
+                                                        [% IF data.reopened %]
+                                                        <tr>
+                                                            <td class="label">Reopen Date</td>
+                                                            <td>[% data.caseinfo.ReopenDate %]</td>
+                                                        </tr>
+                                                        [% END %]
+                
+                                                        <tr>
+                                                            <td class="label">Filing Date</td>
+                                                            <td>[% data.caseinfo.FileDate %]</td>
+                                                        </tr>
+                                                        
+                                                        [% IF data.disposed %]
+	                                                        <tr>
+	                                                            <td class="label">Disposition Date</td>
+	                                                            <td>[% data.caseinfo.DispositionDate %]</td>
+	                                                        </tr>
+                                                        [% END %]
+                
+                                                        [% IF data.crimflag %]
+                                                        <tr>
+                                                            <td class="label">Speedy Waived</td>
+                                                            <td>[% data.caseinfo.SpeedyTrialWaivedDate %]</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Speedy Demanded</td>
+                                                            <td>[% data.caseinfo.SpeedyTrialDemandDate %]</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Speedy Expires</td>
+                                                            <td>[% data.caseinfo.SpeedyTrialDueDate %]</td>
+                                                        </tr>
+                                                        [% END %]
+                
+                                                        <tr>
+                                                            <td class="label">Case Age</td>
+                                                            <td>[% data.caseinfo.CaseAge %] days</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="label">Activity</td>
+                                                            <td>[% data.caseinfo.LastActivity %]</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                
+                                                
+                                               
+                                                
+                                            </div>
+											<div class="watchList" style="margin-bottom:10px;">
+                                                        [% data.watchList %]
+                                                </div>
+							<div style="margin-bottom:10px;">
+                                                    <button class="btn btn-default btn-lge printHide "
+                                                        onclick="window.location.href='mailto:cad-caseissues\@pbcgov.org?subject=Case%20[% data.caseinfo.CaseNumber %]%20(Division%20[% data.caseinfo.DivisionID %])%20data%20issue'">
+                                                        <i class="fa fa-2x fa-comments pull-left"></i>
+                                                            To notify court administration of misfiled documents<br>
+                                                            or inaccurate system information, click here.
+                                                        
+                                                    </button>
+													<br>
+                              </div>     
+											</td>
+                                    </tr>
+                                 
+                                </table>
+                            </div>
+                            
+                            [% IF data.odpuser %]
+                            	<button onclick="window.location.href='/orders/igo.php?ucn=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&new=Y'" class="btn btn-primary printHide" title="Create Orders">Create Orders</button>
+							[% ELSE %]
+								<button class="btn btn-primary printHide noaccess" title="You do not have access to create orders.">Create Orders</s></button>
+							[% END %]
+							<br/><br/>
+							
+                               
+                            <button onclick="window.location.href='/related_case_search/search_form.php?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]'" title="Search for Related Cases" class="btn btn-primary printHide" title="Click this button to search related cases">
+                            	<i class="fa fa-search"></i> Search for Related Cases</span>
+                            </button> 
+							<button onclick="window.location.href='/cgi-bin/eservice/eService.cgi?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&efileCheck=1'" title="E-File and E-Serve Documents" data-efile="1" class="btn btn-primary printHide esButton" title="Click this button to e-file and e-serve documents"><i class="fa fa-file"></i> E-File/E-Serve</button> 
+							<button onclick="window.location.href='/cgi-bin/eservice/eService.cgi?case=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&showOnly=1'" title="Show Service List" data-showonly="1" class="btn btn-primary printHide esButton" title="Click this button to show the service list"><i class="fa fa-list"></i> Show Service List</button>                        
+                			
+                			[% IF data.caseinfo.CourtCode == 'DP' %]
+                				<br/><br/>
+                				<button class="toggleJuvCMData printHide" title="Toggle Case Management Display">Hide/Show Case Management Information</button>
+                				<br/>
+                				<div id="juvCMData" style="display:none">
+                					<br/>
+		                			<div style="border:1px solid #800020; padding:1%; width:100%;">
+		                				<a href="/case_management/juvenile.php?case_number=[% data.ucn %]" target="_blank">Launch Case Management Application</a>
+		                				<br/><br/>
+		                				[% IF data.juv_data %]
+		                					[% IF data.juv_data.cls_attorney_name ||  data.juv_data.gal_name || data.juv_data.gal_attorney_name || data.juv_data.dcm_name %]
+			                					<span style="font-size:20px"><strong>CLS Attorney/GAL/Case Manager</strong></span> <span class="collapseCLS ascArrow">&nbsp;</span>
+			                					<div id="clsSection" style="border:1px solid #800020; padding:1%; width:75%;">
+			                						<table class="summary" style="width:100%; text-align:center;">
+														<tr>
+															<th style="text-align:center">CLS Attorney Name</th>
+															<th style="text-align:center">GAL Name</th>
+															<th style="text-align:center">GAL Attorney Name</th>
+															<th style="text-align:center">Case Manager Name</th>
+														</tr>
+														<tbody>
+															<tr>
+																<td>[% data.juv_data.cls_attorney_name %]</td>
+																<td>[% data.juv_data.gal_name %]</td>
+																<td>[% data.juv_data.gal_attorney_name %]</td>
+																<td>[% data.juv_data.dcm_name %]</td>
+															</tr>
+														</tbody>
+													</table>
+			                					</div>
+			                					<br/>
+		                					[% END %]
+		                					[% IF data.juv_data.attorneys.size > 0 %]
+		                						<br/>
+			                					<span style="font-size:20px"><strong>Attorney(s)</strong></span> <span class="collapseAttorneys ascArrow">&nbsp;</span>
+			                					<div id="attorneysSection" style="border:1px solid #800020; padding:1%; width:75%;">
+				                					<br/>
+				                					<table style="text-align:center; width:75%" class="summary">
+				                						<thead>
+				                							<tr>
+					                							<th style="text-align:center">Type</th>
+																<th style="text-align:center">Name</th>
+																<th style="text-align:center">Represents</th>
+																<th style="text-align:center">Active</th>
+															</tr>
+				                						</thead>
+					                					[% FOREACH a IN data.juv_data.attorneys %]
+					                						<tr>
+					                							<td>[% a.attorney_type %]</td>
+							                					<td>[% a.attorney_name %]</td>
+							                					<td>[% a.represents %]</td>
+							                					<td>[% a.active %]</td>
+					                						</tr>
+					                					[% END %]
+				                					</table>
+				                				</div>
+			                					<br/>
+		                					[% END %]
+		                					[% IF data.juv_data.case_plans.size > 0 %]
+			                						<br/>
+			                						<span style="font-size:20px"><strong>Case Plan(s)</strong></span> <span class="collapseCPs ascArrow">&nbsp;</span>
+			                						<div id="cpSection" style="border:1px solid #800020; padding:1%; width:75%;">
+					                					<table class="summary" style="width:100%; text-align:center;">
+															<tr>
+																<th style="text-align:center">Case Plan</th>
+																<th style="text-align:center">Date Filed</th>
+																<th style="text-align:center">Executed</th>
+																<th style="text-align:center">Executed Date</th>
+																<th style="text-align:center">Goal Date</th>
+																<th style="text-align:center">Order Date</th>
+																<th style="text-align:center">Parties Bound</th>
+															</tr>
+															<tbody>
+																[% FOREACH cp IN data.juv_data.case_plans %]
+																<tr>
+																	<td><a class="imageLink" data-casenum="[% data.ucn %]" data-ucnobj="[% cp.UCNObj %]" data-caseid="[% data.caseinfo.CaseID %]">Image</a></td>
+																	<td>[% cp.cp_file_date %]</td>
+																	<td>[% cp.cp_exec %]</td>
+																	<td>[% cp.cp_exec_date %]</td>
+																	<td>[% cp.cp_goal_date %]</td>
+																	<td>[% cp.cp_order_date %]</td>
+																	<td>
+																		[% IF cp.RelatedCasePlans.size > 0 %]
+																			[% FOREACH rc IN cp.RelatedCasePlans %]
+																				[% rc %]
+																				<br/>
+																			[% END %]
+																		[% END %]
+																	</td>
+																</tr>
+																[% END %]
+															</tbody>
+														</table>
+													</div>
+												<br/>
+											[% END %]
+											[% IF data.juv_data.orders.size > 0 %]
+			                						<br/>
+			                						<span style="font-size:20px"><strong>Ordered</strong></span> <span class="collapseOrdered ascArrow">&nbsp;</span>
+			                						<div id="orderedSection" style="border:1px solid #800020; padding:1%; width:75%;">
+					                					<table class="summary" style="width:100%; text-align:center;">
+															<tr>
+																<th style="text-align:center">Order Title</th>
+																<th style="text-align:center">Order Date</th>
+																<th style="text-align:center">Due Date</th>
+																<th style="text-align:center">Who</th>
+																<th style="text-align:center">Completed</th>
+																<th style="text-align:center">Completed Date</th>
+															</tr>
+															<tbody>
+																[% FOREACH co IN data.juv_data.orders %]
+																<tr>
+																	<td>[% co.order_title %]</td>
+																	<td>[% co.order_date %]</td>
+																	<td>[% co.due_date %]</td>
+																	<td>
+																		[% IF co.order_for.size > 0 %]
+																			[% FOREACH of IN co.order_for %]
+																				[% of %]
+																				<br/>
+																			[% END %]
+																		[% END %]
+																	</td>
+																	<td>[% co.completed %]</td>
+																	<td>[% co.completed_date %]</td>
+																</tr>
+																[% END %]
+															</tbody>
+														</table>
+													</div>
+												<br/>
+											[% END %]
+		                					[% IF data.juv_data.children.size > 0 %]
+		                						<br/>
+			                					[% FOREACH c IN data.juv_data.children %]
+			                						<span style="font-size:20px"><strong>Child - [% c.Name %] - [% c.DOB %] ([% c.Age %]) [% IF c.special_identifiers %]<span class="error">([% c.special_identifiers %])[% END %]</span></strong></span> <span class="collapsePerson ascArrow" id="[% c.PersonID %]">&nbsp;</span>
+			                						<div id="personSection-[% c.PersonID %]" style="border:1px solid #800020; padding:1%; width:90%;">
+			                							[% IF c.ChildPlacements.size > 0 %]
+			                								<button data-person_id="[% c.PersonID %]" class="toggleChildPlacements printHide" title="Toggle Previous Placement">Hide/Show Previous Placements ([% c.ChildPlacements.size %])</button>
+			                								<br/><br/>
+			                								<div class="previousPlacements" id="placements-[% c.PersonID %]" style="display:none">
+				                								<span style="font-size:16px"><strong>Previous Placements ([% c.ChildPlacements.size %])</strong></span>
+				                								<br/>
+				                								[% pCount = 1 %]
+				                								[% FOREACH p IN c.ChildPlacements %]
+				                									<table style="text-align:center; width:100%" class="summary">
+					                									<thead>
+																			<tr>
+																				<th style="text-align:center">&nbsp;</th>
+																				<th style="text-align:center">Date Placed</th>
+																				<th style="text-align:center">Where was Child?</th>
+																				<th style="text-align:center">Who was Child Placed with? </th>
+																				<th style="text-align:center">Address</th>
+																				<th style="text-align:center">Approved Home Study</th>
+																			</tr>
+																		</thead>
+																		<tbody>
+						                									<tr>
+						                										<td>[% pCount %]</td>
+						                										<td>[% p.date_placed %]</td>
+						                										<td>[% p.ChildWhere %]</td>
+						                										<td>[% p.ChildWith %]</td>
+						                										<td>[% p.ChildAddress %]</td>
+						                										<td>
+																					<table style="text-align:center; width:100%">
+																						<thead>
+																							<tr>
+																								<th>Y/N</th>
+																								<th>Date Approved</th>
+																								<th>Filed Date</th>
+																							</tr>
+																						</thead>
+																						<tbody>
+																							<tr>
+																								<td>[% p.home_study_ind %]</td>
+																								<td>[% p.home_study_approved_date %]</td>
+																								<td>[% p.home_study_filed_date %]</td>
+																							</tr>
+																						</tbody>
+																					</table>
+																				</td>
+						                									</tr>
+						                								</tbody>
+					                								</table>
+					                								[% pCount = pCount + 1 %]
+					                							[% END %]
+					                						</div>
+			                							[% END %]
+														<table style="text-align:center; width:100%" class="summary">
+															<span style="font-size:16px"><strong>Current Information</strong></span>
+			                								<br/>
+															<tr>
+																<th style="text-align:center">Father</th>
+																<th style="text-align:center">Type of Father</th>
+																<th style="text-align:center">Date Placed</th>
+																<th style="text-align:center">Where is Child?</th>
+																<th style="text-align:center">Who is Child Placed with?</th>
+																<th style="text-align:center">Address</th>
+															</tr>
+															<tbody>
+																<tr>
+																	<td>[% c.FatherName %]</td>
+																	<td>[% c.father_type %]</td>
+																	<td>[% c.date_placed %]</td>
+																	<td>[% c.ChildWhere %]</td>
+																	<td>[% c.ChildWith %]</td>
+																	<td>[% c.ChildAddress %]</td>
+																</tr>
+															</tbody>
+														</table>
+														<br/>
+														<table style="text-align:center; width:100%">
+															<thead>
+																<tr>
+																	<th style="text-align:center">Approved Home Study</th>
+																	<th style="text-align:center">TICO</th>
+																	<th style="text-align:center">Additional Notes</th>
+																</tr>
+															</thead>
+															<tbody>
+																<tr>
+																	<td>
+																		<table style="text-align:center; width:100%">
+																			<thead>
+																				<tr>
+																					<th>Y/N</th>
+																					<th>Date Approved</th>
+																					<th>Date Filed</th>
+																				</tr>
+																			</thead>
+																			<tbody>
+																				<tr>
+																					<td>[% c.home_study_ind %]</td>
+																					<td>[% c.home_study_approved_date %]</td>
+																					<td>[% c.home_study_filed_date %]</td>
+																				</tr>
+																			</tbody>
+																		</table>
+																	</td>
+																	<td>[% c.TICO %]</td>
+																	<td>[% c.notes %]</td>
+																</tr>
+															</tbody>
+														</table>
+														[% IF c.psych_meds.size > 0 %]
+															<br/>
+															<table style="width:100%; text-align:center">
+																<thead>
+																	<tr>
+																		<th>Psychotropic Medications</th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+																		<td>
+																			<table style="width:100%; text-align:center">
+																				<thead>
+																					<tr>
+																						<th>Requested By</th>
+																						<th>Requested Date</th>
+																						<th>Affidavit Filed</th>
+																						<th>Order Entered</th>
+																						<th>Order Date</th>
+																						<th>Medications</th>
+																					</tr>
+																				</thead>
+																				<tbody>
+																					[% FOREACH pm IN c.psych_meds %]
+																						<tr>
+																							<td>[% pm.psych_meds_requested_by %]</td>
+																							<td>[% pm.psych_meds_requested_date %]</td>
+																							<td>[% pm.psych_meds_affidavit_ind %]</td>
+																							<td>[% pm.psych_meds_order_ind %]</td>
+																							<td>[% pm.psych_meds_order_date %]</td>
+																							<td>[% pm.psych_meds %]</td>
+																						</tr>
+																					[% END %]
+																				</tbody>
+																			</table>
+																		</td>
+																	</tr>
+																</tbody>
+															</table>
+														[% END %]
+														<br/>
+														[% IF c.RelatedCases.size > 0 %]
+															<table style="text-align:center; width:100%">
+																<thead>
+																	<tr>
+																		<th style="text-align:center">Case Number</th>
+																		<th style="text-align:center">Case Type</th>
+																		<th style="text-align:center">Case Status</th>
+																		<th style="text-align:center">File Date</th>
+																		<th style="text-align:center">Case Style</th>
+																		<th style="text-align:center">Division</th>
+																	</tr>
+																</thead>
+																<tbody>
+																	[% FOREACH r IN c.RelatedCases %]
+																		<tr>
+																			<td>[% IF r.HasWarrant == 'Yes' %] <img src="/asterisk.png" />[% END %] <a href="/cgi-bin/search.cgi?name=[% r.ToCaseNumber %]" target="_blank">[% r.ToCaseNumber %]</a></td>
+																			<td>[% r.CaseType %]</td>
+																			<td>[% r.CaseStatus %]</td>
+																			<td>[% r.FileDate %]</td>
+																			<td>[% r.CaseStyle %]</td>
+																			<td>[% r.DivisionID %]</td>
+																		</tr>
+																	[% END %]
+																</tbody>
+															</table>
+													[% END %]
+													</div>
+													<br/>
+			                					[% END %]
+			                					[% IF data.juv_data.fathers.size > 0 %]
+			                						<br/>
+			                						[% FOREACH f IN data.juv_data.fathers %]
+			                							<span style="font-size:20px"><strong>Father - [% f.Name %] [% IF f.special_identifiers %]<span class="error">([% f.special_identifiers %])[% END %]</span> </strong></span> <span class="collapsePerson ascArrow" id="[% f.PersonID %]">&nbsp;</span>
+			                							<div id="personSection-[% f.PersonID %]" style="border:1px solid #800020; padding:1%; width:90%;">
+					                						<table style="text-align:center; width:100%" class="summary">
+																<tr>
+																	<th style="text-align:center">Offending</th>
+																	<th style="text-align:center">In Custody</th>
+																	<th style="text-align:center">No Contact Order</th>
+																	<th style="text-align:center">Additional Notes</th>
+																</tr>
+																<tbody>
+																	<tr>
+																		<td>[% f.Offending %]</td>
+																		<td>
+																			<table style="text-align:center; width:100%">
+																				<thead>
+																					<tr>
+																						<th>Y/N</th>
+																						<th>Where?</th>
+																					</tr>
+																				</thead>
+																				<tbody>
+																					<tr>
+																						<td>[% f.in_custody_ind %]</td>
+																						<td>[% f.in_custody_where %]</td>
+																					</tr>
+																				</tbody>
+																			</table>
+																		</td>
+																		<td>
+																			<table style="text-align:center; width:100%">
+																				<thead>
+																					<tr>
+																						<th>Y/N</th>
+																						<th>Entered Date</th>
+																						<th>Vacated Date</th>
+																						<th>Who?</th>
+																					</tr>
+																				</thead>
+																				<tbody>
+																					<tr>
+																						<td>[% f.no_contact_ind %]</td>
+																						<td>[% f.no_contact_entered %]</td>
+																						<td>[% f.no_contact_vacated %]</td>
+																						<td>
+																							[% IF f.no_contact_who.size > 0 %]
+																								[% FOREACH nc IN f.no_contact_who %]
+																									[% nc %]
+																									<br/>
+																								[% END %]
+																							[% END %]
+																						</td>
+																					</tr>
+																				</tbody>
+																			</table>
+																		</td>
+																		<td>[% f.recom %]</td>
+																	</tr>
+																</tbody>
+															</table>
+															<br/>
+															<table style="text-align:center; width:100%">
+																<thead>
+																	<tr>
+																		<th style="text-align:center">Petitions (Dates of Service)</th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+																		<td>
+																			<table style="text-align:center; width:100%">
+																				<thead>
+																					<tr>
+																						<th>Shelter</th>
+																						<th>Arraignment</th>
+																						<th>Dependency</th>
+																						<th>Supplemental Findings</th>
+																						<th>TPR</th>
+																					</tr>
+																				</thead>
+																				<tbody>
+																					<tr>
+																						<td>[% f.shelter_dos %]</td>
+																						<td>[% f.arraignment_dos %]</td>
+																						<td>[% f.dependency_dos %]</td>
+																						<td>[% f.supp_findings_dos %]</td>
+																						<td>[% f.tpr_dos %]</td>
+																					</tr>
+																				</tbody>
+																			</table>
+																		</td>
+																	</tr>
+																</tbody>
+															</table>
+															<br/>
+															<table style="text-align:center; width:100%">
+																<thead>
+																	<tr>
+																		<th style="text-align:center">Petitions (Orders Filed)</th>
+																	</tr>
+																</thead>
+																<tbody>
+																	<tr>
+																		<td>
+																			<table style="text-align:center; width:100%">
+																				<thead>
+																					<tr>
+																						<th>Shelter</th>
+																						<th>Arraignment</th>
+																						<th>Dependency</th>
+																						<th>Supplemental Findings</th>
+																						<th>TPR</th>
+																					</tr>
+																				</thead>
+																				<tbody>
+																					<tr>
+																						<td>[% f.shelter_order_filed %]</td>
+																						<td>[% f.arraignment_order_filed %]</td>
+																						<td>[% f.dependency_order_filed %]</td>
+																						<td>[% f.supp_findings_order_filed %]</td>
+																						<td>[% f.tpr_order_filed %]</td>
+																					</tr>
+																				</tbody>
+																			</table>
+																		</td>
+																	</tr>
+																</tbody>
+															</table>
+															[% IF f.RelatedCases.size > 0 %]
+																<br/>
+																<table style="text-align:center; width:100%">
+																	<thead>
+																		<tr>
+																			<th style="text-align:center">Case Number</th>
+																			<th style="text-align:center">Case Type</th>
+																			<th style="text-align:center">Case Status</th>
+																			<th style="text-align:center">File Date</th>
+																			<th style="text-align:center">Case Style</th>
+																			<th style="text-align:center">Division</th>
+																		</tr>
+																	</thead>
+																	<tbody>
+																		[% FOREACH r IN f.RelatedCases %]
+																			<tr>
+																				<td>[% IF r.HasWarrant == 'Yes' %] <img src="/asterisk.png" />[% END %] <a href="/cgi-bin/search.cgi?name=[% r.ToCaseNumber %]" target="_blank">[% r.ToCaseNumber %]</a></td>
+																				<td>[% r.CaseType %]</td>
+																				<td>[% r.CaseStatus %]</td>
+																				<td>[% r.FileDate %]</td>
+																				<td>[% r.CaseStyle %]</td>
+																				<td>[% r.DivisionID %]</td>
+																			</tr>
+																		[% END %]
+																	</tbody>
+																</table>
+															[% END %]
+														</div>
+														<br/>
+														[% END %]
+			                					[% END %]
+			                					<br/>
+		                					[% END %]
+		                					[% IF data.juv_data.mother.0.size > 0 %]
+		                						<span style="font-size:20px"><strong>Mother - [% data.juv_data.mother.0.Name %] [% IF data.juv_data.mother.0.special_identifiers %]<span class="error">([% data.juv_data.mother.0.special_identifiers %])[% END %]</span></strong></span> <span class="collapsePerson ascArrow" id="[% data.juv_data.mother.0.PersonID %]">&nbsp;</span>
+		                						<div id="personSection-[% data.juv_data.mother.0.PersonID %]" style="border:1px solid #800020; padding:1%; width:90%;">
+			                						<table style="text-align:center; width:100%" class="summary">
+														<tr>
+															<th style="text-align:center">Offending</th>
+															<th style="text-align:center">In Custody</th>
+															<th style="text-align:center">No Contact Order</th>
+															<th style="text-align:center">Additional Notes</th>
+														</tr>
+														<tbody>
+															<tr>
+																<td>[% data.juv_data.mother.0.Offending %]</td>
+																<td>
+																	<table style="text-align:center; width:100%">
+																		<thead>
+																			<tr>
+																				<th>Y/N</th>
+																				<th>Where?</th>
+																			</tr>
+																		</thead>
+																		<tbody>
+																			<tr>
+																				<td>[% data.juv_data.mother.0.in_custody_ind %]</td>
+																				<td>[% data.juv_data.mother.0.in_custody_where %]</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</td>
+																<td>
+																	<table style="text-align:center; width:100%">
+																		<thead>
+																			<tr>
+																				<th>Y/N</th>
+																				<th>Entered Date</th>
+																				<th>Vacated Date</th>
+																				<th>Who?</th>
+																			</tr>
+																		</thead>
+																		<tbody>
+																			<tr>
+																				<td>[% data.juv_data.mother.0.no_contact_ind %]</td>
+																				<td>[% data.juv_data.mother.0.no_contact_entered %]</td>
+																				<td>[% data.juv_data.mother.0.no_contact_vacated %]</td>
+																				<td>
+																					[% IF data.juv_data.mother.0.no_contact_who.size > 0 %]
+																						[% FOREACH nc IN data.juv_data.mother.0.no_contact_who %]
+																							[% nc %]
+																							<br/>
+																						[% END %]
+																					[% END %]
+																				</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</td>
+																<td>[% data.juv_data.mother.0.recom %]</td>
+															</tr>
+														</tbody>
+													</table>
+													<br/>
+													<table style="text-align:center; width:100%">
+														<thead>
+															<tr>
+																<th style="text-align:center">Petitions (Dates of Service)</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>
+																	<table style="text-align:center; width:100%">
+																		<thead>
+																			<tr>
+																				<th>Shelter</th>
+																				<th>Arraignment</th>
+																				<th>Dependency</th>
+																				<th>Supplemental Findings</th>
+																				<th>TPR</th>
+																			</tr>
+																		</thead>
+																		<tbody>
+																			<tr>
+																				<td>[% data.juv_data.mother.0.shelter_dos %]</td>
+																				<td>[% data.juv_data.mother.0.arraignment_dos %]</td>
+																				<td>[% data.juv_data.mother.0.dependency_dos %]</td>
+																				<td>[% data.juv_data.mother.0.supp_findings_dos %]</td>
+																				<td>[% data.juv_data.mother.0.tpr_dos %]</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</td>
+															</tr>
+														</tbody>
+													</table>
+													<br/>
+													<table style="text-align:center; width:100%">
+														<thead>
+															<tr>
+																<th style="text-align:center">Petitions (Orders Filed)</th>
+															</tr>
+														</thead>
+														<tbody>
+															<tr>
+																<td>
+																	<table style="text-align:center; width:100%">
+																		<thead>
+																			<tr>
+																				<th>Shelter</th>
+																				<th>Arraignment</th>
+																				<th>Dependency</th>
+																				<th>Supplemental Findings</th>
+																				<th>TPR</th>
+																			</tr>
+																		</thead>
+																		<tbody>
+																			<tr>
+																				<td>[% data.juv_data.mother.0.shelter_order_filed %]</td>
+																				<td>[% data.juv_data.mother.0.arraignment_order_filed %]</td>
+																				<td>[% data.juv_data.mother.0.dependency_order_filed %]</td>
+																				<td>[% data.juv_data.mother.0.supp_findings_order_filed %]</td>
+																				<td>[% data.juv_data.mother.0.tpr_order_filed %]</td>
+																			</tr>
+																		</tbody>
+																	</table>
+																</td>
+															</tr>
+														</tbody>
+													</table>	
+													[% IF data.juv_data.mother.0.RelatedCases.size > 0 %]
+														<br/>
+														<table style="text-align:center; width:100%">
+															<thead>
+																<tr>
+																	<th style="text-align:center">Case Number</th>
+																	<th style="text-align:center">Case Type</th>
+																	<th style="text-align:center">Case Status</th>
+																	<th style="text-align:center">File Date</th>
+																	<th style="text-align:center">Case Style</th>
+																	<th style="text-align:center">Division</th>
+																</tr>
+															</thead>
+															<tbody>
+																[% FOREACH r IN data.juv_data.mother.0.RelatedCases %]
+																	<tr>
+																		<td>[% IF r.HasWarrant == 'Yes' %] <img src="/asterisk.png" />[% END %] <a href="/cgi-bin/search.cgi?name=[% r.ToCaseNumber %]" target="_blank">[% r.ToCaseNumber %]</a></td>
+																		<td>[% r.CaseType %]</td>
+																		<td>[% r.CaseStatus %]</td>
+																		<td>[% r.FileDate %]</td>
+																		<td>[% r.CaseStyle %]</td>
+																		<td>[% r.DivisionID %]</td>
+																	</tr>
+																[% END %]
+															</tbody>
+														</table>
+													[% END %]
+												</div>
+												<br/>
+		                					[% END %]
+		                					[% IF data.juv_data.notes.size > 0 %]
+		                						<br/>
+			                						<span style="font-size:20px"><strong>Event Notes</strong></span> <span class="collapseEventNotes ascArrow">&nbsp;</span>
+			                						<div id="eventNotesSection" style="border:1px solid #800020; padding:1%; width:75%;">
+					                					<table class="summary" style="width:100%; text-align:center;">
+															<tr>
+																<th style="text-align:center">Entered Date</th>
+																<th style="text-align:center">Note</th>
+																<th style="text-align:center">Entered By</th>
+															</tr>
+															<tbody>
+																[% FOREACH en IN data.juv_data.notes %]
+																	<tr>
+																		<td>[% en.entered_date %]</td>
+																		<td style="width:50%">[% en.note %]</td>
+																		<td>[% en.created_by %]</td>
+																	</tr>
+																[% END %]
+															</tbody>
+														</table>
+													</div>
+												<br/><br/>
+		                					[% END %]
+		                				[% END %]
+		                			</div>
+		                		</div>
+                			[% END %]
+                
+                            <!-- Parties -->
+                            <div id="partydiv_[% data.ucn %]" style="margin-bottom: 0px; margin-top:15px;">
+                                [% FOREACH party IN data.parties %]
+                                    <table class="summary party">
+                                        <tr>
+                                            <td colspan="[% party.tdCols %]" class="title" style="text-align: left">
+                                                [% party.PartyTypeDesc %]
+                                            </td>
+                                        </tr>
+                                        <tr class="title">
+                                            <th class="name"">Name</th>
+                                            <th class="active">Active</th>
+                                            <th class="phone">Phone</th>
+                                            [% IF party.DOB != "&nbsp;"%]
+	                                            <th class="date">DOB</th>
+	                                            <th class="partyAge">Age</th>
+                                            [% END %]
+                                            <th class="eservice" style="display:none" id="eserviceHeaderShow-[% party.PIDM %]">e-Service Address(es)</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                        <tr>
+                                            <td class="name">
+                                                [% party.FullName %]
+                                                [% IF party.ProSe %]
+                                                    <span style="font-size: smaller; color: blue">(Pro Se)&nbsp;&nbsp;</span>
+                                                [% END %]
+                                                <span style="font-size: smaller; display:none" class="isEServicePartyShow-[% party.PIDM %]">(E-service)&nbsp;&nbsp;</span>
+                                                <br/>
+                                                <span class="address [% IF party.Confidential %]confidential[% END %]">[% party.Address %]</span>
+                                            </td>
+                                            <td class="active">[% party.Active %]</td>
+                                            <td class="phone">[% party.Phone %]</td>
+                                            [% IF party.DOB != "&nbsp;" %]
+	                                            <td class="date">[% party.DOB %]</td>
+	                                            <td class="partyAge">[% party.Age %]</td>
+                                            [% END %]
+     										<td class="eservice" style="color: green; display:none" id="eserviceColumnShow-[% party.PIDM %]"></td>
+                                            <td>
+                                                <a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="[% party.DOB %]" data-first="[% party.FirstName %]" data-middle="[% party.MiddleName %]" data-last="[% party.LastName %]"><img src="/jvsicons/search.png" /></a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <br/>
+                                [% END %]
+                            </div>
+                                        
+                            [% IF data.propertyAddress != "" %]
+                            <div id="propAddress_[% data.ucn %]">
+                                <table class="summary" style="min-width: 35em">
+                                    <tr>
+                                        <td class="title" style="text-align: left">
+                                            PROPERTY ADDRESS
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            [% data.propertyAddress %]	
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            [% END %]
+                            
+                            <div class="spacer"></div>
+                            
+                            <!-- Attorneys -->
+                            <div id="attorneydiv_[% data.ucn %]">
+                                [% FOREACH attorney IN data.attorneys %]
+                                    <table class="summary party">
+                                        <tr>
+                                            <td colspan=[% IF attorney.Active == 'Y' %]"8"[% ELSE %]"7"[% END %] class="title" style="text-align: left">
+                                                [% attorney.PartyTypeDesc %]
+                                            </td>
+                                        </tr>
+                                        <tr class="title">
+                                            <th class="name">Name</th>
+                                            <th class="barid">Bar #</th>
+                                            <th class="active">Active</th>
+                                            <th class="phone">Phone</th>
+                                            <th class="eservice">e-Service Address(es)</th>
+                                            <th class="represents">Represents</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                        <tr>
+                                            <td class="name">
+                                                [% attorney.FullName %]
+                                                <span style="font-size: smaller; display:none" class="isEServiceShow-[% attorney.BarID %]">&nbsp; &nbsp;(E-service)</span>
+                                                <br/>
+                                                <span class="address">[% attorney.Address %]</span>
+                                            </td>
+                                            <td class="barid">[% attorney.BarID %]</td>
+                                            <td class="active">[% attorney.Active %]</td>
+                                            <td class="phone">[% attorney.Phone %]</td>
+               
+                                            <td class="eservice eserviceAttorneyActive-[% attorney.Active %] eService-[% attorney.BarID %]">Loading...</td>
+                
+                                            [% IF attorney.Active == 'Y' %]
+                                            	<td class="represents">[% attorney.Represents.PartyTypeDesc %] - [% attorney.Represents.FullName %]</td>
+                                            [% ELSE %]
+	                                            <td style="color: red;" class="represents">[% attorney.Represents.PartyTypeDesc %] - [% attorney.Represents.FullName %] <strong>(DISPOSED)</strong></td>
+                                            [% END %]
+                                            
+                                            <td>
+	                                           [% namePieces = attorney.FullName.split(',') %]
+                                               [% lastName = namePieces.0 %]
+                                               [% midFirst = namePieces.1 | trim %]
+                                               [% midFirst = midFirst.split(' ') %]
+											   [% firstName = midFirst.0 %]
+											   [% middleName = midFirst.1 %]
+                                               <a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="" data-first="[% firstName %]" data-middle="[% middleName %]" data-last="[% lastName %]"><img src="/jvsicons/search.png" /></a>
+                                        	</td>
+                                        </tr>
+                                    </table>
+                                    <br/>
+                                [% END %]
+                            </div>
+                            
+                            <!-- registry -->
+				            <div id="registrydiv_[% data.ucn %]">
+								Loading Registry Info...
+				            </div>
+                
+                            <!-- Flags and casenotes -->
+                            <div class="spacer"></div>
+                            <div id="flagsnotes_[% data.ucn %]">
+                                <!-- Opens main table -->
+                                <table>
+                                    <tr style="vertical-align: top">
+                                        <td>
+                                            <!-- Opens flags table -->
+                                            <table class="summary" id="flags_[% data.ucn %]">
+                                                <tr>
+                                                    <!-- Flags table header -->
+                                                    <td class="title">
+                                                        Flags
+                                                        <!--<button type="button" style="font-size: smaller" class="addFlag printHide">
+                                                            Add Flag
+                                                        </button>-->
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr id="flaglist_[% data.ucn %]">
+                                                    <td>Retrieving flags...</td>
+                                                </tr>
+                                            </table>
+                                        </td> <!-- End of cell containing flags table -->
+                                        
+                                        <td style="width: 3em"></td>
+                                        
+                                        <!-- Opens notes table -->
+                                        <td>
+                                            <table class="summary" id="notes_[% data.ucn %]">
+                                                <tr>
+                                                    <!-- Flags table header -->
+                                                    <td class="title">
+                                                        Notes
+                                                        <!--<button type="button" style="font-size: smaller" class="addNote printHide">
+                                                            Add Note
+                                                        </button>-->
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr id="casenotes_[% data.ucn %]">
+                                                    <td>Retrieving notes...</td>
+                                                </tr>
+                                            </table>
+                                        </td> <!-- End of cell containing notes table -->           
+                                    </tr>
+                                </table>
+                            </div>
+                
+                            
+                                <div class="spacer"></div>
+                                <div>
+                                <tr><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td colspan="2">
+									[% IF data.notesuser %]
+                                        <button onclick="window.location.href='/casenotes/index.cgi?ucn=[% data.ucn %]&div=[% data.caseinfo.DivisionID %]'" class="btn btn-primary printHide">Add Flags/Case Notes</button>
+										[% ELSE %]
+										<button class="btn btn-primary printHide noaccess" title="You do not have access to add flags/case notes.">Add Flags/Case Notes</button>
+										[% END %]
+                                    </td>
+                                </tr>
+                                </div>
+                
+                            <!-- Linked cases -->
+                            <div class="spacer"></div>
+                            <div id="relcasediv_[% data.ucn %]">
+                                Loading Related Cases...
+                            </div>
+                            
+                            <div class="spacer"></div>
+                            <div>
+                                <tr>
+                                    <td colspan="2">
+                                        <br/>
+                                       [% IF data.odpuser %]
+                                                <button onclick="window.location.href='/orders/igo.php?ucn=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&new=Y'" class="btn btn-primary printHide" title="Create Orders">Create Orders</button>
+												[% ELSE %]
+												<button class="btn btn-primary printHide noaccess" title="You do not have access to create orders.">Create Orders</button>
+											[% END %]
+                                    </td>
+                                </tr>
+                            </div>
+                            
+                            [% IF data.showCrim %]
+                            <!-- Warrants -->
+                            <div class="spacer"></div>
+                            <div id="warrantdiv_[% data.ucn %]">
+                                <table class="summary">
+                                    <tr>
+                                        <td class="title">Warrants</td>
+                                    </tr>
+                                    [% IF data.warrants.size == 0 %]
+                                    <tr>
+                                        <td>There are no warrants for this case.</td>
+                                    </tr>
+                                    [% ELSE %]
+                                    <tr>
+                                        <td class="tableholder">
+                                            <table id="warrants_[% data.ucn %]">
+                                                <thead>
+                                                    <tr class="title">
+                                                        <th style="min-width: 7em">Warrant<br/>Number</th>
+                                                        <th style="min-width: 5em">Warrant<br/>Closed?</th>
+                                                        <th style="min-width: 10em">Description</th>
+                                                        <th style="min-width: 7em">Created</th>
+                                                        <th style="min-width: 7em">Modified</th>
+                                                        <th style="min-width: 7em">Arrested</th>
+                                                        <th style="min-width: 7em">Issued</th>
+                                                        <th style="min-width: 5em">Bond<br/>Amt</th>
+                                                        <th style="min-width: 5em">Action<br/>Closed?</th>
+                                                        <th style="min-width: 5em">Action<br/>Code</th>
+                                                        <th style="min-width: 7em">Action<br/>Date</th>
+                                                        <th style="min-width: 7em">Agency</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    [% FOREACH warrant IN data.warrants %]
+                                                        <tr>
+                                                        	<td style="text-align: center">[% warrant.WarrantNumber %]</td>
+                                                            <td style="text-align: center">[% warrant.Closed %]</td>
+                                                            <td style="text-align: center">[% warrant.WarrantTypeDesc %]</td>
+                                                            <td style="text-align: center">[% warrant.CreateDate %]</td>
+                                                            <td style="text-align: center">[% warrant.ModifyDate %]</td>
+                                                            <td style="text-align: center">[% warrant.ArrestDate %]</td>
+                                                            <td style="text-align: center">[% warrant.IssueDate %]</td>
+                                                            <td style="text-align: right">$ [% warrant.BondAmount %]</td>
+                                                            <td style="text-align: center">[% warrant.WarrantActionClosed %]</td>
+                                                            <td style="text-align: center">[% warrant.ActionCode %]</td>
+                                                            <td style="text-align: center">[% warrant.ActionDate %]</td>
+                                                            <td style="text-align: center">[% warrant.AgencyName %]</td>
+                                                    	</tr>
+                                                    [% END %]
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    [% END %]
+                                </table>
+                            </div>
+                
+                            <!-- Charges -->
+                            <div class="spacer"></div>
+                            <div id="chargediv_[% data.ucn %]">
+                                <table class="summary">
+                                    <tr>
+                                        <td class="title">Charges</td>
+                                    </tr>
+                                    [% IF data.charges.size == 0 %]
+                                    <tr>
+                                        <td>There are no charges for this case.</td>
+                                    </tr>
+                                    [% ELSE %]
+                                    <td class="tableholder">
+												<table id="charges_[% data.ucn %]">
+                                                      <thead>
+                                                          <tr class="title">
+                                                              <th style="width: 3em">Count</th>
+                                                              <th class="date" >Date</th>
+                                                              <th style="width: 5em">Statute</th>
+                                                              <th style="width: 5em">Citation</th>
+                                                              <th style="width: 20em">Description</th>
+                                                              <th style="width: 5em">Degree</th>
+                                                              <th style="width: 8em">Disposition</th>
+                                                              <th class="date">Disp.<br/>Date</th>
+                                                              <th style="width: 5em">Plea</th>
+                                                              <th class="date">Plea<br/>Date</th>
+                                                              <th class="date">Court<br/>Decision<br/>Date</th>
+                                                              <th style="min-width: 6em">Sentence</th>
+                                                              <th style="min-width: 6em">Sentence<br/>Status</th>
+                                                              <th class="date">Sentence<br/>Effective</th>
+                                                          </tr>
+                                                       </thead>
+                                                       <tbody>
+                                                           [% FOREACH charge IN data.charges %]
+                                                                <tr>
+                                                                    <td style="text-align: center">[% charge.ChargeCount %]</td>
+                                                                    <td class="date">[% charge.ChargeDate %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteNumber %]</td>
+                                                                    <td style="text-align: center">[% charge.CitationNumber %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteDescription %]</td>
+                                                                    <td style="text-align: center">[% charge.CourtStatuteLevel %] [% charge.CourtStatuteDegree %]</td>
+                                                                    <td style="text-align: center">[% charge.Disposition %]</td>
+                                                                    <td class="dateCol">[% charge.DispositionDate %]</td>
+                                                                    <td style="text-align: center">[% charge.Plea %]</td>
+                                                                    <td class="date">[% charge.PleaDate %]</td>
+                                                                    <td class="date">[% charge.CourtDecisionDate %]</td>
+                                                                    <td style="text-align: center">[% charge.Sentence %]</td>
+                                                                    <td style="text-align: center">[% charge.SentenceStatus %]</td>
+                                                                    <td class="date">[% charge.SentenceEffectiveDate %]</td>
+                                                                </tr>
+                                                            [% END %]
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+						                       [% END %]
+                                </table>
+                            </div>
+                            [% END %]
+                
+                            <!-- Events -->
+                            <div class="spacer"></div>
+                            <div id="eventdiv_[% data.ucn %]">
+                                <table class="summary">
+                                    <tr>
+                                        <td class="title">Case Calendar Event Docket</td>
+                                    </tr>
+                                    [% IF data.events.size == 0 %]
+                                    <tr>
+                                        <td>There are no events for this case.</td>
+                                    </tr>
+                                    [% ELSE %]
+                                    <tr>
+                                        <td>
+                                            <table id="events_[% data.ucn %]">
+                                                <thead>
+                                                    <tr class="title">
+                                                        <th style="min-width: 6em">Date</th>
+                                                        <th style="min-width: 6em">Code</th>
+                                                        <th style="min-width: 100px">Description</th>
+                                                        <th style="min-width: 100px">Location/<br/>Room</th>
+                                                        [% IF data.hasMotions %]<th style="min-width: 15em">Motion</th>[% END %]
+                                                        <th style="min-width: 100px">Time</th>
+                                                        <th style="min-width: 75px">Judge</th>
+                                                        <th style="min-width: 100px">Docket Date</th>
+                                                        <th style="min-width: 100px">Conf. Number</th>
+                                                        <th style="min-width: 100px">Canceled</th>
+                                                        <th style="min-width: 100px">Updated</th>
+                                                        <th style="min-width: 100px">Notes</th>
+                                                        <th style="min-width: 100px">Reason</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    [% FOREACH event IN data.events %]
+                                                    <tr class="[% event.RowClass %]">
+                                                        <td class="[% event.RowClass %]" style="text-align: center">
+                                                            [% IF event.ShowVRBLink == "future" %]
+                                                            <a class="vrbDate" data-vrbdate="[% event.ISODate %]" data-event_id="[% event.EventID %]">[% event.EventDate %]</a>
+                                                            [% ELSE %]
+                                                            [% event.EventDate %]
+                                                            [% END %]
+                                                        </td>
+                                                        <td class="center [% event.RowClass %]">[% event.EventCode %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.CourtEventType %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.Location %]</td>
+                                                        [% IF data.hasMotions %]<td class="center [% event.RowClass %]">[% event.Motion %]</td>[% END %]
+                                                        <td class="center [% event.RowClass %]">[% event.CourtEventTime %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.JudgeName %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.DocketDate %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.ConfNum %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.Canceled %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.Updated %]</td>
+                                                        <td class="center [% event.RowClass %]">[% event.CourtEventNotes %]</td>
+                                                        [% IF event.Updated == 'Y' %]
+                                                        	<td class="[% event.RowClass %]" style="text-align: center">[% event.update_info %]</td>
+                                                        [% ELSIF event.Canceled == 'Y' %]
+                                                        	<td class="[% event.RowClass %]" style="text-align: center">[% event.cancel_reason %]</td>
+                                                        [% ELSE %]
+                                                          	<td class="[% event.RowClass %]" style="text-align: center">&nbsp;</td>
+                                                        [% END %]
+                                                    </tr>
+                                                    [% END %]
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    [% END %]
+                                    <!--<tr>
+                                        <td>
+                                            <button type="button" class="btn btn-primary vrbCase printHide" data-ucn="[% data.caseinfo.CaseNumber %]">Schedule Event</button>
+                                        </td>
+                                    </tr>-->
+                                
+                                </table>
+                            </div>
+                            
+                            <div class="spacer"></div>
+                            <div id="otherdocsdiv_[% data.ucn %]">
+                                <table class="summary">
+                                    <tr>
+                                        <td class="title">Other Documents</td>
+                                    </tr>
+                                    [% IF data.otherDocs.size == 0 %]
+                                    <tr>
+                                        <td>There are no other documents for this case.</td>
+                                    </tr>
+                                    [% ELSE %]
+                                    <tr>
+                                        <td>
+                                            <table id="otherdocs_[% data.ucn %]">
+                                                <thead>
+                                                    <tr class="title">
+                                                        <th style="min-width: 20em">Title</th>
+                                                        <th style="min-width: 10em">Created By</th>
+                                                        <th style="min-width: 6em">Date Created</th>
+                                                        <th style="min-width: 10em">Current Queue</th>
+                                                        <th style="min-width: 6em">Current Status</th>
+                                                        <th style="min-width: 20em">Comments</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    [% FOREACH doc IN data.otherDocs %]
+                                                    <tr style="[% doc.style %]">
+                                                        <td class="center">
+                                                        	[% IF doc.file %]
+                                                        		<a href="[% doc.file %]" target="_blank">[% doc.Title %]</a>
+                                                        	[% ELSE %]
+                                                        		<a class="[% doc.doc_type %]" data-is_order="[% doc.is_order %]" data-docid="[% doc.DocID %]" data-casenum="[% data.caseinfo.CaseNumber %]">[% doc.Title %]</a></td>
+                                                        	[% END %]	
+                                                        <td class="center">[% doc.creator %]</td>
+                                                        <td class="center">[% doc.CreationDate %]</td>
+                                                        <td class="center">[% doc.queue %]</td>
+                                                        <td class="center">[% doc.current_status %]</td>
+                                                        <td class="center">
+                                                            [% doc.Comments %]
+                                                        </td>
+                                                    </tr>
+                                                    [% END %]
+                                                    <tr>
+                                                    	<td colspan="6" align="center">
+                                                    		<a class="showAllDocs">Show Hidden Documents</a>
+                                                    		<a class="hideDocs" style="display:none">Hide Completed Documents</a>
+                                                    	</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    [% END %]
+                                </table>
+                            </div>
+                
+                            <!-- Dockets -->
+                            <div class="spacer"></div>
+                            <div id="docketdiv_[% data.ucn %]">
+                                Retrieving Dockets...
+                            </div>
+                
+                            <!-- Other cases -->
+                            <div class="spacer"></div>
+                            <!-- Other Cases -->
+				            <tr>
+				            	<td>
+				                	<div style="position: relative" id="fullOtherCaseDiv">
+										
+				                    </div>
+				                </td>
+			            	</tr>
+
+                            <div id="hiddenvars_[% data.ucn %]">
+                                <input type="hidden" id="division_[% data.ucn %]" name="division" value="[% data.caseinfo.DivisionID %]"/>
+                                <input type="hidden" id="nextlev_[% data.ucn %]" name="nextlev" value="[% data.nextlev %]"/>
+                                <input type="hidden" id="ucn_[% data.ucn %]" name="ucn" value="[% data.caseinfo.CaseNumber %]"/>
+                                <input type="hidden" class="ucn"value="[% data.caseinfo.CaseNumber %]"/>
+                                <input class="caseType" type="hidden" value="[% data.caseinfo.CaseType %]"/>
+                                <input class="caseid" type="hidden" value="[% data.caseinfo.CaseID %]"/>
+                            </div>
+                        
+                        </div>
+                        
+                    </div> <!-- End of drawer-content -->
+                </div> <!-- End of drawer-full -->
+                
+                <div class="content closed" style="display: none; height: 100%">
+                    <div id="documents_[% data.ucn %]" class="dv-window" style="height: 90%; width: 100%;">
+                        
+                    </div>
+                </div>
+            </div> <!-- End of drawer-container -->
+            
+            

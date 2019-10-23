@@ -60,7 +60,7 @@ our $dbh = dbConnect($db);
 our $schema = getDbSchema($db);
 
 
-my $orderTemplateDir = "/usr/local/icms/cgi-bin/orders/templates";
+my $orderTemplateDir = "$ENV{'JVS_ROOT'}/cgi-bin/orders/templates";
 
 our $SIGXTWIPS = 4000;
 our $SIGYTWIPS = 1000;

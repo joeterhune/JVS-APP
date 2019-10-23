@@ -33,8 +33,10 @@
 	    if (formsel != "") {
 	        var t = new Date().getTime();
 	        $("#formdiv").load("/orders/orderfields.php?ucn="+ucn+"&formid="+formsel+'&docid='+docid+'&t='+t, OrderHandleFormLoading);
+	        $("#bulkGenerate").show();
 	    } else {
 	        $("#formdiv").html('');
+	        $("#bulkGenerate").hide();
 	        $.unblockUI();
 	    }
 	    
@@ -111,10 +113,148 @@
 	    	$("#form_id_search").val("");
 	    	$("#formid").val($("#form_id_select").val());
 	    });
+	    
+	    $("#doBulkGenerate").change(function(e) {
+	    	if($(this).prop("checked") == true){
+	    		var cnHTML = "<strong>Case Number(s):</strong> (Please enter one case number per line and click outside the box to continue.)</strong><br/><br/>";
+	    		cnHTML += "<div style=\"float:left; width:50%\"><textarea name=\"bulkGenerateCases\" id=\"bulkGenerateCases\" rows=\"10\" cols=\"35\">" + $("#bulkGenerateCasesHidden").val() + "</textarea></div>";
+	    		cnHTML += "<div style=\"float:left; width:50%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;\" id=\"bulkStyles\">" + $("#bulkStylesHidden").val() + "</div>";
+	    		
+		    	$('#dialogSpan').html(cnHTML);
+		        $('#dialogDiv').dialog({
+		            resizable: false,
+		            minheight: 150,
+		            width: 'auto',
+		            modal: true,
+		            title: 'Enter Case Number(s)',
+		            buttons: {
+		                "OK": function() {
+		                    $(this).dialog( "close" );
+		                    
+		                    var text = $("#bulkGenerateCases").val();   
+							var lines = text.split(/\r|\r\n|\n/);
+							var count = lines.length;
+							
+							if(!text || (text == "")){
+								count = 0;
+							}
+							
+		                    if(count > 0){
+		                    	var countText = "(" + count + " cases entered)";
+		                    	$("#bulkCaseCount").html(countText);
+		                    }
+		                    else{
+		                    	$("#bulkCaseCount").html("");
+		                    }
+		                    return false;
+		                },
+		                "Cancel": function() {
+		                    $(this).dialog( "close" );
+		                    return false;
+		                }
+		            }
+		        });
+			}
+			else{
+				$("#bulkCaseCount").html("");
+			}
+	    });
+	    
+	    $(document).on('change','#bulkGenerateCases', function () {
+	    	{literal}
+	    		$.blockUI.defaults.baseZ = 4000;
+				$.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+			{/literal}
+			
+	    	var bulk_cases = $("#bulkGenerateCases").val();
+	    	if(!bulk_cases || (bulk_cases == "")){
+				$("#bulkGenerateCasesHidden").val("");
+				$("#bulkStylesHidden").val("");
+				$("#bulkStyles").html("");
+	    		$.unblockUI();
+				return false;
+			}
+	    	
+	    	var caseArr = bulk_cases.split("\n");
+	    	
+	    	var cleanCaseArr = new Array();
+	    	var styleArr = new Array();
+	    	var casesLength = caseArr.length;
+	    	
+	    	var postData = { cases : bulk_cases };
+	    	$.ajax({
+				url: '/workflow/checkcase_bulk.php',
+				type: "POST",
+				data : postData,
+				success: function(data, textStatus, xhr) {
+					if(data.status == "Success"){
+						var cleanCaseArr = data.CaseList;
+						var styleArr = data.StyleList;
+						
+						var newCaseList = cleanCaseArr.join("\n");
+				    	var styleList = styleArr.join("<br/>");
+				    	$("#bulkGenerateCases").val(newCaseList);
+				    	$("#bulkGenerateCasesHidden").val(newCaseList);
+				    	$("#bulkStylesHidden").val(styleList);
+				    	$("#bulkStyles").html(styleList);
+				    	$.unblockUI();
+					}
+					else{
+						$.unblockUI();
+						showDialog("Error", "No case numbers were found.");
+						$("#doBulkGenerate").prop('checked', false);
+					}
+				}
+			});
+			
+			return false;
+		});
 		
 		$(document).on('click','.editDocument',function() {
 	        $("#formdiv").append('<input type="hidden" name="fromTemplate" id="fromTemplate" value="1"/>');
-			$("#formdiv").submit();
+	        
+	        if(($("#doBulkGenerate").prop("checked") == true) && $("#bulkGenerateCasesHidden").val()){
+	        	$("#formdiv").append('<input type="hidden" name="bulkGenerateCases" id="bulkGenerateCases" value="' + $("#bulkGenerateCasesHidden").val() + '"/>');
+	        	var caseDisplay = $("#bulkGenerateCasesHidden").val();
+	        	caseDisplay = caseDisplay.replace(/\n/g, "<br/>");
+	        	
+	        	$('#dialogSpan').html("This order will automatically generate and will be placed into your queue for the following additional cases:<br/><br/>" + caseDisplay);
+		        $('#dialogDiv').dialog({
+		            resizable: false,
+		            minheight: 150,
+		            width: 500,
+		            modal: true,
+		            title: 'Multiple Orders',
+		            buttons: {
+		                "OK": function() {
+		                    $(this).dialog( "close" );
+		                    $("#formdiv").submit();
+		                    return false;
+		                },
+		                "Cancel": function() {
+		                    $(this).dialog( "close" );
+		                    return false;
+		                }
+		            }
+		        });
+	        }
+	        else{
+	        	$("#formdiv").submit();
+	        }
+	        
+			
+		});
+		
+		{if !empty($formid)}
+			$("#form_id_select").val("{$formid}");
+			$("#form_id_select").trigger("change");
+		{/if}
+		
+		$('#formdiv').submit(function() {
+		    {literal}
+				$.blockUI({message: '<h1><img src="/images/busy.gif"/> Please Wait </h1>', fadeIn: 0});
+			{/literal}
+		    return true; 
 		});
 	});
 	
@@ -238,10 +378,15 @@
 			        	<td>Search All Forms:</td>
 						<td><input id="form_id_search" name="form_id_search" size="50"/></td>
 					</tr>
+					<tr id="bulkGenerate" style="display:none">
+						<td colspan="2"><input type="checkbox" name="doBulkGenerate" id="doBulkGenerate" /> Generate this order for multiple cases <span id="bulkCaseCount" style="color:red"></span></td>
+					</tr>
 		        </table>
 		        <hr/>
 		    </div>
 		    <input type="hidden" id="formid" name="formid"/>
+		    <input type="hidden" id="bulkGenerateCasesHidden" name="bulkGenerateCasesHidden"/>
+		    <input type="hidden" id="bulkStylesHidden" name="bulkStylesHidden"/>
 		</div>
 	    <div>
 			<div style="max-height:550px; height:80%; overflow-y:auto; margin-left:-2%;">

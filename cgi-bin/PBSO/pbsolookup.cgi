@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -35,7 +35,7 @@ my $user = getUser();
 my @myqueues = ($user);
 my @sharedqueues;
 
-createTab("PBSO Search", "/cgi-bin/case/PBSO/pbsolookup.cgi", 1, 1, "index");
+createTab("PBSO Search", "/cgi-bin/PBSO/pbsolookup.cgi", 1, 1, "index");
 my $session = getSession();
 
 getSubscribedQueues($user, $cdbh, \@myqueues);

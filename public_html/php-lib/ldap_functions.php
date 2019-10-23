@@ -3,6 +3,8 @@ function ldapLookup(&$data, $filter, $config, $ldap=null, $fields, $base, $scope
     if ($ldap == null) {
         $host = (string) $config->{'ldapHost'}[0];
         $ldap = ldap_connect($config->ldapHost[0]);
+		ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+		ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
         $r = ldap_bind($ldap, $config->{'bindDn'}, $config->{'bindPw'});
     }
     

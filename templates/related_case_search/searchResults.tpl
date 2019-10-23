@@ -126,7 +126,7 @@
 	                        	{foreach from=$parties item=case}
 	                            	<tr class="eventRow">
 	                                    <td style="text-align: left">
-	                                        {$case.FirstName} {$case.MiddleName} {$case.LastName}
+	                                        {$case.FirstName} {$case.MiddleName} {$case.LastName} {$case.Suffix}
 	                                    </td>
 	                                    <td class="datecol">
 	                                    	{$case.DOB}

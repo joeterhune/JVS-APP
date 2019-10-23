@@ -5,7 +5,28 @@
 	    	
 	    	{if $isOrder}
 		    	$(document).on('click','#step1',function() {
-					window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+					$('#dialogSpan').html("By clicking OK, you will be returned to the form selection screen.  Your current document will be completely regenerated and any text changes you have made will be overwritten.");
+					$('#dialogDiv').dialog({
+						resizable: false,
+						minheight: 150,
+						width: 500,
+						modal: true,
+						title: 'Order Regeneration',
+						buttons: {
+						   	"OK": function() {
+						       	$(this).dialog( "close" );
+						       	window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+						        return false;
+						    },
+						    "Cancel": function() {
+						       	$(this).dialog( "close" );
+						        return false;
+						    }
+						}
+					});
+						                
+					return false;
+									
 				});
 			{/if}
 			
@@ -93,6 +114,14 @@
 						        buttons: {
 						        	"OK": function() {
 						            	$(this).dialog( "close" );
+						            	if($("#changeToExternal").val() == "1"){
+						            		$(".wfpartysrc").val("clerk");
+						            		$(".wfpartysrc").css("background-color", "#fffffe");
+						            	}
+						            	else{
+						            		$(".wfpartysrc").val("previousorder");
+						            		$(".wfpartysrc").css("background-color", "#ff9999");
+						            	}
 						                return false;
 						            }
 						        }
@@ -226,7 +255,6 @@
 	        <tr>
 	        	<td colspan="5">&nbsp;</td>
 	        </tr>
-	        {if $isorder}
 	        <tr>
 	            <td colspan="2">
 	                Case Caption:
@@ -235,8 +263,9 @@
 	                <textarea class="wfcasestyle" name="wfcasestyle" rows="12" cols="80">{$caption}</textarea>
 	            </td>
 	        </tr>
-	        {/if}
-	        {for $i=0; $i < $cclist.Attorneys|@count; $i++}
+			{if (isset($cclist.Attorneys) && (is_array($cclist.Attorneys)))}
+			{$attycount = $cclist.Attorneys|@count}
+	        {for $i=0; $i < $attycount; $i++}
 				{$attorney = $cclist.Attorneys.$i}
 				{if $attorney.check && $attorney.check == '1'}
 					{$ck = "checked"}
@@ -275,6 +304,9 @@
 				</tr>
 	        
 	        {/for}
+			{else}
+			{$attycount = 0}
+			{/if}
 	        
 	        {for $i = 0; $i < ($cclist.Parties|@count); $i++}
 		        {$party = $cclist.Parties.$i}
@@ -283,7 +315,7 @@
 				{else}
 					{$ck = ""}
 				{/if}
-			        {$varindex = $i + ($cclist.Attorneys|@count)}
+			        {$varindex = $i + $attycount}
 			        <tr>
 			            <td>
 			                <input class="group{$varindex} cccheck" name="cclist_{$varindex}_check" type="checkbox" value="1" {$ck}/>
@@ -339,7 +371,7 @@
 	        	</td>
 	        </tr>
 	    </table>
-		 
+		<input type="hidden" name="changeToExternal" id="changeToExternal" value="{$clerkOnly}"/>
 	</form>
 	</div>
 	<br class="clear"/><br class="clear"/>

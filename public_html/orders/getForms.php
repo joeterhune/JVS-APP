@@ -1,9 +1,9 @@
 <?php 
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);

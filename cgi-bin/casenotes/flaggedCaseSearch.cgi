@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib "$ENV{'DOCUMENT_ROOT'}/../lib";
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -42,7 +42,7 @@ my $user = getUser();
 my @myqueues = ($user);
 my @sharedqueues;
 
-createTab("Flagged Case Search", "/cgi-bin/case/casenotes/flaggedCaseSearch.cgi", 1, 1, "index");
+createTab("Flagged Case Search", "/cgi-bin/casenotes/flaggedCaseSearch.cgi", 1, 1, "index");
 my $session = getSession();
 
 getSubscribedQueues($user, $cdbh, \@myqueues);
@@ -83,6 +83,5 @@ $data{'active'} = "index";
 $data{'tabs'} = $session->get('tabs');
 
 print $info->header;
-
 doTemplate(\%data, "$templateDir/top", "header.tt", 1);
 doTemplate(\%data, "$templateDir/casenotes", "flaggedCaseSearch.tt", 1);

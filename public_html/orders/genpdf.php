@@ -5,12 +5,13 @@
 
 ini_set("max_execution_time", 300);
 
-require_once "php-lib/common.php";
-require_once "php-lib/db_functions.php";
-include "icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . '/php-lib/common.php';
+require_once $_SERVER['JVS_DOCROOT'] . '/php-lib/db_functions.php';
+include $_SERVER['JVS_DOCROOT'] . '/icmslib.php';
+require_once($_SERVER['JVS_DOCROOT'] . '/workflow/wfcommon.php');
+include $_SERVER['JVS_DOCROOT'] . '/caseinfo.php';
+
 require_once('Smarty/Smarty.class.php');
-require_once("workflow/wfcommon.php");
-include "caseinfo.php";
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -31,6 +32,7 @@ if(!empty($options)){
 	else{
 		$docid = getReqVal('docid');
 	}
+	
 	if(isset($options['u']) && !empty($options['u'])){
 		$ucn = $options['u'];
 	}
@@ -43,6 +45,9 @@ $docInfo = array();
 
 $dbh = dbConnect("icms");
 $user = $_SESSION['user'];
+$disable_reason = '';
+$locked = 0;
+$locked_user = null;
 
 if(isset($docid) && !empty($docid)){
 	//unsetQueueVars();
@@ -58,9 +63,7 @@ if(isset($docid) && !empty($docid)){
 		getSubscribedQueues($user, $dbh, $subscribed_queues);
 		$shared_queues = array();
 		getSharedQueues($user, $dbh, $shared_queues);
-	
-		//if(in_array($docInfo['creator'], $subscribed_queues) || (in_array($docInfo['creator'], $shared_queues)) ||
-		//(in_array($docInfo['queue'], $subscribed_queues)) || (in_array($docInfo['queue'], $shared_queues))){
+		
 		if(in_array($docInfo['queue'], $subscribed_queues) || (in_array($docInfo['queue'], $shared_queues))){
 			$editable = true;
 		}
@@ -72,7 +75,7 @@ if(isset($docid) && !empty($docid)){
 	
 	if(isset($docInfo['portal_filing_id'])){
 		$fsQuery = "SELECT
-						filing_status
+		filing_status
 					FROM
 						portal_info.portal_filings
 					WHERE
@@ -117,7 +120,7 @@ getSharedQueues($user, $dbh, $sharedqueues);
 $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
-if($env && ($env == 'Y')){
+if(isset($env) && ($env == 'Y')){
 	$showJson = true;
 }
 else{
@@ -128,7 +131,7 @@ if(empty($isOrder)){
 	$isOrder = $docInfo['isOrder'];
 }
 
-$url = "/case/orders/genpdf.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/orders/genpdf.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 	createTab($docInfo['ucn'], $url, 1, 1, "cases",
 	array(
 		"name" => "Order Creation",
@@ -181,7 +184,7 @@ else{
 $formname = $row['title'];
 
 $fname = createOrderPDF($formhtml, $ucn, $formname, $isTemplate);
-$fname = sprintf(str_replace("/var/www/html", "", $fname));
+$fname = sprintf(str_replace($_SERVER['JVS_DOCROOT'], "", $fname));
 
 //Check to see if attachments were added....
 $suppQuery = "SELECT 
@@ -227,25 +230,21 @@ if(!empty($suppDocs)){
 	}
 }
 
-$sigdiv = $docInfo['signature_html'];
+$sigdiv = key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null;
 
-//Let's save this anyway....
-//if ((isset($sigdiv)) && ($sigdiv != "")) {
-    // It's a signed doc.  Save the PDF to the workflow table
-    $filestat = stat("/var/www/html" . $fname);
-    $bsize = $filestat[7];
-    $query = "
-        update
-            workflow
-        set
-            signed_pdf = :pdfdata,
-            signed_filename = :filename,
-            signed_binary_size = :binarysize
-        where
-            doc_id = :docid
-    ";
-    doQuery($query, $dbh, array('pdfdata' => encodeFile("/var/www/html" . $fname), 'filename' => basename($fname), 'binarysize' => $bsize, 'docid' => $docid));
-//}
+$filestat = stat($_SERVER['JVS_DOCROOT'] . $fname);
+$bsize = $filestat[7];
+$query = "
+	update
+		workflow
+	set
+		signed_pdf = :pdfdata,
+		signed_filename = :filename,
+		signed_binary_size = :binarysize
+	where
+		doc_id = :docid
+";
+doQuery($query, $dbh, array('pdfdata' => encodeFile($_SERVER['JVS_DOCROOT'] . $fname), 'filename' => basename($fname), 'binarysize' => $bsize, 'docid' => $docid));
 
 $user = $_SESSION['user'];
 $logMsg = "User $user generated PDF for document ID $docid";
@@ -267,12 +266,12 @@ if(!$showJson){
 	$smarty->assign('wfCount', $wfcount);
 	$smarty->assign('active', "cases");
 	$smarty->assign('tabs', $_SESSION['tabs']);
-	$smarty->assign('filename', sprintf(str_replace("/var/www/html","",$fname)));
+	$smarty->assign('filename', $fname);
 	$smarty->display('top/header.tpl');
 	echo $smarty->fetch("orders/pdf.tpl");
 }
 else{
 	$results = array();
-	$results['filename'] = sprintf(str_replace("/var/www/html","",$fname));
+	$results['filename'] = $fname;
 	returnJson($results);
 }

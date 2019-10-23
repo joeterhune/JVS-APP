@@ -3,7 +3,7 @@
 # $Id: flag.cgi 2196 2015-08-22 12:51:51Z rhaney $
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -55,18 +55,11 @@ my $temp = $params{'ucn'};
 createTab("Flags and Notes", "/casenotes/flag.cgi?ucn=" . $temp, 1, 1, "cases");
 my $session = getSession();
 
-my $casetype = '';
-# modified 11/20/2018 jmt benchmark ucn used as casenum as casenum has spaces
-if ($params{'ucn'} =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-	$casetype = $2;
-}else{
-	## Do this just in case we have the leading "50-" (which we will for Showcase)
-	$temp =~ s/^58//g;
-	my @pieces = split(" ",$temp);
-	#my $casetype = $params{'caseType'};
-	$casetype = $pieces[1];
-}
-
+## Do this just in case we have the leading "58-" (which we will for Showcase)
+$temp =~ s/^58-//g;
+my @pieces = split("-",$temp);
+#my $casetype = $params{'caseType'};
+my $casetype = $pieces[1];
 
 my $query = qq {
 	select
@@ -110,10 +103,9 @@ $query = qq {
 };
 
 my $querycase = $params{'ucn'};
-# modified 11/20/2018 jmt benchmark ucn used as casenum as casenum has spaces instead of dashes
-#if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-#    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
-#}
+if ($querycase =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
+    $querycase = sprintf("%04d-%s-%06d", $1, $2, $3);
+}
 
 my @vals = ($querycase);
 my @currentFlags;

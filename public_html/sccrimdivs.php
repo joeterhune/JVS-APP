@@ -19,7 +19,7 @@
 <h2>Circuit Criminal</h2>
 <ul>
 <?php
-$fp=fopen("/usr/local/icms/etc/scjudgepage.conf","r");
+$fp=fopen($_SERVER['JVS_ROOT'] . "/conf/scjudgepage.conf","r");
 $num=1;
 while (!feof($fp)) {
   $line=fgets($fp,1024);

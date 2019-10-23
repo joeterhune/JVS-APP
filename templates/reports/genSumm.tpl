@@ -6,13 +6,12 @@
 	</div>
 	
 	<div class="h1">
-	    Sarasota County
+	    {$county} County
 	</div>
 	
 	<p class="instructions">
-	    {$prettyDate}
+	    As of {$prettyDate}
 	</p>
-	
 	<table id="gensumm_{$divName}">
 	    <tr>
 	        <td id="rptname_{$divName}" style="background-color: #428bca;">
@@ -24,13 +23,13 @@
 	                <td>
 	                    <table>
 	                        {foreach $caseTypes as $caseType}
-	                        <tr>
+							<tr>
 	                            {if isset($caseType.blank)}
 	                            <td colspan="2">&nbsp;</td>
 	                            {else}
 	                            <td class="label1">
-	                                <a href="/genlist.php?rpath={$rpath}{$caseType.$xpath}&divname={$divName}&rpttype={$caseType.xpath}&yearmonth={$yearMonth}">
-	                                    {$caseType.desc}
+	                                <a href="/genlist.php?type={$courttype}&divname={$divName}&rpttype={$caseType.rpttype}&yearmonth={$yearMonth}">
+	                                    {$caseType.type}
 	                                </a>
 	                            </td>
 	                            <td class="data1">

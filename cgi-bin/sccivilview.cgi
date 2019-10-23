@@ -6,7 +6,7 @@
 # location of PBSO.pm file - can't make relative in case juvenile
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib "$ENV{'JVS_PERL5LIB'}";
 };
 
 use strict;
@@ -83,7 +83,7 @@ sub doit {
 	my $icmsuser = getUser();
 	
 ############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};

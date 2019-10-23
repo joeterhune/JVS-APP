@@ -1,6 +1,10 @@
 package File_Funcs;
-use strict;
-use warnings;
+
+BEGIN {
+	use lib $ENV{'JVS_PERL5LIB'};
+	use strict;
+	use warnings;
+}
 
 use Fcntl qw(:DEFAULT :flock);
 

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -27,13 +27,17 @@ use Common qw (
 use Showcase qw (
     $db
 );
-
+use XML::Simple;
 checkLoggedIn();
 
 my $info = new CGI;
 
 my $user = getUser();
-if (!inGroup($user, "CAD-ICMS-NOTES")) {
+############### Added 04/17/2019 jmt security from conf 
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
+if (!inGroup($user, $notesGroup)) {
     print $info->header;
     print "You do not have rights to use this function.\n";
     exit;

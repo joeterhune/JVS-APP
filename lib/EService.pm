@@ -1,17 +1,11 @@
 package EService;
 
-BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
-};
-
 use strict;
 use warnings;
-
 use CGI::Carp qw(fatalsToBrowser);
 use XML::Simple;
 use JSON;
-
-use Mail::RFC822::Address qw(valid validlist);
+use Email::Valid;
 
 use DB_Functions qw(
 	dbConnect
@@ -40,7 +34,7 @@ use Common qw(
 use Showcase qw (
     $db
 );
-use Data::Dumper;
+
 use File::Temp qw (tempfile);
 
 use MIME::Base64;
@@ -65,8 +59,8 @@ sub getPortalAddresses {
     my $portalAddresses = shift;
     
     return if (!defined($ucn));
-        
-    my $portalXml = `/usr/bin/php $ENV{'APP_ROOT'}/icms/bin/portal/getServiceList.php -x -u $ucn`;
+    
+    my $portalXml = `export JVS_ROOT=$ENV{'JVS_ROOT'} && export JVS_DOCROOT=$ENV{'JVS_DOCROOT'} && /usr/bin/php $ENV{'JVS_ROOT'}/bin/portal/getServiceList.php -x -u $ucn`;
     
     my $ref = XMLin(
                     $portalXml,
@@ -85,7 +79,7 @@ sub getPortalAddresses {
             
             foreach my $atype ('PrimaryEmailAddress','AlternateEmailAddress1','AlternateEmailAddress2') {
                 my $esd = "esd:$atype";
-                next if (inArray(\@emails, lc($filer->{$esd})));
+                next if ((defined($filer->{$esd})) && (inArray(\@emails, lc($filer->{$esd}))));
                 if ((defined($filer->{$esd})) && (ref($filer->{$esd}) ne "HASH")) {
                 	my @filer_emails = split /;/, $filer->{$esd};
 					foreach my $e (@filer_emails){
@@ -499,7 +493,7 @@ sub getAttorneyAddresses {
 		# Take the email address apart for people who put stupid stuff in their email field
 		my @temp = split(/[;,\ ]+/, $address->{'email_addr'});
 		foreach my $piece (@temp) {
-			if (valid($piece)) {
+			if (Email::Valid->address($piece)) {
 				$address->{'email_addr'} = $piece;
 				last;
 			}
@@ -557,14 +551,17 @@ sub getAgencyAddresses {
     my $addressRef = shift;
 	my $dbh = shift;
 	my $caseid = shift;
+    
     my $hasPD = 0;
     my $hasSA = 0;
     my $hasORCC = 0;
+    
     if (!defined($dbh)) {
         $dbh = dbConnect("ols");
     }
-
-    my $caseinfo = getCaseInfo($casenum,$dbh);
+    
+    my $caseinfo = getCaseInfo($casenum);
+    
     my $div = $caseinfo->{'DivisionID'};
     my $case_type = $caseinfo->{'CaseType'};
     
@@ -815,7 +812,7 @@ sub createFilingXml {
     $data{'bar_id'} = $eFileInfo->{'bar_num'} . "FL";
     $data{'ClerkCase'} = $casenum;
     $data{'UCN'} = $ucn;
-    $data{'county_id'} = 50;
+    $data{'county_id'} = 58;
     $data{'judicial_circuit'} = "Twelfth Circuit";
     $data{'county'} = "Sarasota";
 
@@ -886,7 +883,9 @@ sub createFilingXml {
     
     my $meta = doTemplate(\%data, "$templateDir/portal", "ReviewFiling.tt", 0);
     
-    my ($fh, $tmpfile) = tempfile(DIR => "/tmp","SUFFIX" => "-efile.xml");
+    my $tempDir = sprintf("%s/tmp", $ENV{'JVS_ROOT'});
+    
+    my ($fh, $tmpfile) = tempfile(DIR => $tempDir,"SUFFIX" => "-efile.xml");
     print $fh $meta;
     close($fh);
 

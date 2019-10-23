@@ -4,7 +4,7 @@
 \m%sig%
 \m%ddtrsig%, Traffic Hearing Officer
 
-<a>For a better translation of this document contact cad-ada@jud12.flcourts.org</a>
+<a>For a better translation of this document contact cad-ada@pbcgov.org</a>
 
 Copies provided to:
 %cc%

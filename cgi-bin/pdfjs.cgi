@@ -18,12 +18,12 @@ print <<EOS;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="google" content="notranslate">
-    <link rel="stylesheet" href="/case/pdfjs/web/viewer.css"/>
-    <script src="/case/pdfjs/web/compatibility.js"></script>
-  <link rel="resource" type="application/l10n" href="/case/pdfjs/web/locale/locale.properties"/>
-  <script src="/case/pdfjs/web/l10n.js"></script>
-  <script src="/case/pdfjs/build/pdf.js"></script>
-  <script src="/case/pdfjs/web/viewer.js"></script>
+    <link rel="stylesheet" href="/pdfjs/web/viewer.css"/>
+    <script src="/pdfjs/web/compatibility.js"></script>
+  <link rel="resource" type="application/l10n" href="/pdfjs/web/locale/locale.properties"/>
+  <script src="/pdfjs/web/l10n.js"></script>
+  <script src="/pdfjs/build/pdf.js"></script>
+  <script src="/pdfjs/web/viewer.js"></script>
 
   <style>
   #openFile, #secondaryOpenFile, #presentationMode, #secondaryPresentationMode, #download, #secondaryDownload, #viewBookmark, #secondaryViewBookmark {
@@ -400,7 +400,7 @@ print <<EOS;
   </div>
 </div>
   <script type="text/javascript">
-  PDFJS.workerSrc = "/case/pdfjs/build/pdf.worker.js";
+  PDFJS.workerSrc = "/pdfjs/build/pdf.worker.js";
 
   if(window.location.hash.indexOf("toolbar=0") > 0){
     document.getElementById('toolbar').setAttribute('hidden', 'true');

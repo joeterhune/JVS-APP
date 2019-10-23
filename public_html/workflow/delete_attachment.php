@@ -1,29 +1,37 @@
 <?php
 
-include "../php-lib/common.php";
-include "../php-lib/db_functions.php";
-include "../icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/common.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
 
 $doc_id = $_REQUEST['doc_id'];
 
 $dbh = dbConnect("ols");
 $idbh = dbConnect("icms");
 
-$docQuery = "SELECT file
-			FROM olscheduling.supporting_documents
-			WHERE supporting_doc_id = :doc_id";
+$docQuery = "
+	SELECT
+		file
+	FROM
+		olscheduling.supporting_documents
+	WHERE
+		supporting_doc_id = :doc_id";
 
 $row = getDataOne($docQuery, $dbh, array("doc_id" => $doc_id));
 
 $query = "
-	DELETE FROM olscheduling.supporting_documents
-    WHERE supporting_doc_id = :doc_id
-	AND jvs_doc = 1";
+	DELETE FROM
+		olscheduling.supporting_documents
+    WHERE
+		supporting_doc_id = :doc_id
+		AND jvs_doc = 1";
 
 doQuery($query, $dbh, array ('doc_id' => $doc_id));
 
-if(file_exists($row['file'])){
-	unlink($row['file']);
+$delFile = sprintf("%s/%s", $_SERVER['JVS_DOCROOT'], $row['file']);
+
+if(file_exists($delFile)){
+	unlink($delFile);
 }
     
 $user = $_SESSION['user'];

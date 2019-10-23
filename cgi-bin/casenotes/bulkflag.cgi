@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'}; 
+    use lib "$ENV{'JVS_PERL5LIB'}"; 
 }
 
 use strict;
@@ -27,7 +27,7 @@ use DB_Functions qw (
 use Casenotes qw (
     getFlagTypes
 );
-
+use XML::Simple;
 checkLoggedIn();
 
 use CGI;
@@ -35,11 +35,14 @@ use CGI;
 my $info = new CGI;
 
 my $user = getUser();
-#if (!inGroup($user, "CAD-ICMS-NOTES")) {
-#	print $info->header();
-#    print "<h1 style='color:red;text-align:center;margin-top:20px;'>You do not have rights to use this function.</h1>\n";
-#    exit;
-#}
+############### Added 04/17/2019 jmt security from conf 
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
+if (!inGroup($user, $notesGroup)) {
+    print "You do not have rights to use this function.\n";
+    exit;
+}
 
 my $fdbh = dbConnect("icms");
 

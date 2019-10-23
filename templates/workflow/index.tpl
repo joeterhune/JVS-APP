@@ -224,7 +224,7 @@
         	window.location="/workflow/my_audit_log.php?queue={$myAuditLog}";
         });
         
-        $('#wfcount').html({$wfcount});
+        $('#wfcount').html({$wfCount});
         
         {literal}
 	        $("#workflowtabs").tabs({beforeLoad: PreventTabReload});
@@ -284,6 +284,38 @@
 	            height:200,
 	            title: "Select Queue"
 	        });
+	    });
+	    
+	    $('.bulkdelete').on("click", function() {
+	        var deletecheck = $('.qtable').find('.deleteCheck:checked');
+	        var bulkdelete = $(deletecheck).length;
+	        
+	        if (bulkdelete == 0) {
+	            return false;
+	        }
+	    
+	        $('#dialogSpan').html("Are you sure you wish to delete these " + bulkdelete + " item(s)?");
+		    $('#dialogDiv').dialog({
+		        resizable: false,
+		        minheight: 150,
+		        width: 500,
+		        modal: true,
+		        title: 'Confirm Deletion',
+		        buttons: {
+		            "Yes": function() {
+		                $(this).dialog("close");
+		                $(deletecheck).each(function () {
+				            var docid = $(this).val();
+							DeleteEntry(docid);
+						});
+		                return false;
+		            },
+		            "No": function() {
+		                $(this).dialog("close");
+		                return false;
+		            }
+		        }
+		    });
 	    });
 	    
 	    $('.bulkefile').on("click", function() {
@@ -392,6 +424,9 @@
 	    	if($("#TransferLink").hasClass('hideCol')){
 	    		$("#TransferLink").click();
 	    	}
+	    	if($("#DeleteLink").hasClass('hideCol')){
+	    		$("#DeleteLink").click();
+	    	}
     	}
     });
     
@@ -409,8 +444,8 @@
                                 </label>
                             </td>
                             <td>
-                                <input type="text" style="width: 20em" name="wf_ucn" id="wf_ucn" class="text ui-widgit-content ui-corner-all" onChange="HandleWorkFlowCaseFind();"/>
-                                <input type="button" class="button" id="wf_findcase" value="Find" onClick="HandleWorkFlowCaseFind();"/>
+                                <input type="text" style="width: 20em" name="wf_ucn" id="wf_ucn" class="text ui-widgit-content ui-corner-all" onChange="HandleWorkFlowCaseFind('wf_ucn');"/>
+                                <input type="button" class="button" id="wf_findcase" value="Find" onClick="HandleWorkFlowCaseFind('wf_ucn');"/>
                             </td>
                         </tr>
                         
@@ -576,7 +611,7 @@
 					{/if}
 				{/foreach}
 			{/if}
-			{include file='workflow/queue.tpl' queueName=$queueName queueItems=$queueItems[$key] qType=$qType canSign=$canSign}
+			{include file='workflow/queue.tpl' queueName=$queueName queueItems=$queueItems[$key] qType=$qType canSign=$cansign}
 		</div>
 	</div>
 </div>
@@ -609,17 +644,11 @@
         
         <ul class="wfmenu" id="wfmenu" style="width:150px;display:none;cursor:pointer;z-index:100">
             <li class="wfmenuitem" id="wfdocedits1" data-choice="settings">Edit Settings</li>
-            <!--<li class="wfmenuitem">Parties &amp; Addresses</li>-->
-            <!--<li class="wfmenuitem" id=wfdoceditd>Edit Document</li>-->
-            <!--<li class="wfmenuitem" id=wfdocedits>Edit Settings</li>-->
             <li class="wfmenuitem" data-choice="transfer">Transfer</li>
-            <!--<li class="wfmenuitem">Envelopes for Parties</li>-->
-            <!--<li class="wfmenuitem" id=wfdocemail>E-mail to Parties</li>-->
-            <!--<li class="wfmenuitem" id=wfdocefile>E-File with Clerk</li>-->
             <li class="wfmenuitem" data-choice="flag">Flag/Unflag</li>
             <li class="wfmenuitem" data-choice="reject">Reject</li>
             <li class="wfmenuitem" data-choice="delete">Delete</li>
-            <li class="wfmenuitem" data-choice="finish" id=wfdocfinish>Finish</li>
+            <li class="wfmenuitem" data-choice="finish" id="wfdocfinish">Finish</li>
         </ul>
         
         

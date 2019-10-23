@@ -14,7 +14,7 @@
 # 
 
 BEGIN {
-   use lib "$ENV{'PERL5LIB'}";
+   use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -56,7 +56,7 @@ my $fdbh = dbConnect("icms");
 my @myqueues = ($user);
 my @sharedqueues;
 
-my $url = "/cgi-bin/case/PBSO/pbsosearch.cgi";
+my $url = "/cgi-bin/PBSO/pbsosearch.cgi";
 my $count = 0;
 foreach my $p(keys %params){
 	if($count < 1){
@@ -312,7 +312,7 @@ getData(\@list,$resqry,$pbsoconn);
 
 my $rows = scalar(@list);
 
-my $dtitle1 = qq{Sarasota County Sheriff's Office Booking Information<br/>for $type matching: $name};
+my $dtitle1 = qq{Palm Beach County Sheriff's Office Booking Information<br/>for $type matching: $name};
 
 if($custody eq "incustody") {
     $dtitle1 .= " and In PBSO Custody ";
@@ -358,12 +358,12 @@ if (scalar(@list)) {
             };
 		}	
 		$record->{'JacketLink'} = qq{
-            <a class="mjidLink" href="/cgi-bin/case/pbsojview.cgi?jacket=$record->{'InmateID'}">
+            <a class="mjidLink" href="/cgi-bin/pbsojview.cgi?jacket=$record->{'InmateID'}">
                 $record->{'InmateID'}
             </a>
         };
 		$record->{'BookingLink'} = qq {
-            <a class="bookingLink" href="/cgi-bin/case/pbsobview.cgi?jacket=$record->{'InmateID'}&booking=$record->{'BookingID'}">
+            <a class="bookingLink" href="/cgi-bin/pbsobview.cgi?jacket=$record->{'InmateID'}&booking=$record->{'BookingID'}">
                 $record->{'BookingID'}
             </a>
         };

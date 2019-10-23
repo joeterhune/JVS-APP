@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 };
 
 use strict;
@@ -55,9 +55,10 @@ use Showcase qw{
 };
 
 use JSON;
+
 use CGI;
 use CGI::Carp qw(fatalsToBrowser);
-use Data::Dumper;
+
 checkLoggedIn();
 
 my $info = new CGI;
@@ -65,7 +66,7 @@ my %params = $info->Vars;
 
 my @recipients;
 
-my $esdbh = dbConnect("ols");
+my $esdbh = dbConnect("eservice");
 my $jdbh = dbConnect("judge-divs");
 my $dbh = dbConnect(getShowcaseDb());
 
@@ -101,7 +102,6 @@ my $casenum = sanitizeCaseNumber($ucn);
 my $caseid = $params{'caseid'};
 $casenum = getSCCaseNumber($casenum);
 
-
 if(!defined($caseid)){
 	$caseid = getCaseID($casenum);
 }
@@ -122,9 +122,8 @@ if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
 	$href .= "/cgi-bin/eservice/eService.cgi?fromWF=1&efileCheck=1&clerkFile=1&ucn=" . $ucn . "&docid=" . $doc_id;
 }
 else{
-	$href = "/cgi-bin/eservice/eService.cgi?case=" . $casenum . "&caseid=" . $caseid . "&showOnly=" . $showOnly;
+	$href = "/cgi-bin/eservice/eService.cgi?case=" . $casenum . "&caseid=" . $caseid . "&showOnly=" . $showOnly . "&efileCheck=1";
 }
-
 
 createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 { 
@@ -134,8 +133,6 @@ createTab($casenum, "/cgi-bin/search.cgi?name=" . $casenum, 1, 1, "cases",
 	"href" => $href,
 	"parent" => $casenum
 });
-
-
 $session = getSession();
 
 my $fdbh = dbConnect("icms");
@@ -147,12 +144,12 @@ getSubscribedQueues($user, $fdbh, \@myqueues);
 getSharedQueues($user, $fdbh, \@sharedqueues);
 my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
+
 my $wfcount = getQueues(\%queueItems, \@allqueues, $fdbh);
 
 my $caseinfo = getCaseInfo($casenum, $dbh, $caseid);
 
 my $query;
-
 
 my $division = $caseinfo->{'DivisionID'};
 if (!defined($division)) {
@@ -161,11 +158,9 @@ if (!defined($division)) {
     getDivsLDAP(\@divs, $user);
     $division = $divs[0];
 }
-my $ldapFilter = "(|(mail=jterhune\@jud12.flcourts.org)(mail=jterhune\@jud12.flcourts.org))";
 
-# Todo -- setup distribution emails
-#my $ldapFilter = "(|(mail=CAD-Division$division*\@jud12.flcourts.org)(mail=CAD-CaseManager$division*\@jud12.flcourts.org))";
-my $ldapBase = "ou=Manatee,dc=JUD12,dc=LOCAL";
+my $ldapFilter = "(|(mail=Division$division*\@jud12.flcourts.org)(mail=CaseManager$division*\@jud12.flcourts.org))";
+my $ldapBase = "ou=Users,dc=JUD12,dc=LOCAL";
 my @ldapFields = (
 	"displayName",
 	"mail",
@@ -205,7 +200,6 @@ my $mag_email_query = qq {
     and
     	active = 1
 };
-
 getData(\@mag_email_temp, $mag_email_query, $jdbh, {valref => [$user]});
 
 if(scalar(@mag_email_temp) > 0){
@@ -229,14 +223,14 @@ foreach my $sender (@senderTmp) {
 if($division eq "AC"){
 	my %newSender;
 	$newSender{'telephoneNumber'} = "";
-	$newSender{'mail'} = "CriminalAppeals\@jud12.flcourts.org";
+	$newSender{'mail'} = "CriminalAppeals\@pbcgov.org";
 	$newSender{'displayName'} = "Criminal Appeals";
     push(@senders, \%newSender);
 }
 elsif($division eq "AY"){
 	my %newSender;
 	$newSender{'telephoneNumber'} = "";
-	$newSender{'mail'} = "CivilAppeals\@jud12.flcourts.org";
+	$newSender{'mail'} = "CivilAppeals\@pbcgov.org";
 	$newSender{'displayName'} = "Civil Appeals";
     push(@senders, \%newSender);
 }
@@ -253,8 +247,10 @@ if(defined($params{'fromWF'}) && ($params{'fromWF'} eq '1')){
 	$data{'doc_id'} = $params{'doc_id'};
 	$params{'doc_title'} = $docData->{'title'};
 	
-	#Need to regenerate PDF first... 
-	my $orderResp = `/usr/bin/php /var/jvs/public_html/orders/genpdf.php -e Y -d $params{'doc_id'} -u "$casenum"`;
+	#Need to regenerate PDF first...
+	
+	# Yuck - need a better way to get these environment variables to the external script
+	my $orderResp = `export JVS_ROOT=$ENV{'JVS_ROOT'} && export JVS_DOCROOT=$ENV{'JVS_DOCROOT'} && /usr/bin/php $ENV{'JVS_DOCROOT'}/orders/genpdf.php -e Y -d $params{'doc_id'} -u "$casenum"`;
 	my $orderJSON = decode_json($orderResp);
 	$params{'pdf'} = $orderJSON->{'filename'};
 	
@@ -360,7 +356,6 @@ if (!defined($params{'showOnly'})) {
     }
 }
 
-
 if (defined($params{'filingid'})) {
     $refile = 1;
     $data{'filingid'} = $params{'filingid'};
@@ -371,14 +366,14 @@ if (defined($params{'filingid'})) {
 
 $data{'systemType'} = getSystemType();
 
-$data{'UCN'} = $caseinfo->{'ucn'};
+$data{'UCN'} = $caseinfo->{'CaseNumber'};
 
 #LK - Taking this out 3/1/16
 #if (scalar(@senders)) {
 	getAllAddresses($casenum,\@recipients,$esdbh,$caseid);
     
-    if ($caseinfo->{'ucn'} =~ /^58/) {
-        $ucn = $caseinfo->{'ucn'};
+    if ($caseinfo->{'CaseNumber'} =~ /^58/) {
+        $ucn = $caseinfo->{'CaseNumber'};
         $ucn =~ s/-//g;
     } 
     
@@ -432,12 +427,11 @@ $data{'UCN'} = $caseinfo->{'ucn'};
             }
         }
     }
-
+    
     # Are there any agency addresses?
     my @agencyAddrs;
+    getAgencyAddresses($caseinfo->{'CaseNumber'}, \@agencyAddrs, $esdbh, $caseid);
     
-    getAgencyAddresses($caseinfo->{'ucn'}, \@agencyAddrs, $esdbh, $caseid); 
-  
     if (scalar(@agencyAddrs)) {
     	foreach my $address (@agencyAddrs) {
             $address->{'from_portal'} = 0;
@@ -484,8 +478,7 @@ $data{'UCN'} = $caseinfo->{'ucn'};
             }
     	}
     }
-
- 
+    
     # Look up any stored "additional" addresses
     my @addl;
     $query = qq {

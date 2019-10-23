@@ -5,7 +5,7 @@ require_once("./icmslib.php");
 require_once('Smarty/Smarty.class.php');
 require_once("workflow/wfcommon.php");
 
-$config = simplexml_load_file($icmsXml);
+$config = simplexml_load_file($_SERVER['JVS_ROOT'] . ".conf/ICMS.xml");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);

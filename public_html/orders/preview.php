@@ -1,14 +1,16 @@
 <?php
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-include "../icmslib.php";
+require_once($_SERVER['JVS_DOCROOT'] . '/php-lib/common.php');
+require_once($_SERVER['JVS_DOCROOT'] . '/php-lib/db_functions.php');
+include $_SERVER['JVS_DOCROOT'] . '/icmslib.php';
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
-include "../caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . '/workflow/wfcommon.php');
+include $_SERVER['JVS_DOCROOT'] . '/caseinfo.php';
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
 
 $dbh = dbConnect("icms");
 $close = getReqVal("close");
@@ -33,8 +35,8 @@ if(isset($docid) && !empty($docid)){
 	$ucn = $docInfo['ucn'];
 	$docid = $docInfo['docid'];
 	$form_name = $docInfo['form_name'];
-	$form_id = $docInfo['form_id'];
-	$sig_image = $docInfo['signature_img'];
+	$form_id = key_exists('form_id', $docInfo)? $docInfo['form_id'] : null;
+	$sig_image = key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null;
 	
 	if($docInfo['creator'] == $user || ($docInfo['queue'] == $user)){
 		$editable = true;
@@ -95,8 +97,19 @@ if(isset($docid) && !empty($docid)){
 	}
 }
 
+unset($_SESSION['saved_form_data']);
+
 $fromTemplate = false;
 if(isset($_REQUEST['fromTemplate'])){
+	
+	if(!empty($_REQUEST)){
+		foreach($_REQUEST as $key => $r){
+			if($key != "orderTitle" && ($key != "form_name") && ($key != "generic_order_title")){
+				$_REQUEST[$key] = iconv('UTF-8', 'ASCII//TRANSLIT', $r);
+			}
+		}
+	}
+	
 	$docInfo['formData'] = $_REQUEST;
 	$docInfo['formid'] = $_REQUEST['form_id'];
 	$docInfo['isOrder'] = 1;
@@ -111,7 +124,6 @@ if(isset($_REQUEST['fromWF'])){
 	$docInfo['ucn'] = $_REQUEST['ucn'];
 	$docInfo['isOrder'] = $_REQUEST['isOrder'];
 	$isOrder = $_REQUEST['isOrder'];
-	$docInfo['formData'] = "";
 }
 
 if(isset($_REQUEST['orderTitle'])){
@@ -123,7 +135,7 @@ else{
 
 //It's an IGO and no document was actually created yet
 if(empty($docid) && empty($_REQUEST['fromTemplate'])){
-	header("Location: /case/orders/igo.php?ucn=" . $ucn . "&new=Y");
+	header("Location: /orders/igo.php?ucn=" . $ucn . "&new=Y");
 	die;
 }
 
@@ -131,7 +143,7 @@ if(empty($isOrder)){
 	$isOrder = $docInfo['isOrder'];
 }
 $showclerk = getReqVal("showclerk"); # normally shows last order, then clerk...
-$partypath = "/usr/local/icms/workflow/parties";
+$partypath = $_SERVER['JVS_ROOT'] . "/workflow/parties";
 $sign = getReqVal('sign');
 
 if(!empty($sign) && $sign == 'Y'){
@@ -142,6 +154,10 @@ else{
 }
 
 $FORMDATA = array();
+
+$_SESSION['saved_form_data'] = key_exists('formData', $docInfo) ? $docInfo['formData'] : "";
+
+$formbody = '';
 
 if(isset($_REQUEST['fromWF'])){
 	# called from workflow?
@@ -189,7 +205,7 @@ if(isset($_REQUEST['fromWF'])){
 		$docInfo['form_data'] = $formbody;
 		$docInfo['signature_html'] =  $rec['signature_img'];
 		
-		if(!empty($rec['signed_filename']) && file_exists("/var/www/html/tmp/" . $rec['signed_filename'])){
+		if(!empty($rec['signed_filename']) && file_exists("/var/jvs/public_html/tmp/" . $rec['signed_filename'])){
 			$docInfo['pdf_file'] =  $rec['signed_filename'];
 		}
 	}
@@ -197,24 +213,212 @@ if(isset($_REQUEST['fromWF'])){
 else{
 	if(isset($docInfo['docid']) && !$fromTemplate){
 		$form_info = @json_decode($docInfo['form_data'], true);
+		
 		if(json_last_error() !== JSON_ERROR_NONE){
 			$form_info = $docInfo['form_data'];	
 		}
-		$formbody = $form_info['order_html'];
-		
-		if(empty($formbody)){
+		if (is_array($form_info)) {
+			$formbody = key_exists('order_html', $form_info) ? $form_info['order_html'] : '';
+		} else {
 			$formbody = $docInfo['order_html'];
 		}
 	}
 }
 
-$formbody = rawurldecode($formbody);
+$formbody = rawurldecode($formbody); 
 
 $myqueues = array($user);
 $sharedqueues = array();
 
 # get parties from DB...
 $clerkcclist = array();
+
+// NEW!!!! Bulk generate orders - LK 8-27-18
+if(isset($_REQUEST['bulkGenerateCases']) && !empty($_REQUEST['bulkGenerateCases'])){
+	$extraCaseArr = explode("\n", $_REQUEST['bulkGenerateCases']);
+
+	if(count($extraCaseArr > 0)){
+		//Create orders for each case...
+		foreach($extraCaseArr as $ec){
+			$ec = trim($ec);
+				
+			//Make sure it's not a blank case
+			if(!empty($ec)){
+				list($div, $style) = getCaseDivAndStyle($ec);
+				
+				$config = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
+				$url = sprintf("%s/divInfo", (string) $config->{'icmsWebService'});
+				
+				$fields = array(
+					'division' => $div
+				);
+				
+				$return = curlJson($url, $fields);
+				$json = json_decode($return,true);
+				$divInfo = $json['DivInfo'];
+
+				$clerkcclist = array();
+				build_cc_list($dbh, $ec, $clerkcclist);
+
+				$clerkdata = "";
+				$lastdata = "";
+				list($fileucn, $type) = sanitizeCaseNumber($ec);
+
+				$savedFile = sprintf("%s/%s.parties.json", $partypath, $fileucn);
+
+				if (file_exists($savedFile)) {
+					$jsondata = json_decode(file_get_contents($savedFile), true);
+
+					$cclistobj = $jsondata['cclist'];
+
+					$partycount = 0;
+					foreach ($cclistobj as $key=>$value) {
+						if(!is_array($cclist)){
+							$cclist = array();
+						}
+						$cclist[$key] = array();
+						foreach ($value as &$party) {
+							$party['ServiceList'] = (array)$party['ServiceList'];
+							array_push($cclist[$key], $party);
+						}
+					}
+
+					$lastdata="selected";
+					$casestyle = $jsondata['casestyle'];
+				} else {
+					# no saved data, no form data--just clerk data
+					$casestyle = build_case_caption($ec, $clerkcclist['Parties']);
+					$cclist = $clerkcclist;
+					$lastdata = "disabled";
+				}
+
+				if (!is_array($cclist)) {
+					$cclist = $clerkcclist;
+				}
+
+				if(is_string($cclist) && is_array(json_decode($cclist, true))){
+					$cclist = $cclist;
+				}
+				else{
+					$cclist = json_encode($cclist);
+				}
+
+				$schema = isset($_SERVER["HTTPS"]) ? "https:" : "http:";
+				$url = "$schema//$_SERVER[HTTP_HOST]/orders/merge.cgi";
+
+				$fdCopy = $docInfo['formData'];
+				$fdCopy['DivisionID'] = $div;
+				$fdCopy['ucn'] = $ec;
+				$fdCopy['case_number'] = $ec;
+				$fdCopy['courtroom'] = $divInfo['Courtroom'];
+				$fdCopy['judge_name'] = $divInfo['FullName'];
+				$fdCopy['courthouse_city'] = $divInfo['City'];
+				$fdCopy['courthouse_full_address'] = $divInfo['CourthouseAddress'];
+				$fdCopy['courthouse_name'] = $divInfo['CourthouseName'];
+				$fdCopy['judge_first_name'] = $divInfo['FirstName'];
+				$fdCopy['judge_last_name'] = $divInfo['LastName'];
+
+				$curl = curl_init();
+				curl_setopt_array($curl, array(
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_URL => $url,
+					CURLOPT_POST => 1,
+					CURLOPT_POSTFIELDS => array(
+						'cclist' => $cclist,
+						'case_caption' => $casestyle,
+						'formjson' => json_encode($fdCopy),
+						'encode' => 0
+					),
+					CURLOPT_SSL_VERIFYPEER => 0
+				));
+
+				$resp = curl_exec($curl);
+				curl_close($curl);
+
+				$json = json_decode($resp, true);
+				$formbody = $json['html'];
+
+				if(preg_match("/<p class=\"caseCaption\">(.*?)<\\/p>/is", $formbody, $case_caption_match)){
+					$case_caption = $case_caption_match[1];
+					$formbody = str_replace($case_caption, "[% case_caption %]", $formbody);
+				}
+
+				//I sure hope that the cc list is the first match for this... it should be
+				if(preg_match("/<span style=\"font-weight: bold;\">COPIES TO:.*?<\\/table>/is", $formbody, $cc_list_match)){
+					$cc_list = $cc_list_match[0];
+					$formbody = str_replace($cc_list, "[% cc_list %]", $formbody);
+				}
+
+				$post_fields = array(
+						'cclist' => $cclist,
+						'case_caption' => $casestyle,
+						'formjson' => json_encode(
+								array(
+										"order_html" => $formbody
+								)
+						),
+						'encode' => 1
+				);
+
+				$curl = curl_init();
+				curl_setopt_array($curl, array(
+					CURLOPT_RETURNTRANSFER => 1,
+					CURLOPT_URL => $url,
+					CURLOPT_POST => 1,
+					CURLOPT_POSTFIELDS => $post_fields,
+					CURLOPT_SSL_VERIFYPEER => 0
+				));
+
+				$resp = curl_exec($curl);
+				curl_close($curl);
+
+				$json = json_decode($resp, true);
+				$formbody = $json['html'];
+				$formbody = html_entity_decode($formbody);
+				$formbody = preg_replace("/<div class=\"sigdiv\">(.*?)<\\/div>/is", "<br/><br/>", $formbody);
+				$formbody = preg_replace("/<div class=\"sigdiv right\">(.*?)<\\/div>/is", "<br/><br/>", $formbody);
+
+				$form_name = mb_convert_encoding($fdCopy['form_name'], "HTML-ENTITIES", "UTF-8");
+
+				if(strpos($form_name, "Generic (Blank) Order") !== false){
+					if(isset($_SESSION['generic_order_title']) && !empty($_SESSION['generic_order_title'])){
+						$form_name = $_SESSION['generic_order_title'];
+					}
+				}
+
+				$form_id = $fdCopy['form_id'];
+
+				$orderData = array(
+						"form_data" => $fdCopy,
+						"order_html" => $formbody,
+						"cc_list" => $cclist,
+						"case_caption" => $casestyle
+				);
+
+				$data = json_encode($orderData);
+
+				$query = "
+			        insert into
+			            workflow (
+			                queue,ucn,case_style,title,due_date,creator,creation_date,color,doc_type,formname,data,form_id
+			            )
+			            values (
+			                :queue, :ucn, :case_style, :formname, :due_date, :creator, CURRENT_TIMESTAMP,
+			                :color, 'FORMORDER', :formname, :data, :formid
+			            )
+			    ";
+
+				$color = "Red"; # hard-coded for now...
+				$duedate = date("Y-m-d" ,strtotime("+1 week")); # hard coded here too.
+
+				$args = array('queue' => strtolower($user), 'ucn' => $ec, 'case_style' => $style, 'due_date' => $duedate, 'creator' => strtolower($user),
+				'color' => $color, 'formname' => $form_name, 'data' => $data, 'formid' => $form_id);
+
+				doQuery($query, $dbh, $args);
+			}
+		}
+	}
+}
 
 build_cc_list($dbh, $ucn, $clerkcclist);
 
@@ -230,6 +434,9 @@ if(!empty($showclerk) && ($showclerk == '1')){
 	$casestyle = build_case_caption($ucn, $clerkcclist['Parties']);
 	$cclist = $clerkcclist;
 	$clerkdata="selected";
+}
+else{
+	$cclist = array();
 }
 
 if (file_exists($savedFile)) {
@@ -293,7 +500,7 @@ else{
 }
 
 $schema = isset($_SERVER["HTTPS"]) ? "https:" : "http:";
-$url = "$schema//$_SERVER[HTTP_HOST]/case/orders/merge.cgi";
+$url = "$schema//$_SERVER[HTTP_HOST]/orders/merge.cgi";
 
 if((!isset($docid) || empty($docid)) || (!empty($docid) && $fromTemplate) || (empty($formbody))){
 	$curl = curl_init();
@@ -322,22 +529,14 @@ if($isOrder){
 	
 	if(preg_match("/<p class=\"caseCaption\">(.*?)<\\/p>/is", $formbody, $case_caption_match)){
 		$case_caption = $case_caption_match[1]; 
-	}
-	else{
-		//I sure hope that the case caption is the first match....
-		preg_match("/<p[^>]*class=\"left\">(.*?vs.*?)<\\/p>/is", $formbody, $case_caption_match);
-		$case_caption = $case_caption_match[1]; 
-	}
-	
-	//And I sure hope that the cc list is the first match for this, too
-	preg_match("/<span style=\"font-weight: bold;\">COPIES TO:.*?<\\/table>/is", $formbody, $cc_list_match);
-	$cc_list = $cc_list_match[0];
-	
-	//I don't really have a good way to do this, but the MH forms are messed up so I'm going to do it this way
-	if(strpos($ucn, "MH") === false){
 		$formbody = str_replace($case_caption, "[% case_caption %]", $formbody);
 	}
-	$formbody = str_replace($cc_list, "[% cc_list %]", $formbody);
+	
+	//I sure hope that the cc list is the first match for this... it should be
+	if(preg_match("/<span style=\"font-weight: bold;\">COPIES TO:.*?<\\/table>/is", $formbody, $cc_list_match)){
+		$cc_list = $cc_list_match[0];
+		$formbody = str_replace($cc_list, "[% cc_list %]", $formbody);
+	}
 	
 	$post_fields = array(
 		'cclist' => $cclist,
@@ -378,10 +577,10 @@ $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
 if($sign == 'Y'){
-	$url = "/case/orders/preview.php?fromTabs=1&docid=" . $docid . "&sign=Y&ucn=" . $ucn;
+	$url = "/orders/preview.php?fromTabs=1&docid=" . $docid . "&sign=Y&ucn=" . $ucn;
 }
 else{
-	$url = "/case/orders/preview.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+	$url = "/orders/preview.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 }
 
 createTab($ucn, $url, 1, 1, "cases",
@@ -417,19 +616,32 @@ else{
 	}
 }
 
+if($sign == "Y"){
+	if(strpos($formbody, "[% judge_signature %]") !== false){
+		$sigBlockFound = true;
+	}
+	else{
+		$sigBlockFound = false;
+	}
+}
+else{
+	$sigBlockFound = false;
+}
+
+$smarty->assign('sigBlockFound', $sigBlockFound);
 $smarty->assign('cclist_html', $cclist_html);
 $smarty->assign('disable_reason', $disable_reason);
 $smarty->assign('user', $user);
 $smarty->assign('locked', $locked);
 $smarty->assign('locked_user', $locked_user);
 $smarty->assign('editable', $editable);
-$smarty->assign('user_comments', $docInfo['user_comments']);
-$smarty->assign('comments', $docInfo['comments']);
-$smarty->assign('case_caption', $docInfo['case_caption']);
-$smarty->assign('cclist', $docInfo['cclist']);
-$smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('user_comments', key_exists('user_comments', $docInfo) ? $docInfo['user_comments'] : '');
+$smarty->assign('comments', key_exists('comments', $docInfo) ? $docInfo['comments'] : '');
+$smarty->assign('case_caption', key_exists('case_caption', $docInfo) ? $docInfo['case_caption'] : '');
+$smarty->assign('cclist', key_exists('cclist', $docInfo) ? $docInfo['cclist'] : '');
+$smarty->assign('pdf_file', key_exists('pdf_file', $docInfo) ? $docInfo['pdf_file'] : null);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : '');
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : '');
 $smarty->assign('esigs', $esigs);
 $smarty->assign('cansign', $sigCount);
 $smarty->assign('sign', $sign);
@@ -448,7 +660,7 @@ echo $smarty->fetch("orders/preview.tpl");
 function createCopiesToListHTML($cc_list){
 	$cc_list_html = "";
 	
-	if ((isset($cc_list['Attorneys']) && !empty($cc_list['Attorneys'])) || (isset($cc_list['Parties']) && (!empty($cc_list['Parties'])))) {
+	if ((key_exists('Attorneys',$cc_list) && !empty($cc_list['Attorneys'])) || (key_exists('Parties',$cc_list) && (!empty($cc_list['Parties'])))) {
 		$cc_list_html = '<span style="font-weight: bold;">COPIES TO:</span><br/><br/><table id="cc_list_table" style="border: none; table-layout: fixed; max-width:6.5in;">';
 		foreach($cc_list as $key => $cc) {
 			foreach ($cc as $p => $party) {

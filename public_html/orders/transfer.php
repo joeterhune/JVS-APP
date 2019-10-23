@@ -1,10 +1,11 @@
 <?php
-require_once '../php-lib/common.php';
-require_once '../php-lib/db_functions.php';
-require_once "../icmslib.php";
-require_once "../caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/caseinfo.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -32,7 +33,7 @@ getSharedQueues($user, $dbh, $sharedqueues);
 $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
-$url = "/case/orders/transfer.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/orders/transfer.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 	createTab($docInfo['ucn'], $url, 1, 1, "cases",
 		array(
 		"name" => "Order Creation",
@@ -53,12 +54,11 @@ $smarty->assign('real_xferqueues', $real_xferqueues);
 $smarty->assign('ucn', $docInfo['ucn']);
 $smarty->assign('title', $docInfo['form_name']);
 $smarty->assign('queueName', $docInfo['queue']);
-$smarty->assign('user_comments', $docInfo['user_comments']);
-//$smarty->assign('comments', preg_replace("/[^A-Za-z0-9 ^<>:$!#-+.\.\*]/", '', nl2br($docInfo['comments'])));
-$smarty->assign('comments', $docInfo['comments']);
-$smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('user_comments', key_exists('user_comments', $docInfo) ? $docInfo['user_comments'] : null);
+$smarty->assign('comments', key_exists('comments', $docInfo) ? $docInfo['comments'] : null);
+$smarty->assign('pdf_file', key_exists('pdf_file', $docInfo) ? $docInfo['pdf_file'] : null);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null);
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null);
 $smarty->assign('isOrder', $isOrder);
 $smarty->assign('docid', $docid);
 $smarty->assign('wfCount', $wfcount);

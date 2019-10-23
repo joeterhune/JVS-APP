@@ -89,7 +89,7 @@ $(document).ready(function () {
             if (colCookie != undefined) {
                 // Need to remove a value from the cookie.  It's delimited by colons.
                 hideCols = colCookie.split(':');
-                newHide = new Array();
+                newHide = new Array;
                 for (i = 0; i < hideCols.length; i++) {
                     if (hideCols[i] == '') {
                         continue;
@@ -297,6 +297,8 @@ $(document).ready(function () {
         doc.write($(printContents).html());
         $(doc).find('body').addClass('page');
         $(doc).find('head').append('<link href="/style/print_landscape.css?1.2" rel="stylesheet" type="text/css"/>');
+        var foo = doc.height;
+        var bar = doc.width;
         doc.close();
         myWindow.print();
 	});
@@ -349,7 +351,7 @@ $(document).ready(function () {
         if (json.exportXMLdef != undefined) {
             $('#cal-div-[% data.division %]-checkMulti').append(
                 $('<input type="hidden">').attr('id','cal-div-[% data.division %]-hasTemplate').val(1)
-            );
+            )
         }
         var cases = json.cases;
         
@@ -359,7 +361,7 @@ $(document).ready(function () {
         }
         
         if (cases.length > 0) {
-			$('#cal-div-[% data.division %]-tmpFile').val();
+            $('#cal-div-[% data.division %]-tmpFile').val();
             $('#cal-div-[% data.division %]-tableContainer').append(
                 $('<table>').attr('id',"cal-div-[% data.division %]-listTable").append(
                     $('<thead>').append(
@@ -385,11 +387,11 @@ $(document).ready(function () {
             
             // Populate the thead
             $.each(json.exportHeaders,function (i,e) {
-				header = $('<th>').html(e.Column);
+                header = $('<th>').html(e.Column);
                 
                 if (e.filterType != undefined) {
                     $(header).addClass(e.filterType);
-                }
+                };
                 
                 if (e.filterPlaceholder != undefined) {
                     $(header).attr('data-placeholder',e.filterPlaceholder);
@@ -429,7 +431,6 @@ $(document).ready(function () {
             var divType = json.divType;
             $.each(cases, function(i,e) {
                 var newRow = $('<tr>');
-
                 if (e.isCanceled == 'Y') {
                     $(newRow).addClass('canceled');
                 }
@@ -437,9 +438,8 @@ $(document).ready(function () {
                     var fieldName = k.XMLField;
                     var newCell;
                     if (fieldName == 'CaseNumber') {
-                        newCell = $('<td>').html($(e).attr('ICMSLink'));
-						//newCell = $('<td>').html($(e).attr(fieldName));
-					} else {
+                        newCell = $('<td>').html($(e).attr('ICMSLink'));     
+                    } else {
                         newCell = $('<td>').html($(e).attr(fieldName));
                     }
                     

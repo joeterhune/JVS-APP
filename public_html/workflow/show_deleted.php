@@ -1,9 +1,9 @@
 <?php
-include "../php-lib/common.php";
-include "../php-lib/db_functions.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
 require_once('Smarty/Smarty.class.php');
-require_once("wfcommon.php");
-require_once "../icmslib.php";
 
 checkLoggedIn();
 

@@ -15,7 +15,7 @@
     <SideMargins>.5</SideMargins>
     
     <HeaderImage>
-        <ImageFile>/var/www/html/case/images/CourtAdmin_logo.bmp</ImageFile>
+        <ImageFile>/var/www/html/images/CourtAdmin_logo.bmp</ImageFile>
         <ImageRow>0</ImageRow>
         <XOffset>400</XOffset>
         <YHeight>100</YHeight>

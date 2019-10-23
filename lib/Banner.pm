@@ -93,11 +93,10 @@ our @EXPORT_OK=qw(
     getjudgedivfromdiv
     bannerGetDocketItems
 );
-use XML::Simple;
 use Carp qw(cluck);
 
 BEGIN {
-    $ENV{HTTPS_CERT_FILE} = '/var/www/html/case/vcp02xweb_lms.pem';
+    $ENV{HTTPS_CERT_FILE} = '/var/www/html/vcp02xweb_lms.pem';
 }
 
 # When we're showing other cases, don't show them if the party has more than this number
@@ -1982,31 +1981,22 @@ sub getBannerCaseInfo {
     
     my $icmsuser = $ENV{'REMOTE_USER'};
 	
-    ############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
-	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
-	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
-	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
-	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};
-	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
-	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
-	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
-	
-    my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
-    my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
-    my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
-    my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
+    my $ldap = ldapConnect();
+    my $secretuser = inGroup($icmsuser,'CAD-ICMS-SEC',$ldap);
+    my $sealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED',$ldap);
+    my $jsealeduser = inGroup($icmsuser,'CAD-ICMS-SEALED-JUV',$ldap);
+    my $odpuser = inGroup($icmsuser,'CAD-ICMS-ODPS',$ldap);
 
     my $ucn=uc(clean($inUCN));
     
-    $ucn =~ s/^50//g;
+    $ucn =~ s/^58//g;
 	
     my $referer_host = (split("\/",$ENV{'HTTP_REFERER'}))[2];
     
     my %data;
     $data{'ucn'} = $ucn;
-	$data{'notesuser'} = inGroup($icmsuser, $notesgroup, $ldap);
-	$data{'showTif'} = 0;
+	$data{'notesuser'} = inGroup($icmsuser, 'CAD-ICMS-NOTES', $ldap);
+	$data{'showTif'} = inGroup($icmsuser, 'CAD-ICMS-TIF', $ldap);
 	$data{'odpuser'} = $odpuser;
 
 	# UCN should be of format YYYY-CF-NNNNNN-A
@@ -2250,7 +2240,7 @@ sub getParties {
 	my @parties;
 	getData(\@parties,$query,$dbh, {valref => [$case]});
 	
-	my $esdbh = dbConnect("ols");
+	my $esdbh = dbConnect("eservice");
 
 	# Build a list of attorney associations and other cases
     my %otherCases;

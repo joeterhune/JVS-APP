@@ -7,8 +7,8 @@
 #
 #
 
-require_once 'php-lib/common.php';
-require_once 'php-lib/db_functions.php';
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/common.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php";
 
 include_once "icmslib.php";  
 
@@ -2272,7 +2272,7 @@ function xml_case_style($ucn,$parties) {
 # build_case_style_long returns a case style as a multi-line text string
 
 function build_case_caption ($ucn, $partylist) {
-    $conf = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $conf = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     $url = sprintf("%s/caseCaption", (string) $conf->{'icmsWebService'});
     
     $fields = array(
@@ -2734,6 +2734,7 @@ function getScParties(&$partylist, $ucn, $dbh, $schema = "dbo") {
             p.FirstName,
             p.MiddleName,
             p.LastName,
+            p.NameSuffixCode as Suffix,
             p.PartyType,
             p.BarNumber,
             p.PersonID as PartyID,
@@ -2876,32 +2877,24 @@ function getScParties(&$partylist, $ucn, $dbh, $schema = "dbo") {
     
     	//If they are representing a disposed party, take them off...
     	$disposedQuery = "
-	    	SELECT
-	    		COUNT(Represented_PersonID) AS PartyCount,
-	    		SUM(
-	    			CASE
-	    			WHEN p.CourtAction LIKE '%Disposed%'
-	    			THEN 1
-	    			ELSE 0
-	    			END
-	    		) AS DisposedCount
-	    	FROM
-	    		$schema.vAttorney a
-	    	INNER JOIN
-	    		$schema.vParty p
-	    		ON a.CaseID = p.CaseID
-	    		AND a.Represented_PersonID = p.PersonID
-	    	WHERE
-	    		a.CaseID = :case_id
-	    	AND
-	    		a.BarNumber = :bar_number";
-    	
-    	$countRow = getDataOne($disposedQuery, $dbh, array("case_id" => $caseid, "bar_number" => $oldBar));
-    	
-    	if($countRow['DisposedCount'] >= $countRow['PartyCount']){
-    		//unset($partylist['Attorneys'][$key]);
-    		//$partylist['Attorneys'] = array_values($partylist['Attorneys']);
-   	 	}
+            SELECT
+                COUNT(Represented_PersonID) AS PartyCount,
+                SUM(
+                    CASE
+                        WHEN p.CourtAction LIKE '%Disposed%'
+                            THEN 1
+                        ELSE
+                            0
+                    END) AS DisposedCount
+            FROM
+                $schema.vAttorney a
+                    INNER JOIN
+                        $schema.vParty p ON a.CaseID = p.CaseID AND a.Represented_PersonID = p.PersonID
+            WHERE
+                a.CaseID = :case_id
+                AND a.BarNumber = :bar_number";
+                
+        $countRow = getDataOne($disposedQuery, $dbh, array("case_id" => $caseid, "bar_number" => $oldBar));
     }
 }
 
@@ -3028,14 +3021,15 @@ function getBannerParties (&$partylist, $ucn, $dbh) {
 
 function build_cc_list($icms,$ucn, &$parties) {
     $listTypes = array('Attorneys','Parties');
-
+    
     list($ucn, $casetype) = sanitizeCaseNumber($ucn);
-    $xml = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $xml = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
+    
     if (empty($xml->showCaseDb)) {
-    	$dbName = "showcase-prod";
+        $dbName = "showcase-prod";
     }
     else{
-    	$dbName = (string)$xml->showCaseDb;
+        $dbName = (string)$xml->showCaseDb;
     }
     
     $cmsdbh = dbConnect($dbName);
@@ -3046,7 +3040,7 @@ function build_cc_list($icms,$ucn, &$parties) {
         
     $schema = getDbSchema($dbName);
     getScParties($parties, $ucn, $cmsdbh, $schema);   
-
+    
     foreach ($listTypes as $listType) {
         foreach ($parties[$listType] as &$party) {
             buildAddress($party);
@@ -3060,31 +3054,31 @@ function build_cc_list($icms,$ucn, &$parties) {
     
     //Remove suppressed addresses
     if(count($suppressed) > 0){
-      foreach($parties['Attorneys'] as &$a){
-          foreach($a['ServiceList'] as $key => &$s){
-              if(in_array($s, $suppressed)){
-                  unset($a['ServiceList'][$key]);
-              }
-          }
-      }
-      foreach($parties['Parties'] as &$p){
-          foreach($p['ServiceList'] as $key => &$s){
-              if(in_array($s, $suppressed)){
-                  unset($p['ServiceList'][$key]);
-              }
-          }
-      }
+        foreach($parties['Attorneys'] as &$a){
+            foreach($a['ServiceList'] as $key => &$s){
+                if(in_array($s, $suppressed)){
+                    unset($a['ServiceList'][$key]);
+                }
+            }
+        }
+        foreach($parties['Parties'] as &$p){
+            foreach($p['ServiceList'] as $key => &$s){
+                if(in_array($s, $suppressed)){
+                    unset($p['ServiceList'][$key]);
+                }
+            }
+        }
     }
     
     //Add additional e-mails
     if(count($additional) > 0){
-		$count = count($parties['Parties']);
-      	foreach($additional as $ad){
-      		$parties['Parties'][$count]['check'] = 1;
-      		$parties['Parties'][$count]['FullName'] = 'No Name Available';
-         	$parties['Parties'][$count]['ServiceList'] = array($ad['email_addr']);
-         	$count++;
-      	}
+        $count = count($parties['Parties']);
+        foreach($additional as $ad){
+            $parties['Parties'][$count]['check'] = 1;
+            $parties['Parties'][$count]['FullName'] = 'No Name Available';
+            $parties['Parties'][$count]['ServiceList'] = array($ad['email_addr']);
+            $count++;
+        }
     }
     
     //Add agency e-mails - add to PD or ASA already on the case, if there is one
@@ -3093,13 +3087,13 @@ function build_cc_list($icms,$ucn, &$parties) {
     	foreach($agency as $ag){
     		$found = false;
     		foreach($parties['Parties'] as $key => $p){
-    			if($p['PartyType'] == "ASA" && (stripos($ag['email_addr'], "sa15") !== false)){
+    			if(key_exists('PartyType', $p) && ($p['PartyType'] == "ASA") && (stripos($ag['email_addr'], "sa15") !== false)){
     				if(!in_array(strtolower($ag['email_addr']), array_map('strtolower', $parties['Parties'][$key]['ServiceList']))){
 		    			$parties['Parties'][$key]['ServiceList'][] = $ag['email_addr'];
     				}
 		    		$found = true;
     			}
-    			else if($p['PartyType'] == "PD" && (stripos($ag['email_addr'], "pd15") !== false)){
+    			else if(key_exists('PartyType', $p) && ($p['PartyType'] == "PD") && (stripos($ag['email_addr'], "pd15") !== false)){
     				if(!in_array(strtolower($ag['email_addr']), array_map('strtolower', $parties['Parties'][$key]['ServiceList']))){
 		    			$parties['Parties'][$key]['ServiceList'][] = $ag['email_addr'];
     				}
@@ -3109,9 +3103,11 @@ function build_cc_list($icms,$ucn, &$parties) {
     		
     		if(!$found){
     			$parties['Parties'][$count]['check'] = 1;
-    			$parties['Parties'][$count]['FullName'] = 'No Name Available';
-    			$parties['Parties'][$count]['ServiceList'] = array($ag['email_addr']);
-    			$count++;
+                
+                $parties['Parties'][$count]['FullName'] = 'No Name Available';
+                
+                $parties['Parties'][$count]['ServiceList'] = array($ag['email_addr']);
+                $count++;
     		}
     	}
     }
@@ -3124,48 +3120,56 @@ function build_cc_list($icms,$ucn, &$parties) {
     	}
     	
     	//This is a one-off... remove Carey Haughwout's e-mail from e-service on MH cases
-    	if($p2['BarNumber'] == "FL375675" && (strpos($ucn, "MH") !== false)){
+    	if(key_exists('BarNumber', $p2)  && ($p2['BarNumber'] == "FL375675") && (strpos($ucn, "MH") !== false)){
     		$parties['Parties'][$key2]['ServiceList'] = array("mentalhealth@pd15.org");
     	}
     	
     	//Another one-off.. remove Magistrate Fanelli's e-mail address from e-service
-    	if($p2['BarNumber'] == "FL510335"){
-    		$parties['Parties'][$key2]['ServiceList'] = array();
-    	}
-    }
+    	if(key_exists('BarNumber', $p2) && ($p2['BarNumber'] == "FL510335")){
+            $parties['Parties'][$key2]['ServiceList'] = array();
+        }
+    } 
     
     return;
 }
 
 function getSuppressedAddresses($ucn){
-   $dbh = dbConnect("ols");
-   $results = array();
-   $sup = array();
-   
-   $query = "  SELECT email_addr
-               FROM suppress_emails
-               WHERE casenum = :ucn";     
-               
-   getData($results, $query, $dbh, array("ucn" => $ucn));
-   
-   foreach($results as $r){
-      $sup[] = $r['email_addr'];
-   }
-   
-   return $sup;
+    $dbh = dbConnect("eservice");
+    $results = array();
+    $sup = array();
+    
+    $query = "
+        SELECT
+            email_addr
+        FROM
+            suppress_emails
+        WHERE
+            casenum = :ucn";
+            
+    getData($results, $query, $dbh, array("ucn" => $ucn));
+    
+    foreach($results as $r){
+        $sup[] = $r['email_addr'];
+    }
+    
+    return $sup;
 }
 
 function getAdditionalAddresses($ucn){
-   $dbh = dbConnect("ols");
-   $results = array();
-   
-   $query = "  SELECT email_addr
-               FROM reuse_emails
-               WHERE casenum = :ucn";
-               
-   getData($results, $query, $dbh, array("ucn" => $ucn));
-   
-   return $results;
+    $dbh = dbConnect("eservice");
+    $results = array();
+    
+    $query = "
+        SELECT
+            email_addr
+        FROM
+            reuse_emails
+        WHERE
+            casenum = :ucn";
+            
+    getData($results, $query, $dbh, array("ucn" => $ucn));
+    
+    return $results;
 }
 
 function getAgencyAddresses($ucn) {
@@ -3266,46 +3270,49 @@ function getAgencyAddresses($ucn) {
 	}
 	
 	$orccAdd = array();
-	//I'm going to do ORCC separately...
+    
 	if($hasORCC){
-		//Civil e-mail address for juvenile dependency, mental health, and guardianship cases
-		if((strpos($ucn, "DP") !== false) || (strpos($ucn, "MH") !== false) || (strpos($ucn, "GA") !== false)){
-			$orccAdd['email_addr'] = "WPBCivilDocket@rc-4.com";
-			$orccAdd['from_portal'] = 0;
-			$orccAdd['agency'] = 1;
-			$addressRef[] = $orccAdd;
-		}
-		//Appellate e-mail address for appellate cases (duh)
-		else if(strpos($ucn, "AP") !== false){
-			$orccAdd['email_addr'] = "RC4AppellateFilings@rc-4.com";
-			$orccAdd['from_portal'] = 0;
-			$orccAdd['agency'] = 1;
-			$addressRef[] = $orccAdd;
-		}
-		//Criminal address for the rest (criminal and juvenile delinquency)
-		else{
-			$orccAdd['email_addr'] = "WPBCriminalDocket@rc-4.com";
-			$orccAdd['from_portal'] = 0;
-			$orccAdd['agency'] = 1;
-			$addressRef[] = $orccAdd;
-		}
-	}
-	
-	//Baker Acts
-	if($case_type == "BA" && (strpos($ucn, "MH") !== false)){
-		$baPDAdd = array();
-		$baPDAdd['email_addr'] = "E-BakerAct@pd15.org";
-		$baPDAdd['from_portal'] = 0;
-		$baPDAdd['agency'] = 1;
-		$addressRef[] = $baPDAdd;
-
-		$baSAAdd = array();
-		$baSAAdd['email_addr'] = "E-BakerAct@sa15.org";
-		$baSAAdd['from_portal'] = 0;
-		$baSAAdd['agency'] = 1;
-		$addressRef[] = $baSAAdd;
-	}
-	
+        //Civil e-mail address for juvenile dependency, mental health, and guardianship cases
+        
+        if((strpos($ucn, "DP") !== false) || (strpos($ucn, "MH") !== false) || (strpos($ucn, "GA") !== false)){
+            $orccAdd['email_addr'] = "WPBCivilDocket@rc-4.com";
+            $orccAdd['from_portal'] = 0;
+            $orccAdd['agency'] = 1;
+            $addressRef[] = $orccAdd;
+        }
+        else if(strpos($ucn, "AP") !== false){
+            $orccAdd['email_addr'] = "RC4AppellateFilings@rc-4.com";
+            $orccAdd['from_portal'] = 0;
+            $orccAdd['agency'] = 1;
+            $addressRef[] = $orccAdd;
+        }
+        
+        //Criminal address for the rest (criminal and juvenile delinquency)
+        else{
+            $orccAdd['email_addr'] = "WPBCriminalDocket@rc-4.com";
+            $orccAdd['from_portal'] = 0;
+            $orccAdd['agency'] = 1;
+            $addressRef[] = $orccAdd;
+        }
+    }
+    
+    //Baker Acts
+    if($case_type == "BA" && (strpos($ucn, "MH") !== false)){
+        $baPDAdd = array();
+        $baPDAdd['email_addr'] = "E-BakerAct@pd15.org";
+        $baPDAdd['from_portal'] = 0;
+        $baPDAdd['agency'] = 1;
+        
+        $addressRef[] = $baPDAdd;
+        
+        $baSAAdd = array();
+        
+        $baSAAdd['email_addr'] = "E-BakerAct@sa15.org";
+        $baSAAdd['from_portal'] = 0;
+        $baSAAdd['agency'] = 1;
+        $addressRef[] = $baSAAdd;
+    }
+    
 	return $addressRef;
 }
 
@@ -3318,17 +3325,6 @@ function save_party_address($fname,$cclist,$casestyle) {
     $obj->casestyle=$casestyle;
     $obj->cclist=$cclist;
 
-#   $json=encode_json($obj);
-#   $json="[";
-#   for ($i=0;$i<count($cclist);$i++) {
-#      list($chk,$name,$email,$address)=$cclist[$i];
-#      if ($name=="") { continue; } # skip blanks; otherwise they accumulate...
-#      $address=str_replace("\n",'\r\n',$address);
-#      if ($flag) { $json.=","; }
-#     $json.="[\"$chk\",\"$name\",\"$email\",\"$address\"]";
-#      $flag=1;
-#   }
-#   $json.="]";
    file_put_contents($fname,json_encode($obj));
 }
 

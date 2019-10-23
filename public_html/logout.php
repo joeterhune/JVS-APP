@@ -1,6 +1,6 @@
 <?php
 
-require_once("php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
 
 session_start();
 
@@ -28,3 +28,5 @@ $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
 $smarty->display('top/logout.tpl');
+
+?>

@@ -1,14 +1,15 @@
 <?php
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once("Smarty/Smarty.class.php");
-require_once("../workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
 
 checkLoggedIn();
 
-include "../icmslib.php";
-include "../caseinfo.php";
+include $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+include $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
+
+$config = simplexml_load_file($icmsXml);
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -34,7 +35,7 @@ createTab($ucn, "/cgi-bin/search.cgi?name=" . $ucn, 1, 1, "cases",
 			"name" => "Related Case Search",
 			"active" => 1,
 			"close" => 1,
-			"href" => "/case/related_case_search/search.php?ucn=" . $ucn . '&searchTheseParties=' . urlencode(getReqVal('searchTheseParties')),
+			"href" => "/related_case_search/search.php?ucn=" . $ucn . '&searchTheseParties=' . urlencode(getReqVal('searchTheseParties')),
 			"parent" => $ucn
 		)
 );
@@ -52,10 +53,14 @@ function showcaseSearch($parties){
 	$dbh = dbConnect("showcase-prod");
 	$schema = getDbSchema("showcase-prod");
 	
+	if(empty($parties[0]['last_name'])){
+		return array();
+	}
+	
 	//Get first party's cases
 	$query = "  SELECT TOP 1000 CaseID
 				FROM $schema.vAllParties 
-				WHERE 1 = 1 
+				WHERE LastName = '" . trim($parties[0]['last_name']) . "'
 				-- Active = 'Yes'
 				-- AND (Discharged IS NULL OR Discharged = 0)
 				-- AND (CourtAction IS NULL OR CourtAction NOT LIKE 'Disposed%')";
@@ -68,18 +73,14 @@ function showcaseSearch($parties){
 		$query .= "
 				AND MiddleName LIKE '" . trim($parties[0]['middle_name']) . "%'";
 	}
-	if(!empty($parties[0]['last_name'])){
+	/*if(!empty($parties[0]['last_name'])){
 		$query .= "
 				AND LastName = '" . trim($parties[0]['last_name']) . "'";
 	}
 	if(!empty($parties[0]['dob'])){
 		$query .= "
 				AND DOB = '" . trim($parties[0]['dob']) . "'";
-	}
-	
-	if(empty($parties[0]['last_name'])){
-		return array();
-	}
+	}*/
 	
 	$startRes = array();
 	$newStartRes = array();
@@ -123,10 +124,10 @@ function showcaseSearch($parties){
 					$query .= "
 							AND LastName = '" . trim($parties[$i]['last_name']) . "'";
 				}
-				if(!empty($parties[$i]['dob'])){
+				/*if(!empty($parties[$i]['dob'])){
 					$query .= "
 						AND DOB = '" . trim($parties[$i]['dob']) . "'";
-				}		
+				}*/		
 	
 				getData($combinedRows, $query, $dbh);
 				
@@ -169,11 +170,12 @@ function showcaseSearch($parties){
 		$cases = $startRes[0];
 	}
 	
-	if(count($cases) > 0){
+	if(strlen($cases) > 0){
 		$query = " SELECT
 			UPPER(p.LastName) AS LastName,
 			UPPER(p.FirstName) AS FirstName,
 			UPPER(p.MiddleName) AS MiddleName,
+			UPPER(p.NameSuffixCode) as Suffix,	
 			c.UCN,
 			c.CaseNumber,
 			CONVERT(varchar,c.FileDate,101) as FileDate,
@@ -207,10 +209,10 @@ function showcaseSearch($parties){
 				$query .= "
 					 p.LastName = '" . trim($p['last_name']) . "'";
 			}
-			if(!empty($p['dob'])){
+			/*if(!empty($p['dob'])){
 				$query .= "
 					AND p.DOB = '" . trim($p['dob']) . "'";
-			}
+			}*/
 		
 			if(count($parties) > 1 && ($p != end($parties))){
 				$query .= " ) OR ( ";
@@ -239,6 +241,7 @@ if(!empty($parties)){
 	
 	if(!empty($allParties)){
 		$dbh = dbConnect("showcase-prod");
+		$schema = getDbSchema("showcase-prod");
 		foreach($allParties as $key => $ap){
 			
 			$checkWarrantsQuery = "	SELECT COUNT(*) as WarrCount

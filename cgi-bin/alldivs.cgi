@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -68,7 +68,7 @@ if ($listType eq 'crim') {
     @typelist = ('Probate');
 }
 
-createTab("All " . $data{'type'} . " Divisions", "/cgi-bin/case/alldivs.cgi?type=" . $listType, 1, 1, "index");
+createTab("All " . $data{'type'} . " Divisions", "/cgi-bin/alldivs.cgi?type=" . $listType, 1, 1, "index");
 my $session = getSession();
 
 $data{'pathpart'} = $listType;

@@ -1,0 +1,7 @@
+DATE=[% data.rptDate %]
+TITLE1=[% data.title1 %]
+TITLE2=[% data.title2 %]
+VIEWER=[% data.viewer %]
+FIELDNAMES=[% data.fieldnames %]
+FIELDTYPES=[% data.fieldtypes %]
+[% FOREACH case IN data.caselist %][% case %][% END %]

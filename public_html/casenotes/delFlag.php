@@ -1,6 +1,6 @@
 <?php
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 extract($_REQUEST);
 

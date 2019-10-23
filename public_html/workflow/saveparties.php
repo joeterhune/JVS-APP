@@ -1,9 +1,9 @@
 <?php
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
-include "../icmslib.php";
-include "../caseinfo.php";
+include $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+include $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
 
 # saveparties.php - saves the party info provided by parties.php into
 # a JSON object for future use by this case...
@@ -17,8 +17,6 @@ if ($ucn=="") {
 
 list($ucn, $type) = sanitizeCaseNumber($ucn);
 
-
-
 $vars = array_keys($_REQUEST);
 
 $cclist = array();
@@ -26,6 +24,7 @@ $cclist['Attorneys'] = array();
 $cclist['Parties'] = array();
 
 $casestyle = getReqVal('wfcasestyle');
+$clerkOnly = getReqVal('changeToExternal');
 
 $temp = array();
 
@@ -85,14 +84,18 @@ if(!empty($cclist)){
 	}
 }
 
-$partydir="/usr/local/icms/workflow/parties";
+$partydir= $_SERVER['JVS_ROOT'] . "/workflow/parties";
 
 if (!is_dir($partydir)) {
-    mkdir($partydir);
+    mkdir($partydir,0755,true);
 }
 
 save_party_address("$partydir/$ucn.parties.json",$cclist,$casestyle);
-echo $partydir . "/" . $ucn . ".parties.json"; die;
+
+//Remove the file if we are going to use external data
+if($clerkOnly == "1") {
+	unlink($partydir . "/" . $ucn . ".parties.json");
+}
 
 $result = array();
 $result['status'] = "Success";

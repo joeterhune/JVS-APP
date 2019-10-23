@@ -1,15 +1,17 @@
 <?php
 
-require_once($_SERVER['DOCUMENT_ROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 function getQueues (&$queueItems, $queuelist, $dbh) {
-	$xml = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+	global $icmsXml;
+	
+	$xml = simplexml_load_file($icmsXml);
 	foreach($xml->dbConfig as $dbc){
 		if ($dbc->name == "vrb2") {
 			$db = $dbc->dbName;
 		}
 	}
-	
+		
     // Run a separate query for each queue, so we're sure to have
     // a value for each queue, even if it's an empty array.
     $temp = array();
@@ -38,8 +40,8 @@ function getQueues (&$queueItems, $queuelist, $dbh) {
                 WHEN 'DVI' then 'DVI'
                 WHEN 'MISCDOC' then 'Task'
                 WHEN 'OLSORDER' then 'PropOrd'
-        		WHEN 'WARRANT' then 'Warrant'
-        		WHEN 'EMERGENCYMOTION' then 'EmerMot'
+                WHEN 'WARRANT' then 'Warrant'
+                WHEN 'EMERGENCYMOTION' then 'EmerMot'
             END as doc_type,
             CASE
                 WHEN signature_img is null then 'N'
@@ -70,7 +72,7 @@ function getQueues (&$queueItems, $queuelist, $dbh) {
                             END
                     END
             END as efiled,
-            `comments`,
+            comments,
             signed_filename,
             user_comments,
             DATE_FORMAT(e.start_date, '%m/%d/%Y') AS event_date,
@@ -101,21 +103,24 @@ function getQueues (&$queueItems, $queuelist, $dbh) {
         and
         	deleted = 0
     ";
-	
-    getData($queueItems, $query, $dbh, array('queue' => $queue), 'queue');
     
+    getData($queueItems, $query, $dbh, array('queue' => $queue), 'queue');
+	
     // Now count them and return that value.
     $count = 0;
-    foreach (array_keys($queueItems) as $queue) {
-        $count += sizeof($queueItems[$queue]);
-    }
+	
+	//if (is_array($queueItems)) {
+		foreach (array_keys($queueItems) as $queue) {
+			$count += sizeof($queueItems[$queue]);
+		}
     
-    foreach ($queuelist as $queue) {
-        // Ensure that there is an array element even if there is nothing in the queue
-        if (!array_key_exists($queue, $queueItems)) {
-            $queueItems[$queue] = array();
-        }
-    }
+		foreach ($queuelist as $queue) {
+		    // Ensure that there is an array element even if there is nothing in the queue
+		    if (!array_key_exists($queue, $queueItems)) {
+		        $queueItems[$queue] = array();
+		    }
+		}
+	//}
     
     return $count;
 }

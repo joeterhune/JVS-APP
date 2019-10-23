@@ -1,7 +1,7 @@
 <?php 
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 require_once("Smarty/Smarty.class.php");
 
 $smarty = new Smarty;
@@ -9,9 +9,9 @@ $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
-$case_number = $_REQUEST['case_number'];
+$case_number = getReqVal('case_number');
 
-$config = simplexml_load_file($icmsXml);
+$config = simplexml_load_file($_SERVER{'JVS_ROOT'] . "/conf/ICMS.xml");
 $sc_db = (string)$config->{'showCaseDb'};
 
 $dbh = dbConnect($sc_db);
@@ -20,8 +20,8 @@ $schema = getDbSchema($sc_db);
 $case_number = trim($case_number);
 $case_number = cleanCN($case_number);
 //Let's get the case ID first
-if(substr($case_number, 0, 4) == "50"){
-	$regex = '/^50-[0-9]{4}-[A-Z]{2}-[0-9]{6}-[A-Z]{4}-[A-Z]{2}$/';
+if(substr($case_number, 0, 4) == "58"){
+	$regex = '/^58-[0-9]{4}-[A-Z]{2}-[0-9]{6}-[A-Z]{4}-[A-Z]{2}$/';
 	if (preg_match($regex, $case_number)) {
     	$where = " CaseNumber = '$case_number'";
     }
@@ -34,7 +34,7 @@ else{
   	$case_number = str_replace("-", "", $case_number);
   	$regex = '/^[0-9]{4}[A-Z]{2}[0-9]{6}$/';
   	if (preg_match($regex, $case_number)) {
-	    $where = " LegacyCaseNumber = '$case_number' OR UCN LIKE '50$case_number%' ";
+	    $where = " LegacyCaseNumber = '$case_number' OR UCN LIKE '58$case_number%' ";
 	}
 	else{
 		$where = " LegacyCaseNumber LIKE '%$case_number%' OR UCN LIKE '%$case_number%'";
@@ -63,9 +63,9 @@ else{
 function cleanCN ($ucn){
 	$casenum = strtoupper($ucn);
 
-	# Strip leading "50" and any dashes.
+	# Strip leading "58" and any dashes.
 	$casenum = preg_replace("/-/","",$casenum);
-	$casenum = preg_replace("/^50/","",$casenum);
+	$casenum = preg_replace("/^58/","",$casenum);
 
 	if (preg_match("/^(\d{1,6})(\D\D)(\d{0,6})(.*)/", $casenum, $matches)) {
 		$year = $matches[1];
@@ -82,8 +82,8 @@ function cleanCN ($ucn){
 			}
 		}
 
-		# If it's a Showcase code, prepend the 50 - they're all SC codes now!
-		$year = sprintf("50-%04d", $year);
+		# If it's a Showcase code, prepend the 58 - they're all SC codes now!
+		$year = sprintf("58-%04d", $year);
 		if (preg_match("/(\D\D\D\D)(\D\D)/",$suffix,$smatches)) {
 			$suffix = sprintf("%s-%s", $smatches[1], $smatches[2]);
 			$retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);

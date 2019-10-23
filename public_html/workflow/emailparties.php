@@ -1,9 +1,9 @@
 <?php
 # emailparties.php -- called by order gen and soon by workflow, it emails the generated order
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once("../icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
 require_once("Smarty/Smarty.class.php");
 
 $smarty = new Smarty;
@@ -22,7 +22,7 @@ list ($division, $style) = getCaseDivAndStyle($ucn);
 //$result['style'] = $style;
 
 if (isset($pdf)) {
-    $filename = sprintf("%s/tmp/%s", $_SERVER['DOCUMENT_ROOT'], basename($pdf));
+    $filename = sprintf("/var/www/html/tmp/%s", basename($pdf));
 } else {
     // We weren't passed a PDF name, so get it from the DB.  Just check to see if the file exists on disk, first
     $dbh = dbConnect("icms");
@@ -35,7 +35,7 @@ if (isset($pdf)) {
             doc_id = :docid
     ";
     $doc = getDataOne($query, $dbh, array('docid' => $docid));
-    $filename = sprintf("%s/tmp/%s", $_SERVER['DOCUMENT_ROOT'], $doc['signed_filename']);
+    $filename = sprintf("/var/www/html/tmp/%s", $doc['signed_filename']);
     if (!file_exists($filename)) {
         // The file doesn't exist on disk.  Pull it from the DB
         $query = "
@@ -51,9 +51,6 @@ if (isset($pdf)) {
     };
 }
 
-//$result['pdf'] = $filename;
-//$result['shortname'] = basename($filename);
-
 $smarty->assign('ucn', $ucn);
 $smarty->assign('casestyle', $style);
 $smarty->assign('division',$division);
@@ -62,8 +59,6 @@ $attachments = array(array('filedesc' => $formname, 'shortname' => basename($fil
 $smarty->assign('orders', $attachments);
 
 $message = $smarty->fetch('eservice/eservice-email.tpl');
-
-//$result['message'] = $message;
 
 $from_name="Court E-Service System";
 

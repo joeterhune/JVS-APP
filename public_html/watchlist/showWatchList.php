@@ -46,7 +46,10 @@ $query = "
 $watchList = array();
 getData($watchList, $query, $dbh, array('email' => $email));
 
-$smarty = initSmarty();
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
 
 $smarty->assign('watchList', $watchList);
 $smarty->assign('wfCount', $wfcount);

@@ -215,7 +215,27 @@
 			        dataType : 'json',  
 			        success: function(data, status, settings)  {  
 		               doUpdates(data, status);
-		            }  
+		            },
+					error: function (response, exception) {
+						var msg = '';
+						if (response.status === 0) {
+							msg = 'Not connect.\n Verify Network.';
+						} else if (response.status == 404) {
+							msg = 'Requested page not found. [404]';
+						} else if (response.status == 500) {
+							msg = 'Internal Server Error [500].';
+						} else if (exception === 'parsererror') {
+							msg = 'Requested JSON parse failed.';
+						} else if (exception === 'timeout') {
+							msg = 'Time out error.';
+						} else if (exception === 'abort') {
+							msg = 'Ajax request aborted.';
+						} else {
+							msg = 'Uncaught Error.\n' + response.responseText;
+						}
+						$.unblockUI();
+						showDialog("Error Adding Note","The following Error Occurred [" + msg + "]");
+					}					
 			    }); 
                 
                 //xmlhttp = doAjax(url,postArgs,1,doUpdates);

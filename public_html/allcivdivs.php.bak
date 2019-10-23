@@ -1,0 +1,194 @@
+<?php
+# 11/02/09 lms div AY back in for Circuit Civil, add probate no division report,
+#          	   remove AK from Family reports, add divs NO and WE to Family, remove
+#              casetype of SC from County Civil section (that cort_code doesn't exist
+#              in banner) and let all divisions show under county civil (was excluding 
+#              RD, RK, RS, and RT), show no division reports links on bottom of page 
+#              (also under probate and juvenile).
+# 02/17/10 lms Noel requested we remove No division assigned links.
+#              In addition to commented out links in the code below, I removed this from the end of the page.
+#			<h2>No division assigned</h2>
+#			<ul>
+#			php start tag
+#				echo "<li><a href=gensumm.php?rpath=case/Palm/pro/div/index.txt>Probate</a>";
+#				echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div/index.txt>Juvenile</a>";	
+#				echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div/index.txt>Other</a>";
+#			php end tag
+#			</ul>
+# 09/06/11 lms Allow any Probate divisions that pop in... must be 2 chars div, and start with "I"
+?>
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.72 [en] (Windows NT 5.0; I) [Netscape]">
+   <meta name="Author" content="Default">
+   <title>15th Circuit Case Management System</title>
+   <link rel="stylesheet" type="text/css" name="stylin" href="icms1.css">
+<script src="icms.js" language="javascript" type="text/javascript"></script>
+</head>
+<body onLoad="SetBack('ICMS_1');">
+<img src=icmslogo.jpg>
+<font face=arial>
+<p>
+<input type=button name=Back value=Back onClick=GoBack("ICMS_0");>
+<h1>All Civil Divisions</h1>
+<h2>Circuit Civil</h2>
+<ul>
+<?php
+$fp=fopen($_SERVER['JVS_ROOT'] . "/conf/judgepage.conf","r");
+$num=1;
+while (!feof($fp)) {
+   $line=fgets($fp,1024);
+   $line=substr($line,0,-1);
+   if (!preg_match('/~/',$line)) {
+      continue;
+   }
+   list($name,$div,$casetype)=explode('~',$line);
+   $arr[]="$div~$casetype~$name";
+}
+fclose($fp);
+sort($arr);
+# first, circuit civil divisions
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+  $seccasetype=explode(',',$casetype);
+# AX and AZ are no longer used ( need to get them out of the judgepage.conf
+# for now getting rid of the display here
+  if ((($casetype=="CA") || (isset($seccasetype[1]) && $seccasetype[1]=="CA")) &&
+      ($div!="AW")&&($div!="AV")&&($div!="AX")&&($div!="AZ"))  { 
+    if (($div !="")&&($div!="AC")&&($div!="AK")&&($div!="AP")) {
+    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+    }
+  }
+}
+?>
+</ul>
+<h2>Foreclosure</h2>
+<ul>
+<?php
+# now foreclosure
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   if (  ($casetype=="CA" || (isset($seccasetype[1]) && $seccasetype[1]=="CA")) &&
+       ($div=="AW" || $div=="AV") ) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+   }
+}
+?>
+</ul>
+<h2>Probate</h2>
+<ul>
+<?php
+# now probate
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $scase=explode(',',$casetype);
+   if ((($casetype=="GA") || (isset($sccase[1]) && $scase[1]=="GA")||
+	($casetype="CP")||(isset($sccase[1]) && $scase[1]=="CP")||
+	($casetype=="MH")||(isset($sccase[1]) && $scase[1]=="MH"))
+       && (  substr($div,0,1) == "I"  ) && (strlen($div) == 2 )
+   ) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/pro/div$div/index.txt>$div</a>";
+   }
+}
+
+?>
+</ul>
+<h2>Family</h2>
+<ul>
+<?php
+# now family
+foreach ($arr as $line) {
+  list($div,$casetype,$name)=explode('~',$line);
+  $seccasetype=explode(',',$casetype);
+
+  if( ($div!="UFCL") && ($div!="UFCT")&&($div!="UFJM")) {
+    if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
+	($div!="FE") &&($div!="AP") &&($div!="AW") &&($div!="JA") &&($div!= "JK") &&
+	($div!="JL") && ($div!="JM")&&($div!="JO")&&($div!="JS")&&($div!="AK") ) {
+    echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+  }
+  }
+}
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   if ( (($casetype=="DA") || (isset($seccasetype[1]) && $seccasetype[1]=="DA")) &&
+       (($div=="NO")||($div=="WE")) ) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+   }
+}
+
+?>
+</ul>
+<h2>Unified Family Court</h2>
+<ul>
+<?php
+# now unified family court
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   
+   if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR"))
+       &&($div=="UFCL")) {
+      $label="Linked Cases";
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+   }
+}
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   
+   if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
+       ($div=="UFCT")) {
+      $label="Transferred Cases";
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+      }
+}
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   
+   if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR")) &&
+       ($div=="UFJM")) {
+      $label = "Judicial Memo";
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$label</a>";
+   }
+}
+?>
+</ul>
+<h2>Juvenile</h2>
+<ul>
+<?php
+# now juvenile
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   if ((($casetype=="DR") || (isset($seccasetype[1]) && $seccasetype[1]=="DR"))&&
+       (($div=="JA") || ($div== "JK")||($div=="JL")||($div=="JM")||($div=="JO")||($div=="JS"))  ) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div$div/index.txt>$div</a>";
+   } else if (($casetype=="CJ") ||(isset($seccasetype[1]) && $seccasetype[1]=="CJ")||
+	      ($casetype=="DP")||(isset($seccasetype[1]) && $seccasetype[1]=="DP")) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/juv/div$div/index.txt>$div</a>";
+   }
+}
+
+?>
+</ul>
+<h2>County Civil</h2>
+<ul>
+<?php
+# now misdemeanor
+foreach ($arr as $line) {
+   list($div,$casetype,$name)=explode('~',$line);
+   $seccasetype=explode(',',$casetype);
+   if ( ($casetype=="CC") || (isset($seccasetype[1]) && $seccasetype[1]=="CC") ) {
+      echo "<li><a href=gensumm.php?rpath=case/Palm/civ/div$div/index.txt>$div</a>";
+   }
+}
+?>
+</ul>
+
+
+</font>

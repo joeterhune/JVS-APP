@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -15,7 +15,6 @@ use Common qw (
     uploadFile
     encodeFile
 );
-use XML::Simple;
 use DB_Functions qw (
     dbConnect
     doQuery
@@ -28,11 +27,14 @@ use Casenotes qw (
 use JSON;
 use CGI;
 use File::Basename;
-
+use XML::Simple;
 my $info = new CGI;
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
-my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
 my $user = getUser();
+############### Added 04/17/2019 jmt security from conf 
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $notesGroup = $conf->{'ldapConfig'}->{'notesgroup'};
+
 if (!inGroup($user, $notesGroup)) {
     print $info->header;
     print "You do not have rights to use this function.\n";

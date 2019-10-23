@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -55,7 +55,7 @@ use Date::Calc qw(:all Month_to_Text);
 
 use MIME::Base64;
 
-my $config = getConfig("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $config = getConfig("$ENV{'JVS_ROOT'}/etc/ICMS.xml");
 
 my $info = new CGI;
 
@@ -257,7 +257,7 @@ $canEserve = 0;
 
 $data{'ADACoordinator'} = $config->{'ADACoordinator'};
 
-my $rtf = doTemplate(\%data,"/usr/local/icms/cgi-bin/orders/templates",$template,0);
+my $rtf = doTemplate(\%data,"$ENV{'JVS_ROOT'}/cgi-bin/orders/templates",$template,0);
 
 my $tmpdir = "/tmp";
 
@@ -368,7 +368,7 @@ if ((defined ($info->param('paddresses'))) && ($info->param('paddresses') eq "on
 	# Generate the RTF output and write it to a temp file
 	my $template = "addressList.rtf";
 
-	my $rtf = doTemplate(\%data,"/usr/local/icms/cgi-bin/orders/templates",$template,0);
+	my $rtf = doTemplate(\%data,"$ENV{'JVS_ROOT'}/cgi-bin/orders/templates",$template,0);
 
 	my $fh = File::Temp->new (
 							  UNLINK => 0,
@@ -415,7 +415,7 @@ if (defined($data{'DFT'})) {
 
 $newname =~ s/\s+/_/g;
 
-rename("$ENV{'DOCUMENT_ROOT'}/$finalPdf", "$ENV{'DOCUMENT_ROOT'}/$newname");
+rename("$ENV{'JVS_DOCROOT'}/$finalPdf", "$ENV{'JVS_DOCROOT'}/$newname");
 $finalPdf = $newname;
 
 print $info->header;

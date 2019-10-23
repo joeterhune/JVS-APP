@@ -22,11 +22,37 @@
         $('.pdfiframe').attr('src', '{$filename}');
         $('.pdfiframe').css('width', '100%');
         $('.pdfiframe').css('height', PDFIFRAMEHEIGHT);
+        
+        $('#dialogDiv').bind('dialogclose', function(event, ui) {
+			$(".pdfiframe").show();
+		});
        
        	{if $editable}
 	       	{if $isOrder}
 		       	$(document).on('click','#step1',function() {
-					window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+		       		$(".pdfiframe").hide();
+					$('#dialogSpan').html("By clicking OK, you will be returned to the form selection screen.  Your current document will be completely regenerated and any text changes you have made will be overwritten.");
+					$('#dialogDiv').dialog({
+						resizable: false,
+						minheight: 150,
+						width: 500,
+						modal: true,
+						title: 'Order Regeneration',
+						buttons: {
+						   	"OK": function() {
+						       	$(this).dialog( "close" );
+						       	window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+						        return false;
+						    },
+						    "Cancel": function() {
+						       	$(this).dialog( "close" );
+						        return false;
+						    }
+						}
+					});
+						                
+					return false;
+									
 				});
 			{/if}
 		{/if}

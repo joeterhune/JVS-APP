@@ -1,13 +1,14 @@
 <?php
-require_once ('../php-lib/common.php');
-require_once ('../php-lib/db_functions.php');
-include "../icmslib.php";
+require_once ($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once ($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+include $_SERVER['JVS_DOCROOT'] ."/icmslib.php";
 require_once('Smarty/Smarty.class.php');
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
+
 
 $dbh = dbConnect("icms");
 
@@ -38,9 +39,9 @@ for ($i=0;$i<count($userarr);$i++) {
 # collect county/division info
 #
 //$allcounties=load_conf_file("county_db_info.json");
-//$countyarr = array('50' => array('name' => 'Sarasota'));
+//$countyarr = array('58' => array('name' => 'Sarasota'));
 //$countyjson = json_encode($countyarr);
-$allcounties = array('50' => array('name' => 'Sarasota'));
+$allcounties = array('58' => array('name' => 'Sarasota'));
 # sub-optimal buildinf of countylist array...
 $custdivarr=array();
 $countylist=array_keys((array)$allcounties);
@@ -83,7 +84,7 @@ getData($docdescs, $query, $dbh);
 $formid = getReqVal('formid');
 
 $formname = "";
-$counties = "50";
+$counties = "58";
 $casetypes = "";
 $docdesc = "";
 $isprivate = "";

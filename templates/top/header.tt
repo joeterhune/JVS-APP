@@ -45,7 +45,7 @@
         <script src="/javascript/ajax.js?1.6" type="text/javascript"></script>
         <script type="text/javascript" src="/javascript/jquery.placeholder.js"></script>
      	<script src="/icms.js" type="text/javascript"></script>
-        <script src="/javascript/orders.js?2.7" type="text/javascript"></script>
+        <script src="/javascript/orders.js?2.8" type="text/javascript"></script>
         
         <script type="text/javascript">	
         	var onResize = function() {
@@ -288,8 +288,8 @@
 					</div>
 					<ul class="nav nav-tabs navbar navbar-right hidden-sm hidden-xs">
 						<!--<a class="btn btn-default" href="file://///c:/OIVFiles/index.html" target="_blank">OIV</a> -->
-						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
-						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
+						<a class="btn btn-default" href="http://ols.jud12.local/" target="_blank">OLS</a>&nbsp;
+						<a class="btn btn-default" href="http://ols.jud12.local/admin" target="_blank">OLS Admin</a>&nbsp;
 						<!-- <a class="btn btn-default"href="[% data.vrbUrl %]/scheduler/calendar" target="_blank">VRB</a> -->
 						<a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-question-circle"></i> Help <span class="caret"></span></a>
 						<ul class="dropdown-menu" aria-labeledby="Help Dropdown">

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -38,7 +38,7 @@ my $schema = getDbSchema($db);
 
 my @args;
 
-my $href = "/cgi-bin/case/calendars/trafficDocket.cgi";
+my $href = "/cgi-bin/calendars/trafficDocket.cgi";
 my $count = 0;
 
 foreach my $p (keys %params){

@@ -1,10 +1,11 @@
 <?php
-require_once '../php-lib/common.php';
-require_once '../php-lib/db_functions.php';
-require_once "../icmslib.php";
-require_once "../caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/caseinfo.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -32,7 +33,7 @@ $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
 $docid = $docInfo['docid'];
 
-$url = "/case/orders/reject.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/orders/reject.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 	createTab($docInfo['ucn'], $url, 1, 1, "cases",
 		array(
 		"name" => "Order Creation",
@@ -49,8 +50,8 @@ $user = $_SESSION['user'];
 $doc_info = getWFDocInfo($docid);
 
 $smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null);
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null);
 $smarty->assign('ucn', $doc_info['ucn']);
 $smarty->assign('creator', $doc_info['creator']);
 $smarty->assign('current_queue', $doc_info['queue']);
@@ -58,6 +59,6 @@ $smarty->assign('isOrder', $docInfo['isOrder']);
 $smarty->assign('docid', $docInfo['docid']);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "cases");
-$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->assign('tabs', getSessVal('tabs'));
 $smarty->display('top/header.tpl');
 echo $smarty->fetch("orders/reject.tpl");

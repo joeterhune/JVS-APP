@@ -5,7 +5,7 @@
 # 11/29/10 lms don't attempt pbso search if there's no database connection
 
 BEGIN {
-   use lib "$ENV{'PERL5LIB'}";
+   use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -17,20 +17,20 @@ use PBSO;
 use Date::Calc qw(:all);
 
 use Common qw (
-    dumpVar
-    doTemplate
-    $templateDir
-    returnJson
-    createTab
-    getUser
-    getSession
-    checkLoggedIn
+   dumpVar
+   doTemplate
+   $templateDir
+   returnJson
+   createTab
+   getUser
+   getSession
+   checkLoggedIn
 );
 
 use DB_Functions qw (
-    dbConnect
-    getData
-    getSubscribedQueues
+   dbConnect
+   getData
+   getSubscribedQueues
 	getSharedQueues
 	getQueues
 );
@@ -59,15 +59,16 @@ sub doit {
 	
 	my $wfcount = getQueues(\%queueItems, \@allqueues, $fdbh);
 	
-	createTab("PBSO Details - Jacket " . $jacket . " and Booking " . $booking,  "/cgi-bin/case/pbsobview.cgi?jacket=" . $jacket . "&booking=" . $booking, 1, 1, "index");
+	createTab("SCSO Details - Jacket " . $jacket . " and Booking " . $booking,  "/cgi-bin/pbsobview.cgi?jacket=" . $jacket . "&booking=" . $booking, 1, 1, "index");
 	
 	my $session = getSession();
-
-   	# test the pbso connection.  if can't connect, don't do anything!
-   	my $pbsoconn=test_pbsoconnection();
-	if($pbsoconn == 0) {
+   
+   # test the pbso connection.  if can't connect, don't do anything!
+   my $pbsoconn=test_pbsoconnection();
+	
+   if($pbsoconn == 0) {
 		print $info->header();
-	    print "No connection can be made to the PBSO database at this time.  ".
+	    print "No connection can be made to the SCSO database at this time.  ".
 		"Please try later.<br/>";
 	    exit;
 	}
@@ -95,17 +96,17 @@ sub doit {
 		}
 	</script>
 	
-	<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota Sheriff's Office Booking Details<br/>for Jacket # $jacket and Booking # $booking</h2>";
+	<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota County Sheriff's Office Booking Details<br/>for Jacket # $jacket and Booking # $booking</h2>";
 	
-	   write_jacketIdentifier($jacket);
+	   write_jacketIdentifier($jacket, $pbsoconn);
 	   print "<button name=\"GoBookings2\" onclick=\"window.location.href='pbsojview.cgi?jacket=$jacket&ucn=$ucn';\">See All Bookings for this Person</button>";
-	   write_bookingHeader($jacket,$booking);
+	   write_bookingHeader($jacket,$booking, $pbsoconn);
 	   print "<p>";
-	   write_bookingArrestInformation($jacket,$booking);
+	   write_bookingArrestInformation($jacket,$booking, $pbsoconn);
 	   print "<p>";
-	   write_bookingChargeBondInformation($jacket,$booking);
+	   write_bookingChargeBondInformation($jacket,$booking, $pbsoconn);
 	   print "<p>";
-	   write_bookingSentencing($jacket,$booking);
+	   write_bookingSentencing($jacket,$booking, $pbsoconn);
 	   print "<p>";
 	
 	   print "<button name=\"GoBookings2\" onclick=\"window.location.href='pbsojview.cgi?jacket=$jacket&ucn=$ucn';\">See All Bookings for this Person</button>";

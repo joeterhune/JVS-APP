@@ -1,7 +1,7 @@
 package ICMS15;
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -50,7 +50,7 @@ sub get_group_memberships {
         my $newFilter = sprintf('(&(sAMAccountName=CAD-ICMS-*)(member=%s))', $userRec->{'distinguishedName'});
         
         my $groups = [];
-        ldapLookup($groups, $newFilter, $ldap, ['sAMAccountName'],'ou=Services,ou=CAD,ou=Enterprise,dc=jud12.flcourts,dc=ORG');
+        ldapLookup($groups, $newFilter, $ldap, ['sAMAccountName'],'ou=Services,ou=CAD,ou=Enterprise,dc=PBCGOV,dc=ORG');
         
         foreach my $group (@{$groups}) {
             $groupref->{$group->{'sAMAccountName'}} = 1;

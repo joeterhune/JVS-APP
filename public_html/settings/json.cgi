@@ -4,9 +4,6 @@
 # json.cgi makes settings available via javascript by leveraging a json request to /icms/settings/json.cgi 
 #
 
-BEGIN {
-    use lib $ENV{'PERL5LIB'};
-}
 use CGI;
 use ICMS15 qw (
     get_group_memberships

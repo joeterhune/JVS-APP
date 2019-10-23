@@ -1,10 +1,6 @@
 <?php
-require_once("/usr/local/icms-web/case/php-lib/common.php");
-require_once("/usr/local/icms-web/case/php-lib/db_functions.php");
-
-require_once('FirePHPCore/fb.php');
-$firephp = FirePHP::getInstance(true);
-$firephp->setEnabled(false);
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 $divname = getReqVal('reportDiv');
 

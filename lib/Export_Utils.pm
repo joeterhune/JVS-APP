@@ -1,7 +1,7 @@
 package Export_Utils;
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -38,7 +38,7 @@ sub makeSpreadsheet {
     if (defined $ENV{'HTTPS'}) {
         $protocol = "https"
     }
-    my $url = sprintf("%s://%s/cgi-bin/case/", $protocol, $ENV{'HTTP_HOST'});
+    my $url = sprintf("%s://%s/cgi-bin/", $protocol, $ENV{'HTTP_HOST'});
     
     if (!defined($formatHash)) {
         $formatHash = {};

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;

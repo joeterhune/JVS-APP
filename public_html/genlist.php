@@ -2,12 +2,13 @@
 
 ini_set('max_execution_time','0');	// no time limit
 
-require_once("php-lib/common.php");
-require_once("php-lib/db_functions.php");
-require_once("php-lib/col_maps.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/col_maps.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/ldapfunctions.php");
+
 require_once("Smarty/Smarty.class.php");
-require_once("workflow/wfcommon.php");
-require_once('ldapfunctions.php');
 
 checkLoggedIn();
 
@@ -76,15 +77,15 @@ function prettydate($date) {
 
 
 function getval($varname,$infile) {
-  $x=fgets($infile);
-  list($vx,$val)=explode("=",$x);
-  $vx=rtrim($vx);
-  $val=rtrim($val);
-  if ($vx!=$varname) {
-      print "/case/genlist.php: Error: variable $varname not encountered--(saw $vx instead)!\n";
-      return("");
-      }
-  return($val);
+    $x=fgets($infile);
+    list($vx,$val)=explode("=",$x);
+    $vx=rtrim($vx);
+    $val=rtrim($val);
+    if ($vx!=$varname) {
+        print "/genlist.php: Error: variable $varname not encountered--(saw $vx instead)!\n";
+        return("");
+    }
+    return($val);
 }
 
 
@@ -93,21 +94,23 @@ function loaddata($rpath, &$config, &$res, $ageRange = null) {
     global $colMaps;
     global $ranges;
     global $LDAPSECGROUP;
+	$ldapconfig = simplexml_load_file($icmsXml);
+	$LDAPSECGROUP = isset($config->{'ldapConfig'}->{securegroup}) ? (string) $config->{'ldapConfig'}->{securegroup} : "MAN_JVS_Users";
     //I am fudging this fix in here due to the plus sign for county civil 96+
-    if(strpos($rpath, "_96") !== false){
-    	$rpath = str_replace("_96 .txt", "_96+.txt", $rpath);
-    }
-    
-    $infile=fopen("/var/www/html/$rpath","r");
+		if(strpos($rpath, "_96") !== false){
+			$rpath = str_replace("_96 .txt", "_96+.txt", $rpath);
+		}
+
+    $infile=fopen("/$rpath","r");
     if (!$infile) {
-        echo "Couldn't open /var/www/html/$rpath";
+        echo "Couldn't open /$rpath";
         return;
     }
     $report_date = getval("DATE",$infile);
     $config['rptdate'] = fancydate($report_date);
     $config['title1'] = getval("TITLE1",$infile);
     $config['title2'] = getval("TITLE2",$infile);
-    
+
     if ($ageRange != NULL) {
         $config['title2'] = sprintf("%s (Case Age %s)", $config['title2'], $ranges[$ageRange]['rangeString']);
     }
@@ -193,6 +196,7 @@ function browse($rpath, &$data, $ageRange = null) {
     
     $data['config'] = array();
     $data['reportData'] = array();
+    
     loaddata($rpath, $data['config'], $data['reportData'], $ageRange);
     
     return;
@@ -204,6 +208,12 @@ function browse($rpath, &$data, $ageRange = null) {
 #
 
 extract($_REQUEST);
+
+$config = simplexml_load_file($icmsXml);
+// Set a default value, in case there is no reportPath element defined
+$reportPath = isset($config->{'reportPath'}) ? (string) $config->{'reportPath'} : "/var/www/Palm";
+$type = getReqVal('type');
+$divName = getReqVal('divName');
 
 if(!isset($pagenum)){
 	$pagenum = 1;
@@ -226,26 +236,26 @@ while($slashCount >= 4){
 	$slashCount = substr_count($rpath, "/");
 }	
 
-$rptPath = sprintf("%s/%s/%s.txt", $rpath, $yearmonth, $rpttype);
+$rptPath = sprintf("%s/%s/%s.json", $rpath, $yearmonth, $rpttype);
+
+createTab("Division " . $divname . " Case Report", 
+	"/genlist.php?type=$type&divname=$divname&rpttype=$rpttype&yearmonth=$yearmonth", 1, 1, "cases");
+
+$reportFile = sprintf("%s/%s/div%s/%s", $reportPath, $type, $divname, $rptPath);
 
 $data = array();
+
+if (isset($ageRange) && ($ageRange >= 0)) {
+    browse("$reportFile", $data, $ageRange);
+} else {
+    browse("$reportFile", $data);
+}
+
 $data['divname'] = $divname;
 $data['yearmonth'] = $yearmonth;
 $data['rpttype'] = $rpttype;
-$data['rpath'] = "/" . $rptPath;
-$data['rpath'] = "/" . $rptPath;
-
-createTab("Division " . $divname . " Case Report", 
-	"/case/genlist.php?rpath=/" . $rpath . "/index.txt&divname=" . $divname . "&rpttype=" . $rpttype . "&yearmonth=" . $yearmonth, 
-	1, 1, "cases");
-
-//$data['divtype'] = $divinfo['division_type'];
-
-if (isset($ageRange) && ($ageRange >= 0)) {
-    browse($rptPath, $data, $ageRange);
-} else {
-    browse($rptPath, $data);
-}
+$data['rpath'] = $rptPath;
+$data['courttype'] = $type;
 
 if (isset($lop)) {
     $smarty->assign('lop', 1);
@@ -264,8 +274,7 @@ else{
 
 if($pagenum == 0){
 	$endrow = $pagesize;
-}
-else{
+} else {
 	$endrow = (($pagenum) * $pagesize) + $pagesize;
 	
 	if($endrow > count($data['reportData'])){
@@ -276,6 +285,7 @@ else{
 //The plus was causing a space at the end...
 $data['rpttype'] = trim($data['rpttype']);
 
+$smarty->assign('courttype', $type);
 $smarty->assign('data', $data);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "cases");
@@ -301,11 +311,9 @@ $result = array();
 
 if(!$ajax){
 	$smarty->display('top/header.tpl');
-
-	echo $html;
-}
-else{
 	
+	echo $html;
+} else {
 	$headerCount = 12;
 	$dataArray = array();
 	$rowCount = 0;
@@ -332,8 +340,7 @@ else{
 			$field = $headers[$key];
 			if($c == 0){
 				usort($allDataRows, sortAsc($field));
-			}
-			else{
+			} else {
 				usort($allDataRows, sortDesc($field));
 			}
 		}
@@ -371,8 +378,7 @@ else{
 							
 							$totalRowCount++;
 						}
-					}
-					else if($rf == "121-180 days"){
+					} else if($rf == "121-180 days") {
 						if($rd[$field] > 120 && ($rd[$field] <= 180)){
 							if($actualRowCount >= $begrow && ($actualRowCount < ($endrow + 1))){
 								if(!existsInArray($dataRows, 'CaseNumber', $rd['CaseNumber'])){
@@ -386,8 +392,7 @@ else{
 							
 							$totalRowCount++;
 						}
-					}
-					else if($rf == "180+ days"){
+					} else if($rf == "180+ days") {
 						if($rd[$field] > 180){
 							if($actualRowCount >= $begrow && ($actualRowCount < ($endrow + 1))){
 								if(!existsInArray($dataRows, 'CaseNumber', $rd['CaseNumber'])){
@@ -404,7 +409,7 @@ else{
 					}
 				}
 				//Otherwise do the normal stuff
-				else if(stripos($rd[$field], $rf) !== false){
+				else if(stripos($rd[$field], $rf) !== false) {
 					if($actualRowCount >= $begrow && ($actualRowCount < ($endrow + 1))){
 						if(!existsInArray($dataRows, 'CaseNumber', $rd['CaseNumber'])){
 							$dataRows[] = $rd;
@@ -475,8 +480,7 @@ else{
 	
 	if(empty($_REQUEST['filter'])){
 		$dataArray['total_rows'] = count($data['reportData']);
-	}
-	else{
+	} else{
 		$dataArray['total_rows'] = $totalRowCount;
 	}
 	
@@ -507,13 +511,11 @@ function sortDesc($key) {
 	return function ($a, $b) use ($key) {
 		if(is_numeric($a[$key]) && is_numeric($b[$key])){
 			return $b[$key] - $a[$key];
-		}
-		else if(stripos($key, "date") !== false){
+		} else if(stripos($key, "date") !== false) {
 			$d1 = date("Y-m-d", strtotime($a[$key]));
 			$d2 = date("Y-m-d", strtotime($b[$key]));
 			return strcmp($d2, $d1);
-		}
-		else{
+		} else {
 			return strcmp($b[$key], $a[$key]);
 		}
 	};

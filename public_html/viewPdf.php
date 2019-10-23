@@ -1,11 +1,11 @@
 <?php
 
-require_once("/usr/local/icms-web/case/php-lib/common.php");
-require_once("php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 $pdbh = dbConnect("portal_info");
 
-$filing_id = $_REQUEST['filing_id'];
+$filing_id = getReqVal('filing_id');
 
 $query = "	SELECT base64_attachment
 			FROM pending_filings

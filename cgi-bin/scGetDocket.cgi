@@ -4,7 +4,7 @@
 # to show booking history for the defendant
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib $ENV{'JVS_PERL5LIB'};
 }
 
 use strict;
@@ -28,6 +28,7 @@ use Showcase qw (
     getDockets
     $db
 );
+use XML::Simple;
 
 use JSON;
 
@@ -40,6 +41,8 @@ my %params = $info->Vars;
 my $casenum = $params{'casenum'};
 my $casetype = $params{'casetype'};
 my $caseid = $params{'caseid'};
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $tifgroup = $conf->{'ldapConfig'}->{'tifgroup'};
 
 my $dbh = dbConnect($db);
 if (!defined($dbh)) {
@@ -70,7 +73,7 @@ $data{'ucn'} = $casenum;
 #$data{'ucn'} =~ s/^50-//g;
 $data{'CaseID'} = $caseid;
 
-$data{'showTif'} = inGroup(getUser(), "CAD-ICMS-TIF");
+$data{'showTif'} = inGroup(getUser(), $tifgroup);
 
 getDockets($casenum, $dbh, $data{'dockets'}, $schema, $caseid);
 

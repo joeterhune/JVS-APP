@@ -8,7 +8,7 @@
 # 04/07/11 lms Change &Dagger; to "F:" to indicate flag
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use Spreadsheet::WriteExcel;

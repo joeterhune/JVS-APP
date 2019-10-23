@@ -3,9 +3,9 @@
 # returns a timestamp, and path to a temporary file that contains the
 # signature image for that user with the other info superimposed
 # as a digital watermark...and the name and role superimposed at the bottom
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-include "../icmslib.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+include $_SERVER['JVS_DOCROOT'] .  "/icmslib.php";
 
 extract($_REQUEST);
 

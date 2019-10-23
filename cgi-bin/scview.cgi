@@ -4,7 +4,7 @@
 #
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib $ENV{'JVS_PERL5LIB'};
 };
 
 use strict;
@@ -107,7 +107,7 @@ sub doit {
     my $icmsuser = getUser();
     
     ############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
@@ -115,12 +115,15 @@ sub doit {
 	my $sealedJuvGroup = $conf->{'ldapConfig'}->{'sealedjuvgroup'};
 	my $odpsgroup = $conf->{'ldapConfig'}->{'odpsgroup'};
 	my $icmsuser = $info->remote_user;
-	
+	my $notesuser = $conf->{'ldapConfig'}->{'notesgroup'};
     my $ldap = ldapConnect();
     my $secretuser = inGroup($icmsuser,$secGroup,$ldap);
     my $sealeduser = inGroup($icmsuser,$sealedGroup,$ldap);
     my $jsealeduser = inGroup($icmsuser,$sealedJuvGroup,$ldap);
-    my $odpuser = inGroup($icmsuser,$odpsgroup,$ldap);
+	my $tifgroup = $conf->{'ldapConfig'}->{'tifgroup'};
+
+    $data{'odpuser'} = inGroup($icmsuser,$odpsgroup,$ldap);
+    $data{'notesuser'} = inGroup($icmsuser,$notesuser,$ldap);
     
     my $dbh = dbConnect($db);
     my $schema = getDbSchema($db);
@@ -381,7 +384,7 @@ sub doit {
     $data{'events'} = [];
     getCourtEvents($caseid, $dbh, $data{'events'}, $schema);
     
-    $data{'showTif'} = (($ENV{'HTTP_USER_AGENT'} !~ /mobile/i) && (inGroup(getUser(), "CAD-ICMS-TIF", $ldap)));
+    $data{'showTif'} = (($ENV{'HTTP_USER_AGENT'} !~ /mobile/i) && (inGroup(getUser(), $tifgroup, $ldap)));
 
     $data{'appellants'} = [];
     # We've already looked up the parties.  Get the appellants from that list

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -67,7 +67,7 @@ foreach my $key (keys %{$sess_tabs}){
 }
 
 if(!$tdExists){
-	my $href = "/cgi-bin/case/calendars/trafficDocket.cgi";
+	my $href = "/cgi-bin/calendars/trafficDocket.cgi";
 	createTab("Traffic Docket", $href, 1, 1, "calendars");
 	$session = getSession();
 } else{

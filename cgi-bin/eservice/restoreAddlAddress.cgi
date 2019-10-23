@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -24,7 +24,7 @@ my %params = $info->Vars;
 my $casenum = $params{'casenum'};
 my $email = $params{'email'};
 
-my $dbh = dbConnect("ols");
+my $dbh = dbConnect("eservice");
 
 my $query = qq {
     insert into

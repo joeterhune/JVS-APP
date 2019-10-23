@@ -25,7 +25,7 @@
 	                <tr>
 	                    <td style="width: 270px; background-color: #FFFFFE">
 	                        <span class="rptlabel">
-	                            <a href="gensumm.php?rpath=/Sarasota/{$div.divType}/div{$div.divName}/index.txt&divName={$div.divName}">
+	                            <a href="gensumm.php?rpath=/Palm/{$div.divType}/div{$div.divName}/index.txt&divName={$div.divName}">
 	                                {$div.divDesc} Division {$div.divName}
 	                            </a>
 	                        </span>

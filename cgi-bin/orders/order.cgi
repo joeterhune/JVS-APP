@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -40,8 +40,8 @@ our $db = getShowcaseDb();
 our $dbh = dbConnect($db);
 our $schema = getDbSchema($db);
 
-my $DPATH="/usr/local/icms/cgi-bin/orders/forms";
-my $SIGS="/usr/local/icms/cgi-bin/orders/sigs/";
+my $DPATH="$ENV{'JVS_ROOT'}/cgi-bin/orders/forms";
+my $SIGS="$ENV{'JVS_ROOT'}/cgi-bin/orders/sigs/";
 my $FFEXT=".form";
 my $maxcopies = 10;  # configurable!  don't allow more than 10 copies to be produced by the order generator.
 
@@ -642,11 +642,11 @@ print <<EOS;
 <html>
 <head>
 <title>Create Form Order</title>
-<link rel="stylesheet" type="text/css" href="/case/icms1.css?1.1"/>
-<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.js"></script>
-<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
-<script src="/case/icms.js?1.1" type="text/javascript"></script>
-<script src="/case/javascript/main.js?1.1" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="/icms1.css?1.1"/>
+<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.js"></script>
+<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.cookie.js" type="text/javascript"></script>
+<script src="/icms.js?1.1" type="text/javascript"></script>
+<script src="/javascript/main.js?1.1" type="text/javascript"></script>
 </head>
 <body>
 	<script type="text/javascript">
@@ -701,8 +701,8 @@ print <<EOS;
 	</script>
 	
 	<div>
-		<a href="/case/">
-			<img src="/case/icmslogo.jpg" style="border: none" alt="ICMS Logo">
+		<a href="/">
+			<img src="/icmslogo.jpg" style="border: none" alt="ICMS Logo">
 		</a>
 	</div>
 	
@@ -805,7 +805,7 @@ if ($rpttype ne "") {
         # show fields if it's on the fieldname list for the form,
         # OR if it's mdate, since mdate appears on all forms
         #if ($fieldq=~/,$fieldname,/ or $fieldname eq "mdate") {
-        #  12th won't use mdate!  no certificate of service here...
+        #  15th won't use mdate!  no certificate of service here...
         my $cookval;
         if ($fieldq=~/,$fieldname,/) {
             # support for initval in TEXT field

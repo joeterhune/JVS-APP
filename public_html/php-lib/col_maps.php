@@ -1,59 +1,77 @@
 <?php
 
 $colMaps = array (
-    'Case #' => array(
+    'CaseNumber' => array(
         'colName' => 'CaseNumber',
-        'filterPlaceholder' => 'Part of case #'
+        'colHeader' => 'Case #',
+        'filterPlaceholder' => 'Part of case #',
+        'type' => 'L'
     ),
-    'Name' => array (
+    'CaseStyle' => array (
         'colName' => 'CaseStyle',
+        'colHeader' => 'Name',
         'filterPlaceholder' => 'Part of case style',
-        'cellClass' => 'caseStyle'
+        'cellClass' => 'caseStyle',
+        'type' => 'I'
     ),
     'DOB' => array(
         'colName' => 'DOB',
         'filterPlaceholder' => 'Date',
         'filter-type' => 'filter-select filter-match',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'dateCol',
+        'type' => 'D'
     ),
-    'Initial File' => array(
+    'FileDate' => array(
         'colName' => 'FileDate',
+        'colHeader' => 'Initial File',
         'filterPlaceholder' => 'Date',
         'filter-type' => 'filter-select',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'dateCol',
+        'type' => 'D'
     ),
-    'Age' => array(
+    'CaseAge' => array(
+        'colHeader' => 'Age',
         'colName' => 'CaseAge',
         'filterPlaceholder' => 'Select Range',
-        'cellClass' => 'medNum'
+        'cellClass' => 'medNum',
+        'type' => 'D'
     ),
-    'Type' => array(
+    'CaseType' => array(
+        'colHeader' => 'Case<br>Type',
         'colName' => 'CaseType',
         'filterPlaceholder' => 'Type',
         'filter-type' => 'filter-select',
-        'cellClass' => 'medNum'
+        'cellClass' => 'medNum',
+        'type' => 'C'
     ),
-    'Status' => array(
+    'CaseStatus' => array(
         'colName' => 'CaseStatus',
+        'colHeader' => 'Status',
         'filterPlaceholder' => 'Status',
         'filter-type' => 'filter-select',
-        'cellClass' => 'medNum'
+        'cellClass' => 'medNum',
+        'type' => 'I'
     ),
-    'Last Activity' => array(
+    'LastActivity' => array(
         'colName' => 'LastActivity',
+        'colHeader' => 'Last<br>Activity<br>Date',
         'filterPlaceholder' => 'Date',
         'filter-type' => 'filter-select',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'dateCol',
+        'type' => 'D'
     ),
-    '# of Charges' => array(
-        'colName' => 'ChargeCount',
+    'NumCharges' => array(
+        'colName' => 'NumCharges',
+        'colHeader' => '# of Charges',
         'filterPlaceholder' => 'Count',
         'filter-type' => 'filter-select',
-        'cellClass' => 'smallNum'
+        'cellClass' => 'smallNum',
+        'type' => 'D'
     ),
     'Charges' => array(
         'colName' => 'Charges',
-        'filterPlaceholder' => 'Part of charge'
+        'filterPlaceholder' => 'Part of charge',
+        'type' => 'I'
     ),
     'Event Code' => array(
         'colName' => 'FarthestEventCode',
@@ -67,84 +85,103 @@ $colMaps = array (
         'filter-type' => 'filter-select',
         'cellClass' => 'dateCol'
     ),
-    'Flags/Most Recent Note' => array(
-        'colName' => 'FlagsNotes',
+    'MergedNotesFlags' => array(
+        'colName' => 'MergedNotesFlags',
+        'colHeader' => 'Flags/Most Recent Note',
         'filterPlaceholder' => 'Part of flag or note',
-        'cellClass' => 'caseNote'
+        'cellClass' => 'caseNote',
+        'type' => 'I'
     ),
-    'Div' => array(
+    'DivisionID' => array(
         'colName' => 'DivisionID',
+        'colHeader' => 'Div',
         'filterPlaceholder' => 'Div',
         'filter-type' => 'filter-select',
-        'cellClass' => 'divCol'
+        'cellClass' => 'divCol',
+        'type' => 'C'
     ),
-    'Last Activity Date' => array(
-        'colName' => 'LastActivityDate',
-        'filterPlaceholder' => 'Date',
+    'LastDocketCode' => array(
+        'colName' => 'LastDocketCode',
+        'colHeader' => 'Last<br>Activity',
+        'filterPlaceholder' => 'Code',
         'filter-type' => 'filter-select',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'eventCode',
+        'type' => 'C'
     ),
     'Sex' => array(
         'colName' =>'Sex',
         'filterPlaceholder' => 'Sex',
         'filter-type' => 'filter-select',
-        'cellClass' => 'yesno'
+        'cellClass' => 'yesno',
+        'type' => 'C'
     ),
-    'In<br>Jail' => array(
+    'InJail' => array(
         'colName' => 'InJail',
+        'colHeader' => 'In<br>Jail',
         'filterPlaceholder' => 'Select',
         'filter-type' => 'filter-select',
-        'cellClass' => 'yesno'
+        'cellClass' => 'yesno',
+        'type' => 'C'
     ),
-    'Days<br>Served' => array(
+    'DaysServed' => array(
         'colName' => 'DaysServed',
+        'colHeader' => 'Days<br>Served',
         'filterPlaceholder' => 'Days',
-        'cellClass' => 'smallNum'
+        'cellClass' => 'smallNum',
+        'type' => 'D'
     ),
-    'Case<br>Type' => array(
-        'colName' => 'CaseType',
-        'filterPlaceholder' => 'Type',
-        'filter-type' => 'filter-select',
-        'cellClass' => 'medNum'
-    ),
-    'Case<br>Age' => array(
+    'CaseAge' => array(
         'colName' => 'CaseAge',
+        'colHeader' => 'Case<br>Age',
         'filterPlaceholder' => 'Age',
-        'cellClass' => 'medNum'
+        'cellClass' => 'medNum',
+        'type' => 'D'
     ),
-    '# of<br>Charges' => array(
+    'ChargeCount' => array(
         'colName' => 'ChargeCount',
+        'colHeader' => '# of<br>Charges',
         'filterPlaceholder' => 'Count',
         'filter-type' => 'filter-select',
         'cellClass' => 'smallNum'
     ),
-    'Highest<br>Charge<br>Degree' => array(
-        'colName'=> 'HighestDegree',
+    'TopChargeDesc' => array(
+        'colName'=> 'TopChargeDesc',
+        'colHeader' => 'Highest<br>Charge<br>Degree',
         'filterPlaceholder' => 'Select Degree',
         'filter-type' => 'filter-select',
-        'cellClass' => 'shortText'
+        'cellClass' => 'shortText',
+        'type' => 'I'
     ),
-    'Most<br>Recent<br>Event Date' => array(
+    'MostRecentEventDate' => array(
         'colName' => 'MostRecentEventDate',
+        'colHeader' => 'Most<br>Recent<br>Event Date',
         'filterPlaceholder' => 'Date',
         'filter-type' => 'filter-select',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'dateCol',
+        'type' => 'D'
     ),
-    'Most Recent<br>Event Type' => array(
+    'MostRecentEventType' => array(
         'colName' => 'MostRecentEventType',
+        'colHeader' => 'Most Recent<br>Event Type',
         'filterPlaceholder' => 'Type',
-        'filter-type' => 'filter-select'
+        'filter-type' => 'filter-select',
+        'type' => 'I'
     ),
-    'Farthest<br>Event' => array(
-        'colName' => 'FarthestEvent',
+    'FarthestEventDate' => array(
+        'colName' => 'FarthestEventDate',
+        'colHeader' => 'Farthest Event<br>Date',
         'filterPlaceholder' => 'Date',
         'filter-type' => 'filter-select',
-        'cellClass' => 'dateCol'
+        'cellClass' => 'dateCol',
+        'type' => 'D'
     ),
-    'Farthest Event<br>Type' => array(
+    'FarthestEventType' => array(
         'colName' => 'FarthestEventCode',
+        'colHeader' => 'Farthest Event<br>Type',
         'filterPlaceholder' => 'Type',
-        'filter-type' => 'filter-select'
+        'filter-type' => 'filter-select',
+        'cellClass' => 'eventCode',
+        'type' => 'C'
     )
 );
 

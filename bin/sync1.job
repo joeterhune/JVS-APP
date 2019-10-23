@@ -1,0 +1,7 @@
+####################### sync1.job ########################
+# Description:  Job backs up all Postgresql DB on server
+mount -t cifs //151.132.36.27/linux /mnt/backup -o user=cadweb,pass=mobile1,rw,nolock
+cd /mnt/backup
+PGUSER=postgres pg_dumpall -c > icms.sql
+cd /mnt
+umount /mnt/backup

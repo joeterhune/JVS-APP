@@ -1,11 +1,12 @@
 <?php
 
-require_once '../php-lib/common.php';
-require_once '../php-lib/db_functions.php';
-require_once "../icmslib.php";
-require_once "../caseinfo.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/common.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 checkLoggedIn();
 
@@ -13,6 +14,8 @@ $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
+
+$uploadDir = $_SERVER['JVS_DOCROOT'] . "/uploads";
 
 $docInfo = array();
 $docid = getReqVal('docid');
@@ -42,15 +45,16 @@ if(!empty($_POST)){
 	$suppDocs = array();
 	for($i = 1; $i < $supportingCount; $i++){
 		$fName = preg_replace('/[^a-zA-Z0-9-_\.]/','', $_FILES['customSupportingDoc_' . $i]['name']);
-		$suppName = "/var/www/html/case/uploads/" . $user . "/" . $ucn . "_" . $fName;
+		$suppName = "$uploadDir/$user/$ucn" . "_" . $fName;
+		
 		$title = htmlentities($_POST['customSupportingTitle_' . $i], ENT_QUOTES);
 			
 		if(empty($title)){
 			$title = "Attachment " . $i;
 		}
 		
-		if(!file_exists("/var/www/html/case/uploads/" . $user)) {
-			mkdir("/var/www/html/case/uploads/" . $user);
+		if(!file_exists("$uploadDir/$user")) {
+			mkdir("$uploadDir/$user", 0755, true);
 		}
 			
 		move_uploaded_file($_FILES['customSupportingDoc_' . $i]['tmp_name'], $suppName);
@@ -60,7 +64,7 @@ if(!empty($_POST)){
 		}
 		else{
 			
-			$suppName = "/case/uploads/" . $user . "/" . $ucn . "_" . $fName;
+			$suppName = "/uploads/$user/$ucn" . "_" . $fName;
 			$iQuery = "INSERT INTO olscheduling.supporting_documents
 						(
 							workflow_id,
@@ -165,13 +169,14 @@ getTransferQueues($user, $dbh, $real_xferqueues);
 $smarty->assign('real_xferqueues', $real_xferqueues);
 
 $xml = simplexml_load_file($icmsXml);
+
 $smarty->assign('olsURL', $xml->olsURL);
 $smarty->assign('merge_docs', $mergeDocs);
 $smarty->assign('jvs_docs', $jvsDocs);
 $smarty->assign('ols_docs', $olsDocs);
 $smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null);
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null);
 $smarty->assign('isOrder', $isOrder);
 $smarty->assign('ucn', $ucn);
 $smarty->assign('docid', $docid);

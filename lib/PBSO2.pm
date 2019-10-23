@@ -1,7 +1,7 @@
 package PBSO2;
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -13,6 +13,7 @@ our @EXPORT_OK = qw(
     getMugshotWithJacketId
     getInmateIdFromBooking
     getBookingHistory
+    getBookingSubset
 );
 
 use DB_Functions qw (
@@ -24,6 +25,7 @@ use DB_Functions qw (
 
 use Common qw (
     inArray
+    getArrayPieces
 );
 
 use File::Basename;
@@ -342,7 +344,7 @@ sub getBookingPhoto {
 		return "/images/star.jpg";
 	}
 
-	my $imagebase = "$ENV{'DOCUMENT_ROOT'}/bookingimages";
+	my $imagebase = $ENV{'JVS_DOCROOT'} . "/bookingimages";
 
 	my @pieces = split(/Imacs_Images_5/,$photopath);
 
@@ -381,5 +383,60 @@ sub getBookingPhoto {
 		return "/bookingimages" . $pieces[1];
 	}
 }
+
+sub getBookingSubset {
+    # Instead of returning *all* arrests (far more than is needed, even for nightly reports), just get a
+    # subset of the arrests, from a listing of booking sheet numbers. Will need to
+    # run multiple iterations,
+	my $caseref = shift;
+	my $pbsodbh = shift;
+    my $bsns = shift;
+
+	my $hasDBH = 1;
+	if (!defined($pbsodbh)) {
+		$pbsodbh = dbconnect("pbso2");
+		$hasDBH = 0;
+	}
+    
+    my $count = 0;
+    my $perQuery = 1000;
+    
+    while ($count < scalar(@{$bsns})) {
+        my @temp;
+        getArrayPieces($bsns, $count, $perQuery, \@temp, 1);
+        my $inString = join(",", @temp);
+        
+        
+        my $query = qq {
+            select
+                distinct casenumber as PBSOCase,
+                CONVERT(varchar(10),BookingDate,110) as BookingDate,
+                inmateid as InmateID,
+                BookingID as BookingID,
+                CASE
+                    WHEN releasedate IS NULL
+                        THEN ''
+                    ELSE CONVERT(varchar(10),releasedate,110)
+                END as ReleaseDate,
+                ISNULL(assignedcellid,'') as AssignedCellID
+            from
+                $view
+            where
+                casenumber in ($inString)
+            order by
+                casenumber desc
+        };
+        getData($caseref,$query,$pbsodbh,{ hashkey => "PBSOCase", flatten => 1 });
+        
+        $count += $perQuery;
+    }
+    
+	if (!$hasDBH) {
+		$pbsodbh->disconnect;
+	}
+	# Return the number of rows
+	return scalar(keys(%{$caseref}));
+}
+
 
 1;

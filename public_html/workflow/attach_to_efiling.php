@@ -1,16 +1,16 @@
 <?php
 
-include "../php-lib/common.php";
-include "../php-lib/db_functions.php";
-include "../icmslib.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] .  "/icmslib.php");
 
-$xml = simplexml_load_file($icmsXml);
+$xml = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
 
-$wf_id = $_REQUEST['wf_id'];
-$doc_id = $_REQUEST['doc_id'];
-$attach = $_REQUEST['attach'];
-$merge_doc = $_REQUEST['mergeDoc'];
-$user = $_SESSION['user'];
+$wf_id = getReqVal('wf_id');
+$doc_id = getReqVal('doc_id');
+$attach = getReqVal('attach');
+$merge_doc = getReqVal('mergeDoc');
+$user = getSessVal('user');
 
 $dbh = dbConnect("ols");
 $idbh = dbConnect("icms");
@@ -27,15 +27,15 @@ $is_jvs_doc = $row['jvs_doc'];
 $args = array();
 $set = ", jvs_file_path = NULL ";
 if($is_jvs_doc == '0'){
-	$new_file_path = "/var/www/html/case/uploads/" . $user . "/" . basename($row['file']);
+	$new_file_path = "/var/www/html/uploads/" . $user . "/" . basename($row['file']);
 	
-	if(!file_exists("/var/www/html/case/uploads/" . $user)) {
-		mkdir("/var/www/html/case/uploads/" . $user);
+	if(!file_exists("/var/www/html/uploads/" . $user)) {
+		mkdir("/var/www/html/uploads/" . $user);
 	}
 	
 	copy($xml->olsURL . "/" . $row['file'], $new_file_path);
 	$set = ", jvs_file_path = :new_file_path ";
-	$new_file_path = "/case/uploads/" . $user . "/" . basename($row['file']);
+	$new_file_path = "/uploads/" . $user . "/" . basename($row['file']);
 	$args['new_file_path'] = $new_file_path;
 }
 
@@ -88,7 +88,7 @@ if(count($mergeDocs) > 0){
 	foreach($mergeDocs as $md){
 		$html .= '<tr id="merge-' . $md['supporting_doc_id'] . '">
 					<td><a href="' . $md['file'] . '" target="_blank">' . $md['document_title'] . '</a></td>
-					<td><a href="#\" class="removeMergeDoc" data-docid="' . $md['supporting_doc_id'] . '"><img src="../icons/delete.png"/></a></td>
+					<td><a href="#\" class="removeMergeDoc" data-docid="' . $md['supporting_doc_id'] . '"><img src="../jvsicons/delete.png"/></a></td>
 				</tr> ';
 	}
 

@@ -1,0 +1,126 @@
+<?php
+
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once('Smarty/Smarty.class.php');
+
+checkLoggedIn();
+
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
+
+$user = getSessVal('user');
+$fdbh = dbConnect("icms");
+
+$myqueues = array($user);
+$sharedqueues = array();
+
+getSubscribedQueues($user, $fdbh, $myqueues);
+getSharedQueues($user, $fdbh, $sharedqueues);
+$allqueues = array_merge($myqueues, $sharedqueues);
+
+$queueItems = array();
+
+$wfcount = getQueues($queueItems, $allqueues, $fdbh);
+
+$config = simplexml_load_file($icmsXml);
+
+// Set a default value, in case there is no reportPath element defined
+$reportPath = isset($config->{'reportPath'}) ? (string) $config->{'reportPath'} : "/var/www/Palm";
+$divName = getReqVal('divName');
+$type = getReqVal('type');
+
+$county = $config->{'county'};
+
+//P in Palm was causing issues with division P....
+if($divName != "P"){
+	$archPath = substr($reportPath, 0, strpos($reportPath, $divName)) . $divName;
+}
+else{
+	$archPath = substr($reportPath, 0, strpos($reportPath, "/index.json"));
+}
+
+$yearMonth = getReqVal('yearmonth');
+
+if(!empty($yearMonth)){
+	$rptMonth = "&month=" . $yearMonth;
+} else {
+	$rptMonth = "";
+}
+
+$tabStr = sprintf("%s?divName=%s&type=%s%s", $_SERVER['SCRIPT_NAME'], $divName, $type, $rptMonth);
+
+createTab("Division $divName", $tabStr, 1, 1, "cases");
+
+$divxy = getReqVal('divxy');
+$flagxy = getReqVal('flagxy');
+
+if ($divxy != null) {
+    list($div,$type) = explode("~",$divxy);
+    $rpath = "$type/div$div";
+} else if ($flagxy != null) {
+    list($num,$type) = explode("~", $flagxy);
+    $rpath = "flags/$num";
+    $older="no";
+} else {
+	if ($rptMonth != "") {
+		$rpath = sprintf("%s/div%s/%s", $type, $divName, $yearMonth);
+	} else {
+		$rpath = sprintf("%s/div%s", $type, $divName);
+	}
+}
+
+$older = getReqVal('older');
+
+$smarty->assign('divName', $divName);
+$smarty->assign('rpath',$rpath);
+$smarty->assign('archPath', $archPath);
+$smarty->assign('wfCount', $wfcount);
+$smarty->assign('active', "cases");
+$smarty->assign('tabs', getSessVal('tabs'));
+$smarty->assign('courttype',$type);
+
+$output = show("$rpath/index.json",$older,$divName,$smarty,$reportPath);
+
+$result = array();
+
+$smarty->display('top/header.tpl');
+
+echo $output;
+
+exit;
+
+function show($rpath,$older,$div,$smarty,$reportPath) {
+    global $res,$path,$county;
+	
+	$jsonSrc = "$reportPath/$rpath";
+	
+	$data = array();
+	
+	readJsonFile($data, $jsonSrc);
+	
+	$smarty->assign('yearMonth', substr($data['ReportDate'],0,7));
+	$smarty->assign('prettyDate', date_format(date_create($data['ReportDate']), 'l, F jS, Y'));
+    
+	$smarty->assign('title1', $data['Title']);
+	$smarty->assign('title2', $data['Subtitle']);
+    
+    $caseTypes = $data['CaseCounts'];
+		
+    $divDesc = "";
+	if (hasCalendar($div, $divDesc)) {
+        $smarty->assign('hasCalendar', 1);
+	}
+    
+    $smarty->assign('divDesc', $divDesc);
+    $smarty->assign('caseTypes', $caseTypes);
+	$smarty->assign('county', $county);
+    
+    return $smarty->fetch("reports/div_summ.tpl");
+}
+
+?>

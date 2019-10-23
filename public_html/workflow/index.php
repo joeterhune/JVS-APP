@@ -1,9 +1,9 @@
 <?php
 # wfshow.php - show all work queues for a user
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 require_once("wfcommon.php");
-require_once "../icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
 
 require_once('Smarty/Smarty.class.php');
 
@@ -132,7 +132,6 @@ $query = "
 $qres = array();
 getData($qres, $query, $dbh);
 $smarty->assign('queuejson', json_encode($qres));
-
 
 $smarty->assign('wfCount', $wfcount);
 $smarty->display('top/header.tpl');

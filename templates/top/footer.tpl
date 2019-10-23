@@ -4,7 +4,7 @@
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:CAD-HELP@jud12.flcourts.org">CAD-HELP@jud12.flcourts.org</a>
+		Please e-mail <a href="mailto:CAD-HELP@pbcgov.org">CAD-HELP@pbcgov.org</a>
 		to report any problems with this system.
 	</div>
 
@@ -22,7 +22,7 @@
 	</div>
 
 	<div style="font-size:50%">
-		Court Technology Department, Twelfth Judicial
+		Court Technology Department, Fifteenth Judicial
 		Circuit of Florida
     </div>
 	

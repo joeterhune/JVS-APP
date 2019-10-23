@@ -1,10 +1,11 @@
 <?php
 
-require_once("php-lib/common.php");
-require_once("php-lib/db_functions.php");
-require_once("./icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("workflow/wfcommon.php");
 
 checkLoggedIn();
 
@@ -113,7 +114,6 @@ $sharedqueues = array();
 
 getSubscribedQueues($user, $fdbh, $myqueues);
 getSharedQueues($user, $fdbh, $sharedqueues);
-
 $allqueues = array_merge($myqueues, $sharedqueues);
 
 $queueItems = array();
@@ -127,7 +127,9 @@ $magistrates = array(
 
 $judges = array();
 $divisions = array();
+
 getJudgeDivs($judges,$divisions,$jdbh);
+
 $smarty->assign('judges', $judges);
 $smarty->assign('skipDivs',array("","AP"));
 $smarty->assign('magistrates', $magistrates);
@@ -234,7 +236,7 @@ foreach ($x as $adiv) {
         $prodivs[$adiv] = $divisions[$adiv];
     }
 
-    if (preg_match('/\~crim$/', $divisions[$adiv]['opt'])) {
+    if (preg_match('/\~crim$/', $divisions[$adiv]['opt']) || ($divisions[$adiv]['courtType'] == 'Trial')) {
         $crimdivs[$adiv] = $divisions[$adiv];
     }
 
@@ -242,11 +244,11 @@ foreach ($x as $adiv) {
         $juvdivs[$adiv] = $divisions[$adiv];
     }
     
-    if ($divisions[$adiv]['courtType'] == 'Circuit Civil' || ($divisions[$adiv]['courtType'] == 'Foreclosure')) {
+    if ($divisions[$adiv]['courtType'] == 'Circuit Civil' || ($divisions[$adiv]['courtType'] == 'Foreclosure') || ($divisions[$adiv]['courtType'] == 'Trial')) {
         $circivdivs[$adiv] = $divisions[$adiv];
     }
 
-    if ($divisions[$adiv]['courtType'] == 'County Civil') {
+    if ($divisions[$adiv]['courtType'] == 'County Civil' || ($divisions[$adiv]['courtType'] == 'Trial')) {
     	$cocivdivs[$adiv] = $divisions[$adiv];
     }
 }
@@ -318,7 +320,9 @@ $magResults = array();
 $magistrates = array();
 $query = "select
 			first_name,
+			middle_name,
 			last_name,
+			suffix,
 			division,
 			juv_cal_divisions,
 			magistrate_type
@@ -339,8 +343,19 @@ foreach($magResults as $m){
 			$type .= $m['division'] . "," . $t . ";";
 		}
 	}
-	$magistrates[$m['last_name'] . ", " . $m['first_name']] = $m['last_name'] . ", " . $m['first_name'] . "~" . $type;
-	$calMagistrates[$m['division']] = $m['last_name'] . ", " . $m['first_name'];
+	
+	if(!empty($m['suffix'])){
+        $mName = $m['last_name'] . ", " . $m['suffix'] . ", " . $m['first_name'];
+    }
+	else{
+		$mName = $m['last_name'] . ", " . $m['first_name'];
+	}
+	
+	if(!empty($m['middle_name'])){
+		$mName .= " " . $m['middle_name'];
+	}
+	$magistrates[$mName] = $mName . "~" . $type;
+	$calMagistrates[$m['division']] = $mName;
 }
 
 $jdbh = null;
@@ -366,7 +381,7 @@ $query = "	SELECT *
             FROM mediation_scheduling.mediators
 			WHERE active = 1
             ORDER BY last_name";
-            
+
 getData($results, $query, $odbh);
 
 $count = 0;
@@ -387,9 +402,9 @@ foreach($results as $r){
 	else{
 		foreach($mediators as $key => $m){
 			if($m['name'] == $mString){
-                $curVal = $mediators[$key]['mediator_id'];
+				$curVal = $mediators[$key]['mediator_id'];
                 $mediators[$key]['mediator_id'] = $curVal . "-" . $r['mediator_id'];
-            }
+			}
 	   }
     }
 }
@@ -397,26 +412,29 @@ foreach($results as $r){
 $smarty->assign('xferqueues', $xferqueues);
 $smarty->assign('real_xferqueues', $real_xferqueues);
 
-$searchParamJson = file_get_contents($_SERVER['DOCUMENT_ROOT'] . "/../conf/searchParams.json");
+$searchParamJson = file_get_contents($_SERVER['JVS_DOCROOT'] . "/../conf/searchParams.json");
 $searchParams = json_decode($searchParamJson,true);
 
 ksort($searchParams['Charges']);
 ksort($searchParams['Causes']);
 
+$tabs = getSessVal('tabs');
+if ($tabs == null) {
+    $tabs = array();
+}
+$userid = getSessVal('user');
+
+$smarty->assign('foo','FOOBAR');
 $smarty->assign('mediators', $mediators);
 $smarty->assign('magistrates', $magistrates);
 $smarty->assign('calMagistrates', $calMagistrates);
 $smarty->assign('searchParams', $searchParams);
-
-$smarty->assign('userid', $_SESSION['user']);
+$smarty->assign('userid', $userid);
 $smarty->assign('vrbUrl', (string) $config->{'vrbUrl'});
-
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('pendCount', $pendCount);
-
-$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->assign('tabs', $tabs);
 $smarty->assign('active', "index");
 $smarty->display('top/header.tpl');
 $smarty->display('top/search.tpl');
-//$smarty->display('top/footer.tpl');
-
+?>

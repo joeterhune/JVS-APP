@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -54,7 +54,7 @@ createTab($params{'casenum'}, "/cgi-bin/search.cgi?name=" . $params{'casenum'}, 
 	"name" => "All Case Docket Listing",
 	"active" => 1,
 	"close" => 1,
-	"href" => "/cgi-bin/case/scAllCaseDockets.cgi?casenums=" . $params{'casenums'} . "&caseids=" . $params{'caseids'} . "&casenum=" . $params{'casenum'},
+	"href" => "/cgi-bin/scAllCaseDockets.cgi?casenums=" . $params{'casenums'} . "&caseids=" . $params{'caseids'} . "&casenum=" . $params{'casenum'},
 	"parent" => $params{'casenum'}
 });
 

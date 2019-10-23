@@ -1,5 +1,5 @@
 <?php
-$fp=fopen("/usr/local/icms/etc/judgepage.conf","r");
+$fp=fopen($_SERVER['JVS_ROOT'] . "/conf/judgepage.conf","r");
 $num=1;
 while (!feof($fp)) {
   $line=fgets($fp,1024);

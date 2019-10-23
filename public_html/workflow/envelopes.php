@@ -1,13 +1,16 @@
 <?php
-require_once '../php-lib/common.php';
-require_once '../php-lib/db_functions.php';
-require_once "../icmslib.php";
-require_once "../caseinfo.php";
-require_once "mpdf60/mpdf.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/common.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
+require_once "/usr/share/httpd/vendor/autoload.php";
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 checkLoggedIn();
+
+$config = simplexml_load_file($icmsXml);
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -17,11 +20,14 @@ $smarty->setCacheDir($cacheDir);
 $dbh = dbConnect("icms");
 $user = $_SESSION['user'];
 
+$disable_reason = '';
+$locked = 0;
+$locked_user = null;
+
 $docInfo = array();
 $docid = getReqVal('docid');
 $ucn = getReqVal('ucn');
 if(isset($docid) && !empty($docid)){
-	//unsetQueueVars();
 	$docInfo = getDocData($docid);
 	$ucn = $docInfo['ucn'];
 	$docid = $docInfo['docid'];
@@ -35,9 +41,7 @@ if(isset($docid) && !empty($docid)){
 		getSubscribedQueues($user, $dbh, $subscribed_queues);
 		$shared_queues = array();
 		getSharedQueues($user, $dbh, $shared_queues);
-	
-		//if(in_array($docInfo['creator'], $subscribed_queues) || (in_array($docInfo['creator'], $shared_queues)) ||
-		//(in_array($docInfo['queue'], $subscribed_queues)) || (in_array($docInfo['queue'], $shared_queues))){
+		
 		if(in_array($docInfo['queue'], $subscribed_queues) || (in_array($docInfo['queue'], $shared_queues))){
 			$editable = true;
 		}
@@ -48,16 +52,17 @@ if(isset($docid) && !empty($docid)){
 	}
 	
 	if(isset($docInfo['portal_filing_id'])){
-		$fsQuery = "SELECT
-						filing_status
-					FROM
-						portal_info.portal_filings
-					WHERE
-						filing_id = :filing_id";
-	
+		$fsQuery = "
+			SELECT
+				filing_status
+			FROM
+				portal_info.portal_filings
+			WHERE
+				filing_id = :filing_id";
+				
 		$pdbh = dbConnect("portal_info");
 		$fsRow = getDataOne($fsQuery, $pdbh, array("filing_id" => $docInfo['portal_filing_id']));
-	
+		
 		if($fsRow['filing_status'] != "Correction Queue"){
 			$editable = false;
 			$disable_reason = "This document has already been e-filed.  It will open in read-only mode.";
@@ -68,11 +73,11 @@ if(isset($docid) && !empty($docid)){
 		date_default_timezone_set('America/New_York');
 		$dock_lock_date = strtotime($docInfo['doc_lock_date']);
 		$now = strtotime(date("Y-m-d H:i:s"));
-	
+		
 		if(($now - $dock_lock_date) <= 10){
 			$locked_user = $docInfo['doc_lock_user'];
 			$locked_sess_id = $docInfo['doc_lock_sessid'];
-				
+			
 			//The person holding the lock is the person trying to open it
 			if($locked_sess_id == session_id()){
 				$locked = false;
@@ -102,14 +107,14 @@ $wfcount = getQueues($queueItems,$allqueues,$dbh);
 $signedDoc = getReqVal('signed');
 
 $url = "/workflow/envelopes.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
-	createTab($docInfo['ucn'], $url, 1, 1, "cases",
-	array(
-		"name" => "Order Creation",
-		"active" => 1,
-		"close" => 1,
-		"href" => $url,
-		"parent" => $docInfo['ucn']
-	)
+createTab($docInfo['ucn'], $url, 1, 1, "cases",
+		  array(
+				"name" => "Order Creation",
+				"active" => 1,
+				"close" => 1,
+				"href" => $url,
+				"parent" => $docInfo['ucn']
+			)
 );
 
 if($isOrder){
@@ -118,43 +123,40 @@ if($isOrder){
 else{
 	$showclerk = 0;
 }
-    
-$protocol = "http";
-if ($_SERVER['HTTPS'] == 'on') {
-	$protocol = "https";
-}
 
-$url = sprintf("%s://%s/orders/genpdf.php?env=Y", $protocol, $_SERVER['HTTP_HOST']);
+$url = sprintf("%s/orders/genpdf.php?env=Y", $config->{'baseURL'});
 
 $strCookie = 'PHPSESSID=' . $_COOKIE['PHPSESSID'] . '; path=/';
 session_write_close();
 $curl = curl_init();
 curl_setopt_array($curl, array(
-	CURLOPT_RETURNTRANSFER => 1,
-	CURLOPT_URL => $url,
-	CURLOPT_POST => 1,
-	CURLOPT_POSTFIELDS => array(
-		'ucn' => urlencode($ucn),
-		'docid' => $docid
-	),
-	CURLOPT_SSL_VERIFYPEER => 0,
-	CURLOPT_COOKIE => $strCookie
-));
+							   CURLOPT_RETURNTRANSFER => 1,
+							   CURLOPT_URL => $url,
+							   CURLOPT_POST => 1,
+							   CURLOPT_POSTFIELDS => array(
+														   'ucn' => urlencode($ucn),
+														   'docid' => $docid
+														   ),
+							   CURLOPT_SSL_VERIFYPEER => 0,
+							   CURLOPT_COOKIE => $strCookie
+							   )
+				  );
 
 $resp = curl_exec($curl);
 curl_close($curl);
 
 $ofile = json_decode($resp, true);
-$orderfname = sprintf("/var/www/html%s", $ofile['filename']);
 
-$partypath="/usr/local/icms/workflow/parties";
+$orderfname = sprintf("%s%s", $_SERVER['JVS_DOCROOT'], $ofile['filename']);
+
+$partypath= $_SERVER['JVS_ROOT'] . "/workflow/parties";
 
 $dbh = dbConnect("icms");
 
 # get parties from DB...
 $clerkcclist = array();
 
-build_cc_list($icms,$ucn,$clerkcclist);
+build_cc_list(null,$ucn,$clerkcclist);
 
 $clerkdata = "";
 
@@ -206,11 +208,19 @@ if (!is_array($cclist)) {
     $cclist = $clerkcclist;
 }
 
-if(is_array($cclist['Attorneys']) && is_array($cclist['Parties'])){
+if((key_exists('Attorneys', $cclist) && (is_array($cclist['Attorneys']))) &&
+   (key_exists('Parties', $cclist) && (is_array($cclist['Parties'])))){
 	$cclist = array_merge($cclist['Attorneys'], $cclist['Parties']);
 }
 
-$mpdf=new mPDF('c',array(241,105),0,'',120,15,51,16,9,9,'P');
+$mpdfcfg = array(
+	'mode' => 'c',
+	'format' => [241,105],
+	'orientation' => 'P'
+);
+
+$mpdf = new \Mpdf\Mpdf($mpdfcfg);
+//$mpdf=new \Mpdf\Mpdf('c',array(241,105),0,'',120,15,51,16,9,9,'P');
 # 9.5 x 4.125
 # 241 x 105
 $count=0;
@@ -285,15 +295,10 @@ foreach ($cclist as $key => $cc) {
 	
     if (sizeof($cc['ServiceList']) && !empty($cc['ServiceList']) && (!empty($cc['ServiceList'][0]))) {
         // This is an e-Service user.  No envelope here.
+		#print "SKIPPING ENVELOPE FOR PARTY:\n"; var_dump($cc); print "\n\n";
         continue;
     }
-    
-    //I'm not sure why we wouldn't want Pro Se parties...?
-    /*if (($cc['BarNumber'] == "") && (!$cc['ProSe'])) {
-        // Party that is NOT pro se.
-        continue;
-    }*/
-    
+	
 	//Only print the checked ones...
     if(isset($cc['check']) && ($cc['check'] == '1')){
 	    $name = $cc['FullName'];
@@ -301,43 +306,49 @@ foreach ($cclist as $key => $cc) {
 	    $address=str_replace("\n","<br>",$address);
 	    $address=str_replace("\r","",$address);
 	    $mpdf->AddPage();
-	    $mpdf->writeHTML("$name<br>$address<p>");
+		$recAddr = sprintf('<div style="position: absolute; top:40mm; left: 90mm;">%s<br>%s</div>', $name, $address);
+		$mpdf->writeHTML($recAddr);
+	    //$mpdf->writeHTML("$name<br>$address<p>");
 	    $mpdf->writeHTML($returnAddr);
 	    $count++;
     }
 }
 
-$envname = tempnam("/var/www/html/tmp","env");
+$tempDir = sprintf("%s/tmp", $_SERVER['JVS_DOCROOT']);
+
+$envname = tempnam($tempDir,"env");
 $mpdf->Output($envname);
 rename($envname,"$envname.pdf");
 
-$mailjob = tempnam("/var/www/html/tmp","mail");
+$mailjob = tempnam($tempDir,"mail");
 rename($mailjob,"$mailjob.pdf");
 $mailjob .= ".pdf";
 
+$cat = '';
 # and concatenate the appropriate # of orders
 for ($i = 0; $i < $count; $i++) {
     $cat .= "$orderfname ";
     
     //If there are non-merged supporting docs, merge those too
-    $suppQuery = "SELECT
-					CASE WHEN jvs_doc = 1
-						THEN file
-					ELSE jvs_file_path
-					END AS file,
-					document_title,
-					order_merge
-				FROM
-					olscheduling.supporting_documents
-				WHERE
-					workflow_id = :doc_id
-    			AND 
-    				order_merge <> 1
-				AND
-					efile_attach = 1";
-    
-    $suppDocs = array();
-    getData($suppDocs, $suppQuery, $dbh, array("doc_id" => $docid));
+    $suppQuery =
+		"SELECT
+			CASE WHEN jvs_doc = 1
+				THEN
+					file
+				ELSE
+					jvs_file_path
+			END AS file,
+			document_title,
+			order_merge
+		FROM
+			olscheduling.supporting_documents
+		WHERE
+			workflow_id = :doc_id
+			AND order_merge <> 1
+			AND efile_attach = 1";
+
+	$suppDocs = array();
+	getData($suppDocs, $suppQuery, $dbh, array("doc_id" => $docid));
     
     if(!empty($suppDocs)){
     	foreach($suppDocs as $sd){
@@ -362,15 +373,15 @@ $smarty->assign('locked_user', $locked_user);
 $smarty->assign('editable', $editable);
 $smarty->assign('s_name', $sName);
 $smarty->assign('s_add', $sAddOrig);
-$smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('pdf_file', key_exists('pdf_file', $docInfo) ? $docInfo['pdf_file'] : null);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null);
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null);
 $smarty->assign('isOrder', $isOrder);
 $smarty->assign('docid', $docid);
 $smarty->assign('ucn', $ucn);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "cases");
 $smarty->assign('tabs', $_SESSION['tabs']);
-$smarty->assign('file', str_replace("/var/www/html","", $mailjob));
+$smarty->assign('file', str_replace($_SERVER['JVS_DOCROOT'],"", $mailjob));
 $smarty->display('top/header.tpl');
 echo $smarty->fetch("orders/envelopes.tpl");

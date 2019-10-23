@@ -40,7 +40,7 @@ our @EXPORT=qw (
     fixtimelist $TODAY $YEAR $MONTH $DAY $MTEXT $M2 $D2 $EVTDATE $NOW $HOUR
     $MINUTE $SECOND $TIMESTAMP @DIVNAME %CIVILDIVNAME %COUNTY $PIVOTYEAR
     $UTILSFILEPATH $ROOTPATH $SQLPROFILE @DATABASES %DBXREF %CODES %ACCESS @OLSCHEDULING $CIRCUIT
-    timestamp loadconffile dumpconffile onlinediv reportheader reportfooter tabletitle
+    timestamp onlinediv reportheader reportfooter tabletitle
     tableline tableline2 tableblank tabletotal groupcheck $INACTIVECODES $WARRANTCODES
     @CRIMCODES
     @SCCODES
@@ -72,14 +72,11 @@ our @EXPORT=qw (
     sqlArrayHash
     $MAX_IMG_SIZE
     $templateDir
-    $SKIPPBSO
 );
 
 BEGIN {
     our $DEBUG = 0;
 }
-
-our $SKIPPBSO = 0;
 
 our $EVTDATE;
 our $SQLEVTDATE;
@@ -150,7 +147,7 @@ our @ORDERS = (
     'OTSU','OTT','OUFC','OVAC','OVOL','OWAF','OWCN','OWDP','OWFN','OWIF',
     'PAO','PEDD','PUEO','PUISG','PUISS','PWOT','QDRO','RFPU','RNCO',
     'SORC','SORD','SOSC','STOR','UFCL','UFCT','VFJD','WETC','WODV','WONC','WOPC','WOSP','WBAT','STORD',
-    'STORI'
+    'STORI','OPIN','ORDQ'
 );
 
 
@@ -162,7 +159,7 @@ our @MOTIONS = (
     'MOTR','MRAD','MREH','MRH','MRSC','MSAJ','MSBD','MSID','MSJT','MSLT',
     'MSNJ','MSOP','MSTR','MTJR','MTP','MTRC','MTS','MTSJ','MTSV','MTWD',
     'OPCB','POST','REDS','RMAN','SCOU','VENU','VMTN','ZPOST','MFORD',
-    'MFPO','MORD','MWPU','MCONCIV'
+    'MFPO','MORD','MWPU','MCONCIV','MREHCIV'
 );
 
 our @JUDGMENTS = (
@@ -176,16 +173,16 @@ our @PETITIONS = (
 
 our @NOTICES = (
     'ANOA','ANTD','ANTM','ASWNC','CNNC','CNOH','COMP','CRNOH','DFD','DLFN','DSNA','FORF',
-    'GANDL','JNOD','JNSI','MHIIS',
-    'NADD','NAFD','NAGL','NARR','NAST','NCAN','NCCS','NCHG','NCOM','NCPA','NDCA',
-    'NDDR','NDIS','NDNE','NDRC','NDVD','NEXP','NFRD','NFSF','NHIS','NHRT','NIN','NINQ',
+    'GANDL','JNOD','JNSI','MHIIS','NADD','NAFD','NAGL','NARR','NAST','NCAN','NCCS','NCHG','NCOM',
+    'NCPA','NDCA','NDDR','NDIS','NDNE','NDRC','NDVD','NEXP','NFRD','NFSF','NHIS','NHRT','NIN','NINQ',
     'NITP','NJRH','NLPR','NNAC','NNJT','NOA','NOAC','NOAD','NOAP','NOC','NOCA','NOCO',
     'NOD','NODP','NOED','NOF','NOFC','NOFH','NOFI','NOH','NOHP','NOI','NOIC','NOIDP','NOJA',
     'NOJT','NOMA','NOME','NONA','NONC','NOPR','NORC','NORD','NORE','NORIS','NORO','NOS',
     'NOSA','NOSC','NOT','NOTCF','NOTD','NOTIS','NOTR','NOUN','NOVD','NPAY','NPNP','NREI',
     'NRFC','NSDL','NSFE','NTA','NTCR','NTCV','NTDC','NTE','NTJN','NTP','NTRA','NTSAO',
     'NTSF','NTTR','NUSF','PBUN','PNAD','PNCR','PSUN','RFJN','RNOH',
-    'RNOT','RNTD','SDIV','SNTD','UDIV','UNOA','UNTCR','VOSWN','WNAD','WNOT','ZNOA','ZNOAD'
+    'RNOT','RNTD','SDIV','SNTD','UDIV','UNOA','UNTCR','VOSWN','WNAD','WNOT','ZNOA','ZNOAD',
+    'NOHTCD','NOFTCD'
 );
 
 our @VOPS = (
@@ -193,7 +190,7 @@ our @VOPS = (
 );
 
 our @ANSWERS = (
-	'ANS','ANAD','ANCP','ANSAR'
+	'ANS','ANAD','ANCP','ANSAR','SAOR'
 );
 
 # Limit the number of cases to be shown for the specified search criteria
@@ -309,38 +306,13 @@ our %fieldOrder = (
 our $MAX_IMG_SIZE = 4096000;
 
 # The directory to store templates for use with the Perl Template Toolkit
-our $templateDir = "/usr/local/icms/templates";
+our $templateDir = "$ENV{'JVS_ROOT'}/templates";
 
 sub fatal {
   my($mess)=@_;
   print "Content-Type: text/html; charset=ISO-8859-1\n";
   print $mess,"\n";
   exit;
-}
-#
-# dumpconffile shows what loadconffile loaded.
-#
-sub dumpconffile {
-  print "%ACCESS:\n";
-  foreach (sort keys %ACCESS) {
-    print "   $_: $ACCESS{$_}\n";
-  }
-  print "\@OLSCHEDULING:\n";
-  foreach (@OLSCHEDULING) {
-    print "   $_\n";
-  }
-  print "%CODES:\n";
-  foreach (sort keys %CODES) {
-    print "   $_: $CODES{$_}\n";
-  }
-  print "\@DATABASES:\n";
-  foreach (@DATABASES) {
-    print "   $_\n";
-  }
-  print "%DBXREF:\n";
-  foreach (sort keys %DBXREF) {
-    print "   $_: $DBXREF{$_}\n";
-  }
 }
 
 # see if this division is an online scheduling division
@@ -358,7 +330,7 @@ sub onlinediv {
 
 #
 # Check if user belongs to particular group by reading ldapgroups.txt.
-# Almost the same as the one in AuthSarasota.
+# Almost the same as the one in AuthPalm.
 #
 sub groupcheck {
 	my($user,$group)=@_;
@@ -397,7 +369,10 @@ sub dbconnect {
   if ($ACCESS{$DB}) {
     ($dbname,$user,$pass,$dbhost,$dbpath)=split ';',$ACCESS{$DB};
   } else {
-    die "dbconnect: Unknown database '$DB'\n";
+    print "dbconnect: Unknown database '$DB'\n";
+    use Devel::StackTrace;
+    my $trace = Devel::StackTrace->new;
+    die $trace->as_string;
   }
   if (!defined $dbpath) {
     $dbpath="";
@@ -724,6 +699,10 @@ sub sqllist {
 	my $qry = shift;
 	my $limit = shift;
 	my $dbhandle  = shift;
+    
+    use Devel::StackTrace;
+    my $trace = Devel::StackTrace->new;
+    die $trace->as_string;
 
 	if ($DEBUG) {
 		logQuery($qry,"FILE" . __FILE__ . ", LINE " . __LINE__ . "\n\n");
@@ -1262,13 +1241,14 @@ sub writeHashFromHash {
 		my $fname = $fh->filename;
 
 		# No sense trying to process them if we don't have any field names
-		foreach my $row (sort keys %{$hashref}) {
+        foreach my $row (sort keys %{$hashref}) {
 			print $fh $hashref->{$row}->{$first} . "`";
 			my @stringArray;
 			foreach my $field (@fields) {
-				push(@stringArray,$hashref->{$row}->{$field});
+                push(@stringArray,$hashref->{$row}->{$field});
 			}
-			print $fh join("~",@stringArray) . "\n";
+            
+            print $fh join("~",@stringArray) . "\n";
 		}
 		close ($fh);
 
@@ -1595,7 +1575,7 @@ sub reportfooter {
   $outpath2=~s#/\d\d\d\d\-\d\d##;
   print $fh <<EOS;
 </table>
-<p><font size=-1><a href=$outpath2/archive.html>Older Reports</a></font><p><font size=-2><i>Court Technology Department, 12th Judicial Circuit of Florida</i></font>
+<p><font size=-1><a href=$outpath2/archive.html>Older Reports</a></font><p><font size=-2><i>Court Technology Department, 15th Judicial Circuit of Florida</i></font>
 EOS
 }
 
@@ -2199,16 +2179,18 @@ sub moddate {
 #
 
 sub prettyfaccciv {
-  my ($year,$countynum,$rawcase);
-  ($countynum,$rawcase)=@_;
-  $year=substr($rawcase,0,2);
-  if ($year<$PIVOTYEAR) {
-    $year+=2000;
-  } else {
-    $year+=1900;
-  }
-  ;
-  return "$countynum-$year-".substr($rawcase,8,2)."-".substr($rawcase,2,6);
+    my $countynum = shift;
+    my $rawcase = shift;
+    my $year;
+    
+    $year=substr($rawcase,0,2);
+    if ($year<$PIVOTYEAR) {
+        $year+=2000;
+    } else {
+        $year+=1900;
+    }
+    
+    return "$countynum-$year-".substr($rawcase,8,2)."-".substr($rawcase,2,6);
 }
 
 
@@ -2288,13 +2270,7 @@ sub logQuery {
 ### BEGIN MAIN PROGRAM BODY ###
 
 timestamp();
-if (-d "/usr/local/icms") {
-  $UTILSFILEPATH="/usr/local/icms/etc";
-} else {
-  $UTILSFILEPATH="../etc";
-}
-
-#loadconffile();
+$UTILSFILEPATH = "$ENV{'JVS_ROOT'}/conf";
 
 if (!(defined($ENV{'PWD'}) && $ENV{'PWD'}=~/caseX|exp/) &&  !($0=~/caseX|exp/)) {
   $ROOTPATH="/case";

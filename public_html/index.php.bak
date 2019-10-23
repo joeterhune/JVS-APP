@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <?php
-require_once("php-lib/db_functions.php");
+require_once($_SERVER['OLS_DOCROOT'] . "/php-lib/db_functions.php");
 
 $jdbh = dbConnect('judge-divs');
 
@@ -89,18 +89,18 @@ $fdbh = null;
     <meta name="Author" content="Default" />
 
     <title>
-		12th Circuit Case Management System
+		15th Circuit Case Management System
     </title>
 	
-	<link rel="stylesheet" type="text/css" href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/bootstrap/bootstrap.css"/>
-	<link href="https://e-services.co.Sarasota-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
+	<link rel="stylesheet" type="text/css" href="https://e-services.co.palm-beach.fl.us/cdn/style/bootstrap/bootstrap.css"/>
+	<link href="https://e-services.co.palm-beach.fl.us/cdn/style/jquery-ui-1.10.4/themes/south-street/jquery-ui.css" type="text/css" rel="stylesheet"/>
 	<link rel="stylesheet" type="text/css" href="icms1.css?1.1" />
-	<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
-	<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
-	<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
-	<script type="text/javascript" src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
-	<script src="/case/icms.js" type="text/javascript"></script>
-    <script src="/case/javascript/main.js" type="text/javascript"></script>
+	<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+	<script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/bootstrap/bootstrap.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-ui-1.10.4.min.js"></script>
+	<script type="text/javascript" src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery.blockUI.js"></script>
+	<script src="/icms.js" type="text/javascript"></script>
+    <script src="/javascript/main.js" type="text/javascript"></script>
 </head>
 
 <body onload="SetBack('ICMS_0'); SetBack('ICMS_1'); document.theform.name.focus(); document.theform.type.value='';">
@@ -111,7 +111,7 @@ $fdbh = null;
                 buttonImageOnly: true,
                 buttonText: "Select date",
                 format: 'mm/dd/yyyy',
-                buttonImage: "/case/style/images/calendar.gif",
+                buttonImage: "/style/images/calendar.gif",
 				autoclose: true,
 				todayHighlight: true,
 				todayBtn: 'linked',
@@ -128,8 +128,7 @@ $fdbh = null;
 			});
 			
 			$('.calsubmit').click(function () {
-                var foo = $(this).siblings();
-				var btnid = $(this).attr('id');
+                var btnid = $(this).attr('id');
 				var division = $(this).parent().find('.divsel').val();
 				if (division == "") {
 					$('#dialogSpan').html("Please select a division from the list.");
@@ -147,8 +146,8 @@ $fdbh = null;
 						}
 					});
 					return false;
-				};
-				$('#theform').attr('action','/cgi-bin/case/calendars/showCal.cgi');
+				}
+				$('#theform').attr('action','/cgi-bin/calendars/showCal.cgi');
 				$('#div').val(division);
 				$('#theform').submit();
 				return true;
@@ -190,7 +189,7 @@ $fdbh = null;
     <form name="theform" id="theform" method="post" action="/cgi-bin/search.cgi">
 	<input type="hidden" name="countyone" value="All" />
 	<input type="hidden" name="types" value="All" />
-	<input type="hidden" name="referer" value="/case/index.php" />
+	<input type="hidden" name="referer" value="/index.php" />
 	<input type="hidden" name="div" id="div"/>
 
 	<img src="icmslogo.jpg" alt="ICMS" />
@@ -341,7 +340,7 @@ $fdbh = null;
 	    <tr>
 		<td colspan="3">
 		    <span class="h3">
-			<a href="/cgi-bin/case/flaggedCaseSearch.cgi">
+			<a href="/cgi-bin/flaggedCaseSearch.cgi">
 			    Flagged Case Search
 			</a>
 		    </span>
@@ -351,7 +350,7 @@ $fdbh = null;
         <tr>
 		<td colspan="3">
 		    <span class="h3">
-			<a href="/cgi-bin/case/casenotes/bulkflag.cgi">
+			<a href="/cgi-bin/casenotes/bulkflag.cgi">
 			    Bulk Case Flagging/Unflagging
 			</a>
 		    </span>
@@ -361,7 +360,7 @@ $fdbh = null;
 	    <tr>
 		<td colspan="3">
 		    <span class="h3">
-			<a href="/case/pbso/pbsolookup.php?lev=1">
+			<a href="/pbso/pbsolookup.php?lev=1">
 			    PBSO Search
 			</a>
 		    </span>
@@ -440,7 +439,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=crim">
+                        <a href="/cgi-bin/alldivs.cgi?type=crim">
                             All Criminal Divisions
                         </a>
                     </span>
@@ -450,7 +449,7 @@ foreach (array_keys($judges) as $ajudge) {
 		    <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=civ">
+                        <a href="/cgi-bin/alldivs.cgi?type=civ">
                             All Civil Divisions
                         </a>
                     </span>
@@ -460,7 +459,7 @@ foreach (array_keys($judges) as $ajudge) {
 		    <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=fam">
+                        <a href="/cgi-bin/alldivs.cgi?type=fam">
                             All Family Divisions
                         </a>
                     </span>
@@ -470,7 +469,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=juv">
+                        <a href="/cgi-bin/alldivs.cgi?type=juv">
                             All Juvenile Divisions
                         </a>
                     </span>
@@ -480,7 +479,7 @@ foreach (array_keys($judges) as $ajudge) {
             <tr>
                 <td colspan="2">
                     <span class="h3">
-                        <a href="/cgi-bin/case/alldivs.cgi?type=pro">
+                        <a href="/cgi-bin/alldivs.cgi?type=pro">
                             All Probate Divisions
                         </a>
                     </span>
@@ -503,7 +502,7 @@ foreach (array_keys($judges) as $ajudge) {
 			<td>
 				<span class="h3">
 					Please use 
-					<a href="/cgi-bin/case/flaggedCaseSearch.cgi">
+					<a href="/cgi-bin/flaggedCaseSearch.cgi">
 						Flagged Case Search
 					</a>
 				</span>
@@ -664,7 +663,7 @@ foreach ($y as $divname) {
 		</tr>
 		
 		<tr>
-			<td><a href="/cgi-bin/case/calendars/trafficDocket.cgi">Traffic Dockets</a></td>
+			<td><a href="/cgi-bin/calendars/trafficDocket.cgi">Traffic Dockets</a></td>
 		</tr>
 
 
@@ -677,7 +676,7 @@ foreach ($y as $divname) {
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:cad-web@jud12.flcourts.com">cad-web@jud12.flcourts.com</a>
+		Please e-mail <a href="mailto:cad-web@pbcgov.com">cad-web@pbcgov.com</a>
 		to report any problems with this system.
 	</div>
 

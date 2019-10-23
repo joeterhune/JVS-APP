@@ -61,7 +61,31 @@ $(document).ready(function () {
     });
 });
 </script>
-
+<style type="text/css">
+ 	.ui-widget-content{
+    	border: 5px solid black;
+        color: #222222;
+        background-color: #FFFFFE;
+    }
+ 	.ui-menu .ui-menu-item a{
+    	display: block;
+        padding: 3px 3px 3px 3px;
+        text-decoration: none;
+        cursor: pointer;
+        background-color: #FFFFFE;
+        border: 1px solid #eceff1;
+        border-radius: 0.25rem;
+    }
+    .ui-state-active a:hover,
+	.ui-state-active a:link,
+	.ui-state-active a:visited,
+	.ui-menu .ui-menu-item a:hover{
+		background-color:#428bca;
+	}
+	.ui-datepicker-title{
+		color:#000000;
+	}
+</style>
 <div class="container-fluid">
 	<div>
 		<div class="h1" style="text-align: left; margin-top: 10px; font-weight: bold">

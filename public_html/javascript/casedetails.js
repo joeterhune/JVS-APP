@@ -3,8 +3,9 @@
 var VRBURL = "https://demo-vrb.15thcircuit.com";
 
 function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
-    getFlags(ucn);
-    getNotes(ucn);
+    getFlags(casenum);
+    getNotes(casenum);
+    
     $('#docketdiv_' + casenum).block({
         message: '<h1><img src="/images/busy.gif"/> Please Wait... loading dockets </h1>', fadeIn: 0
     });
@@ -15,15 +16,15 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         async: true,
         success: function(data) {
             content = data.html;
-            casenum = data.casenum; // casenum replaced with ucn below
+            casenum = data.casenum;
             
-            $('#docketdiv_' + ucn).html(content);
+            $('#docketdiv_' + casenum).html(content);
                 
-            docketCount = $('#dockets_' + ucn).find('tr').length;
+            docketCount = $('#dockets_' + casenum).find('tr').length;
 				
-            $('#dockets_' + ucn).tablesorter({
+            $('#dockets_' + casenum).tablesorter({
                 widgets: ['zebra','filter'],
-                sortList: [[1,1],[2,1]],
+                sortList: [[0,1],[2,1]],
                 widgetOptions: {
                     filter_columnFilters: true,
                     filter_saveFilters: false,
@@ -33,11 +34,11 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
             });
             pdforder = $.cookie("pdforder");
             if ((pdforder == undefined) || (pdforder == 'desc')) {
-                $('#buildDesc_' + ucn).attr('checked',true);
+                $('#buildDesc_' + casenum).attr('checked',true);
             } else {
-                $('#buildAsc_' + ucn).attr('checked',true);
+                $('#buildAsc_' + casenum).attr('checked',true);
             }
-            $('#docketdiv_' + ucn).unblock();
+            $('#docketdiv_' + casenum).unblock();
             return true;
         }
     });
@@ -49,7 +50,7 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         success: function(data) {
             json = $.parseJSON(data);
             content = json.html;
-            $('#pbsodiv_' + ucn).html(content); // casenum replaced with ucn
+            $('#pbsodiv_' + casenum).html(content);
         }
     });
     
@@ -59,7 +60,7 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         async: true,
         success: function(data) {
             var content = data.html;
-            $('#relatedcasesdiv_' + ucn).html(content); // casenum replaced with ucn
+            $('#relatedcasesdiv_' + casenum).html(content);
             return true;
         }
     });
@@ -71,8 +72,8 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
         success: function (data) {
             json = $.parseJSON(data);
             content = json.html;
-            $('#fullOtherCaseDiv_' + ucn).html(content);// casenum replaced with ucn
-            $('#othercases_' + ucn).tablesorter({widgets: ['zebra'], sortList: [[0,1]],headers: {4: {sorter: false}}});
+            $('#fullOtherCaseDiv_' + casenum).html(content);
+            $('#othercases_' + casenum).tablesorter({widgets: ['zebra'], sortList: [[0,1]],headers: {4: {sorter: false}}});
         }
     });
     
@@ -92,22 +93,22 @@ function scGetAsync (ucn, casenum, mjid, casetype, caseid) {
 
 
 function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
-    getFlags(ucn);
-    getNotes(ucn);
-   
+    getFlags(casenum);
+    getNotes(casenum);
+    
     $.ajax({
         url: "/cgi-bin/scCivilGetDocket.cgi",
-        data: {casenum: ucn, casetype: casetype, caseid: caseid},
+        data: {casenum: casenum, casetype: casetype, caseid: caseid},
         async: true,
         success: function(data) {
             var content = data.html;
-            var casenum = data.casenum; // casenum replaced with ucn
+            var casenum = data.casenum;
             
-            $('#docketdiv_' + ucn).html(content);
+            $('#docketdiv_' + casenum).html(content);
                 
-            var docketCount = $('#dockets_' + ucn).find('tr').length;
+            var docketCount = $('#dockets_' + casenum).find('tr').length;
 				
-            $('#dockets_' + ucn).tablesorter({
+            $('#dockets_' + casenum).tablesorter({
                 widgets: ['zebra','filter'],
                 sortList: [[1,1],[2,1]],
                 widgetOptions: {
@@ -118,9 +119,9 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
                 headers: {7: {sorter: false, filter: false}, 8: {sorter: false, filter: false}}});
             var pdforder = $.cookie("pdforder");
             if ((pdforder == undefined) || (pdforder == 'desc')) {
-                $('#buildDesc_' + ucn).attr('checked',true);
+                $('#buildDesc_' + casenum).attr('checked',true);
             } else {
-                $('#buildAsc_' + ucn).attr('checked',true);
+                $('#buildAsc_' + casenum).attr('checked',true);
             }
             return true;
         }
@@ -133,7 +134,7 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
         success: function(data) {
             var content = data.html;
             var casenum = data.casenum;
-            $('#registrydiv_' + ucn).html(content); // casenum replaced with ucn
+            $('#registrydiv_' + casenum).html(content);
             return true;
         }
     });
@@ -144,7 +145,7 @@ function sc_civilGetAsync (ucn, casenum, casetype, caseid) {
         async: true,
         success: function(data) {
             var content = data.html;
-            $('#relcasediv_' + ucn).html(content); // casenum replaced with ucn
+            $('#relcasediv_' + casenum).html(content);
             return true;
         }
     });
@@ -259,16 +260,16 @@ $(document).on('click','.searchRelatedOneParty', function() {
 	var parties = {};
 	
 	parties[0] = {};
-	parties[0]['first_name'] = $(this).attr('data-first');
-    parties[0]['middle_name'] = $(this).attr('data-middle');
-    parties[0]['last_name'] = $(this).attr('data-last');
+	parties[0].first_name = $(this).attr('data-first');
+    parties[0].middle_name = $(this).attr('data-middle');
+    parties[0].last_name = $(this).attr('data-last');
     if($.trim($(this).attr('data-dob')) == ""){
-    	parties[0]['dob'] = "";
+    	parties[0].dob = "";
     }
     else{
-    	parties[0]['dob'] = $(this).attr('data-dob');
+    	parties[0].dob = $(this).attr('data-dob');
     }
-
+    
     window.location.href= "/related_case_search/search.php?searchTheseParties=" + JSON.stringify(parties) + "&ucn=" + $(this).attr('data-ucn');
 });
 
@@ -337,4 +338,3 @@ function getCreds(creds) {
         }
     })
 }
-

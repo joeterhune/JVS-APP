@@ -12,13 +12,13 @@
 // the file is not found.
 //
 
-$CAD_OU="Enterprise";
+$CAD_OU="Groups";
 $LDAPHOST = "ldap://JUDSARDC05.jud12.local";
 $LDAPBINDDN = "jud12\XeroxLDAP";
 $LDAPBINDPW = "magi$ter";
-$LDAPBASE = "OU=Manatee,DC=JUD12,DC=LOCAL";
-$LDAPSVCBASE = "CN=Users,DC=JUD12,DC=LOCAL";
-$LDAPSECGROUP = "MAN_JVS_Users"
+$LDAPBASE = "DC=JUD12,DC=LOCAL";
+$LDAPSVCBASE = "CN=JVS_Users,DC=JUD12,DC=LOCAL";
+$LDAPSECGROUP = "JVS_Users"
 
 function inGroup($user,$group) {
 	global $LDAPHOST;

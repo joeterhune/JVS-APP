@@ -317,7 +317,7 @@ function showFlags(data){
         $(fhtable).append($(body));
     }
     
-    $('#flaglist_' + ucn).html($(flaglist)); // replaced casenum with ucn
+    $('#flaglist_' + casenum).html($(flaglist));
     
     return true;
 }
@@ -372,7 +372,7 @@ function showNotes(data){
         $(fhtable).append($(body));
     }
     
-    $('#casenotes_' + ucn).html($(noteslist)); // replaced casenum with ucn
+    $('#casenotes_' + casenum).html($(noteslist));
     
     return true;
 }

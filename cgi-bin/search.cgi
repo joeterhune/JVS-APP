@@ -7,7 +7,7 @@
 # appropriate arrays
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib $ENV{'JVS_PERL5LIB'};
 }
 
 use strict;
@@ -121,7 +121,6 @@ logToFile($logStr, "/tmp/lookups.log");
 # Can we get a case number out of what was entered?  If so, we can short-circuit
 # the rest of this.
 my $sanitizedCase = sanitizeCaseNumber($params{'name'});
-
 my $json = JSON->new->allow_nonref;
 
 if (defined($params{'tmpfile'})) {
@@ -155,7 +154,7 @@ my $ldap = ldapConnect();
 #$fields{'psealeduser'} = inGroup($icmsuser,'CAD-ICMS-SEALED-PROBATE',$ldap);
 
 ############### Added 11/6/2018 jmt security from conf 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
@@ -284,8 +283,8 @@ if (defined($params{'partyTypeLimit'})) {
 
 # Populates the "searchmask} element, which is a bitmask showing what needs
 # to be used building the queries.
-
 findSearchType (\%fields);
+
 my @cases;
 
 if ($fields{'citationsearch'}) {
@@ -323,9 +322,11 @@ if ($fields{'citationsearch'}) {
     # OK, if we're here, it's not a citation search.
     
     print $info->header();
-	
+    
     if (sanitizeCaseNumber($fields{'name'}) eq "") {
         showcaseNameSearch(\%fields, \@cases);
+		logToFile("sanitixe", "/tmp/lookups.log");
+
     } else {
         if($fields{'criminal'} != 1) {
             showcaseCivilSearch(\%fields, \@cases);
@@ -334,7 +335,6 @@ if ($fields{'citationsearch'}) {
             showcaseSearch(\%fields, \@cases);
         }
     }
-    exit;
 }
 
 
@@ -377,8 +377,6 @@ $data{'dTitle'} = sprintf ("%s Search %s for %s %s - ", $fields{'dtitle'}, $data
 # Strip the viewer from the case number; we don't need it any more.
 foreach my $case (@cases) {
     $case->{'CaseNumber'} = (split(";",$case->{'CaseNumber'}))[0];
-	###### Added 11/6/2018 jmt strip spaces from casenumber
-	$case->{'CaseNumber'} =~ s/ //g;
 }
 
 # We still need to write the file, as it will be handy in case of an export.

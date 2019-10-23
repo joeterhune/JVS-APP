@@ -14,11 +14,11 @@ if (!isset($removeCases)) {
 } else {
     $temp = explode(",", $removeCases);
     foreach ($temp as $case) {
-        if (preg_match("/^50/", $case)) {
+        if (preg_match("/^58/", $case)) {
             $str = sprintf("'%s'", $case);   
         } else {
-            $stripped = preg_replace("/-/", "", $case);
-            $str = sprintf("'%s'", $stripped);
+            //$stripped = preg_replace("/-/", "", $case);
+            $str = sprintf("'%s'", $case);
         }
         array_push($cases, $str);
         array_push($unQuotedCases, $case);

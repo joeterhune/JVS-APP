@@ -4,7 +4,7 @@
 # to show booking history for the defendant
 
 BEGIN {
-   use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -25,7 +25,7 @@ use DB_Functions qw (
     getInitDockets
     getDataOne
 );
-
+use XML::Simple;
 use Showcase qw (
     getDockets
 );
@@ -47,6 +47,10 @@ my $casetype = $params{'casetype'};
 
 my $dbh = dbConnect($db);
 my $schema = getDbSchema($db);
+
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $tifgroup = $conf->{'ldapConfig'}->{'tifgroup'};
+
 if (!defined($dbh)) {
     print $info->header;
     die "There was a problem connecting to the Showcase database. Please try again later."
@@ -78,7 +82,7 @@ getInitDockets($casetype,$initDockets);
 my $json = JSON->new->allow_nonref;
 $data{'initDockets'} = $json->encode($initDockets);
 
-$data{'showTif'} = inGroup(getUser(), "CAD-ICMS-TIF");
+$data{'showTif'} = inGroup(getUser(), $tifgroup);
 #$data{'casenum'} = $casenum;
 #$data{'ucn'} = $casenum;
 $data{'CaseID'} = $caseid;

@@ -22,8 +22,8 @@ if ($dsCaseNumSearch != "") {
     $searchnums = array();
     foreach ($pieces as $case) {
         $case = preg_replace("/-/","", $case);
-        if (!preg_match("/^50/", $case)) {
-            $case = sprintf("50%s", $case);
+        if (!preg_match("/^58/", $case)) {
+            $case = sprintf("58%s", $case);
         }
         array_push($searchnums,$case);
     }

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -44,7 +44,7 @@ $data{'password'} = $eFileInfo->{'password'};
 $data{'bar_id'} = $eFileInfo->{'bar_num'} . "FL";
 $data{'ClerkCase'} = $params{'casenum'};
 $data{'UCN'} = $params{'ucn'};
-$data{'county_id'} = 50;
+$data{'county_id'} = 58;
 $data{'judicial_circuit'} = "Twelfth Circuit";
 $data{'county'} = "Sarasota County";
 
@@ -92,7 +92,7 @@ close OUTFILE;
 print "Content-type: text/html\n\n";
 print "Done!";
 
-my $filing = `/usr/bin/php /var/jvs/icms/bin/portal/fileTemplate.php -f $file`;
+my $filing = `/usr/bin/php $ENV{'JVS_PERL5LIB'}/portal/fileTemplate.php -f $file`;
 
 open(OUTFILE, ">/tmp/filing.xml");
 print OUTFILE $filing;

@@ -1,12 +1,13 @@
 <?php
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once("Smarty/Smarty.class.php");
-require_once("../workflow/wfcommon.php");
-include "../icmslib.php";
-include "../caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+include $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+include $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
 
 checkLoggedIn();
+
+require_once("Smarty/Smarty.class.php");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -17,15 +18,16 @@ $docInfo = array();
 $docid = getReqVal('docid');
 $ucn = getReqVal('ucn');
 if(isset($docid) && !empty($docid)){
-	//unsetQueueVars();
 	$docInfo = getDocData($docid);
 	$ucn = $docInfo['ucn'];
 	$docid = $docInfo['docid'];
 }
 
+$smarty->assign("clerkOnly", "0");
 $clerkOnly = false;
 if(isset($_REQUEST['clerkOnly'])){
 	$clerkOnly = true;
+	$smarty->assign("clerkOnly", "1");
 }
 
 #
@@ -37,7 +39,7 @@ $dbh = dbConnect("icms");
 $user = $_SESSION['user'];
 $close = getReqVal("close");
 $isOrder = $docInfo['isOrder'];
-$partypath = "/usr/local/icms/workflow/parties";
+$partypath = $_SERVER['JVS_ROOT'] . "/workflow/parties";
 
 if($isOrder){
 	$showclerk = 1;
@@ -151,18 +153,16 @@ getSharedQueues($user, $dbh, $sharedqueues);
 $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
-//$formbody = getReqVal('form_body');
-
 $url = "/workflow/parties.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 
 createTab($ucn, $url, 1, 1, "cases",
-	array(
-		"name" => "Order Creation",
-		"active" => 1,
-		"close" => 1,
-		"href" => $url,
-		"parent" => $ucn
-	)
+		  array(
+				"name" => "Order Creation",
+				"active" => 1,
+				"close" => 1,
+				"href" => $url,
+				"parent" => $ucn
+		)
 );
 
 $smarty->assign('caption', $casestyle);
@@ -189,7 +189,8 @@ foreach (array('Attorneys','Parties') as $type) {
             $needemail=1;
             if (array_key_exists('ServiceList', $party)) {
                 $emails = array_merge($emails, $party['ServiceList']);
-                if (sizeof($party['ServiceList'] == 1)) {
+				
+                if (sizeof($party['ServiceList']) == 1) {
                     if ($party['ServiceList'][0] == "") {
                         unset($party['ServiceList'][0]);
                         $needsnail = 1;
@@ -200,9 +201,6 @@ foreach (array('Attorneys','Parties') as $type) {
     }    
 }
 
-//$_SESSION['case_caption'] = $casestyle;
-//$_SESSION['cclist'] = json_encode($cclist);
-
 $smarty->assign('cclist', $cclist);
 $ccjson = htmlentities(json_encode($cclist));
 $smarty->assign('ccjson', $ccjson);
@@ -212,9 +210,9 @@ $smarty->assign('needemail', $needemail);
 $smarty->assign('emails', implode(",", $emails));
 $smarty->assign('close', $close);
 
-$smarty->assign('pdf_file', $docInfo['pdf_file']);
-$smarty->assign('signature_html', $docInfo['signature_html']);
-$smarty->assign('signature_img', $docInfo['signature_img']);
+$smarty->assign('pdf_file', key_exists('pdf_file',$docInfo) ? $docInfo['pdf_file'] : null);
+$smarty->assign('signature_html', key_exists('signature_html', $docInfo) ? $docInfo['signature_html'] : null);
+$smarty->assign('signature_img', key_exists('signature_img', $docInfo) ? $docInfo['signature_img'] : null);
 $smarty->assign('ucn', $docInfo['ucn']);
 $smarty->assign('docid', $docInfo['docid']);
 $smarty->assign('isOrder', $docInfo['isOrder']);

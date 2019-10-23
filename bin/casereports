@@ -1,0 +1,17 @@
+#!/bin/bash
+
+export JSV_ROOT=/var/jvs
+export PERL5LIB=$JSV_ROOT/lib
+export DOCUMENT_ROOT=$JSV_ROOT/public_html
+
+DATE=`/bin/date +%Y%m%d`
+
+cd $JSV_ROOT/bin
+# Showcase reports have been moved to screports.sh
+./buildjudge.pl
+./scciv.pl > results/civresults
+./scjuv.pl > results/juvresults
+./scpro.pl > results/proresults
+#./flagreports.pl > results/flagreports
+#./aw_ftp1.job > results/ftp
+./clearcache.job > results/cleanup

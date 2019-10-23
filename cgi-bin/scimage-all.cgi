@@ -3,7 +3,7 @@
 # Render a multi-case docket for selected images.
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -127,7 +127,8 @@ sub doit {
 	getData(\%items, $query, $dbh, {hashkey => "CaseNumber"});
 
 	# Need to determine which TrakMan user we should be using.
-    my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 	my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 	my $STMPASS = $conf->{'TrakMan'}->{'sealed'}->{'password'};

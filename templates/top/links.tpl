@@ -56,7 +56,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Twelfth Circuit Website" class="externLink" data-url="http://www.15thcircuit.com/" data-target="Circuit15">Twelfth Circuit Website</a>
+                                                    <a title="Fifteenth Circuit Website" class="externLink" data-url="http://www.15thcircuit.com/" data-target="Circuit15">Fifteenth Circuit Website</a>
                                                 </li>                  
                                             </ul>
                                         </td>
@@ -75,7 +75,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Appellate Rules of Procedure" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/830A6BC6B90DA05685256B29004BFAC0/$FILE/Appellate.pdf?OpenElement"
+                                                    <a title="Appellate Rules of Procedure" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2017/10/Appellate-Court-Rules-10-01-17.pdf"
                                                        data-target="Appellate Rules of Procedure">
                                                         Appellate
                                                     </a>
@@ -86,7 +86,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Rules of Judicial Administration" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/F854D695BA7136B085257316005E7DE7/$FILE/Judicial.pdf"
+                                                    <a title="Rules of Judicial Administration" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2018/06/RJA-7-1-18.pdf"
                                                        target="RJA">
                                                         Judicial Administration
                                                     </a>
@@ -99,7 +99,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="FL Civil Rules of Procedure" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/10C69DF6FF15185085256B29004BF823/$FILE/Civil.pdf?OpenElement"
+                                                    <a title="FL Civil Rules of Procedure" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2018/07/Civil-Procedure-Rules-Updated-7-2-18.pdf"
                                                        target="CivilRules">
                                                         Civil
                                                     </a>
@@ -110,7 +110,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Probate" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/6C2FEF97C5969ACD85256B29004BFA12/$FILE/Probate.pdf?OpenElement"
+                                                    <a title="Probate" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2017/09/Probate-Rules-09-07-17.pdf"
                                                        target="ProbateRules">
                                                         Probate
                                                     </a>
@@ -123,7 +123,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="FL Rules of Criminal Procedure" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/BDFE1551AD291A3F85256B29004BF892/$FILE/Criminal.pdf?OpenElement"
+                                                    <a title="FL Rules of Criminal Procedure" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2018/05/Criminal-Procedure-Rules-05-10-18.pdf"
                                                        target="CrimRules">
                                                         Criminal
                                                     </a>
@@ -134,7 +134,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="FL Small Claims" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/5E3D51AF15EE8DCD85256B29004BFA62/$FILE/Small%20Claims.pdf?OpenElement"
+                                                    <a title="FL Small Claims" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2017/04/small-claims.pdf"
                                                        target="SmallClaimsRules">
                                                         Small Claims
                                                     </a>
@@ -147,7 +147,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="FL Family Rules of Procedure" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/416879C4A88CBF0485256B29004BFAF8/$FILE/Family.pdf?OpenElement"
+                                                    <a title="FL Family Rules of Procedure" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2018/01/Family-Law-Rules-of-Procedure-01-2018.pdf"
                                                        target="FamilyRules">
                                                         Family
                                                     </a>
@@ -157,7 +157,7 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Fl Rules of Traffic" class="externLink" data-url="http://www.floridabar.org/TFB/TFBResources.nsf/Attachments/0FF693985C17374385256B29004BFA46/$FILE/Traffic.pdf?OpenElement"
+                                                    <a title="Fl Rules of Traffic" class="externLink" data-url="https://www.floridabar.org/wp-content/uploads/2017/04/traffic.pdf"
                                                        target="TrafficRules">
                                                         Traffic
                                                     </a>
@@ -284,9 +284,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_county/codes/code_of_ordinances"
+                                                    <a title="Palm Beach County Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_county/codes/code_of_ordinances"
                                                        target="PBCOrdinances">
-                                                        Sarasota County
+                                                        Palm Beach County
                                                     </a>
                                                 </li>
                                             </ul>
@@ -341,9 +341,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach/codes/code_of_ordinances"
+                                                    <a title="Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach/codes/code_of_ordinances"
                                                        target="PBOrdinances">
-                                                        Sarasota
+                                                        Palm Beach
                                                     </a>
                                                 </li>
                                             </ul>
@@ -365,9 +365,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="Sarasota Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/Sarasota_beach_gardens/codes/code_of_ordinances"
+                                                    <a title="Palm Beach Gardens City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/palm_beach_gardens/codes/code_of_ordinances"
                                                        target="PBGOrdinances">
-                                                        Sarasota Gardens
+                                                        Palm Beach Gardens
                                                     </a>
                                                 </li>
                                             </ul>
@@ -438,9 +438,9 @@
                                         <td>
                                             <ul>
                                                 <li>
-                                                    <a title="West Sarasota City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_Sarasota_beach/codes/code_of_ordinances"
+                                                    <a title="West Palm Beach City Ordinances" class="externLink" data-url="https://www.municode.com/library/fl/west_palm_beach/codes/code_of_ordinances"
                                                        target="WPBOrdinances">
-                                                        West Sarasota
+                                                        West Palm Beach
                                                     </a>
                                                 </li>
                                             </ul>

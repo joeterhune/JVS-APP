@@ -32,7 +32,6 @@ use ICMS;
 
 our $dbName = getShowcaseDb();
 our $schema = getDbSchema($dbName);
-our $dbh = dbConnect($dbName);
 
 sub buildContested {
     my $caselist = shift;
@@ -153,7 +152,7 @@ sub getVrbEventsByCaseList {
     my $startDate = shift;
     
     my $count = 0;
-    my $perQuery = 1000;
+    my $perQuery = 100;
     
     # Transform the $caseList to the @cases array, just changing the Banner 
     my @cases;
@@ -274,27 +273,25 @@ sub getLastDocketFromList {
         
         my $query;
 
-            my $inCase = join(",", @temp);
-            
-            $query = qq {
-                select
-                    DocketCode,
-                    CONVERT(char(10),EffectiveDate,120) as EffectiveDate,
-                    CaseNumber,
-                    UCN
-                from
-                    $schema.vDocket with(nolock)
-                where
-                    DocketCode in ($inDocket)
-                    and CaseNumber in ($inCase)
-                order by
-                    EffectiveDate desc
-            };
-            getData(\%dockets, $query, $dbh, {hashkey => 'UCN', flatten => 1});
+        my $inCase = join(",", @temp);
+        
+        $query = qq {
+            select
+                DocketCode,
+                CONVERT(char(10),EffectiveDate,120) as EffectiveDate,
+                CaseNumber,
+                UCN
+            from
+                $schema.vDocket with(nolock)
+            where
+                DocketCode in ($inDocket)
+                and CaseNumber in ($inCase)
+            order by
+                EffectiveDate desc
+        };
+        getData(\%dockets, $query, $dbh, {hashkey => 'UCN', flatten => 1});
         
         $count += $perQuery;
-        
-        print "Checked $count...\n\n";
     }
     
     foreach my $casenum (@cases) {
@@ -309,14 +306,23 @@ sub getLastDocketFromList {
 sub buildNoHearings {
 	my $justcases = shift;
 	my $motionNoEvent = shift;
+    my $MSGS = shift;
 	
 	my %lastDockets;
     
-    my $firstCase = $justcases->[0];
+    if ($MSGS) {
+        print "Querying last dockets from case list...\n";
+    }
+    
+    #my $firstCase = $justcases->[0];
     my $dbType = "showcase";
     
 	getLastDocketFromList($justcases, \@MOTIONS, \%lastDockets, $dbType);
 	
+    if ($MSGS) {
+        print "Done querying last dockets from case list...\n";
+    }
+    
 	my $earliest = "9999-99-99";
 	
 	foreach my $case (keys %lastDockets) {
@@ -326,6 +332,9 @@ sub buildNoHearings {
 		}
 	}
 
+    if ($MSGS) {
+        print "Querying VRB events from case list...\n";
+    }
 
 	my %events;
 	# Find the events for the cases after $earliest (not after now - we need to be sure to catch events before today)
@@ -348,6 +357,10 @@ sub buildNoHearings {
             $motionNoEvent->{$case} = 1;
 		}
 	}
+    
+    if ($MSGS) {
+        print "Done querying VRB events from case list...\n";
+    }
 }
 
 

@@ -21,7 +21,7 @@ $postgres_functions = array (
 			     "fetch_array" => "pg_fetch_array",
 			     "num_rows" => "pg_num_rows",
 			     "free_result" => "pg_free_result"
-		     );
+			     );
 
 function casenumtoucn ($casenum) {
   // Copied almost directly from bannersearch.cgi

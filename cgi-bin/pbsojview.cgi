@@ -5,7 +5,7 @@
 # 11/29/10 lms don't attempt pbso search if there's no database connection
 
 BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -70,7 +70,7 @@ sub doit {
 	my $pbsoconn = dbConnect("pbso2");
 	if (!defined($pbsoconn)) {
 		print $info->header();
-		print "No connection can be made to the PBSO database at this time.  ".
+		print "No connection can be made to the SCSO database at this time.  ".
 			"Please try later.<br/>";
 		exit;
 	}
@@ -98,7 +98,7 @@ sub doit {
 	}</script>
 
 
-<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota Sheriff's Office Jacket/Inmate View </h2>";
+<h2 style=\"background-color:#428bca; color:#FFFFFE\">Sarasota County Sheriff's Office Jacket/Inmate View </h2>";
 
 	write_jacketIdentifier($jacket);
 	print "<p>";

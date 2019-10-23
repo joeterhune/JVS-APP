@@ -44,7 +44,7 @@
         <script src="/javascript/main.js?1.8" type="text/javascript"></script>
         <script src="/javascript/ICMS.js?2.1" type="text/javascript"></script>
         <script src="/javascript/ajax.js?1.6" type="text/javascript"></script>
-        <script src="/javascript/orders.js?2.9" type="text/javascript"></script>
+        <script src="/javascript/orders.js?3.0" type="text/javascript"></script>
         <script src="/icms.js" type="text/javascript"></script>
         
         <script src="/javascript/signature_pad.js" type="text/javascript"></script>
@@ -102,7 +102,7 @@
 			        return false;
 			    });
             
-            	{if $pendCount['pendCount']}
+            	{if (isset($pendCount.pendCount) && ($pendCount.pendCount))}
 					$('#dialogSpan').html("You have items in the e-Filing portal's Pending Queue that require attention.");
 					$('#dialogDiv').dialog({
 						resizable: false,
@@ -346,11 +346,13 @@
 		  			<li class="topTab" id="logoutTop" title="Logout Tab">
 		                <a href="/cgi-bin/logout.cgi"><span style="text-decoration:none"><i class="fa fa-sign-out">&nbsp;&nbsp;</i></span>Logout</a>
 		            </li>
+                    {if is_array($tabs)}
 		            {if $tabs|@count > 1}
 			            <li class="topTab" id="closeOutTop" title="Close All Tabs">
 			            	<a href="/close_all.php"><span style="text-decoration:none"><i class="fa fa-times">&nbsp;&nbsp;</i></span>Close All Tabs</a>
 			            </li>
 		            {/if}
+                    {/if}
 				</ul>
 				<div class="pull-right rightTitleBox">
 					<div id="logoDiv" class="pull-right">
@@ -358,8 +360,8 @@
 					</div>
 					<ul class="nav nav-tabs navbar pull-left">
 						<!--<a class="btn btn-default" href="file://///c:/OIVFiles/index.html" target="_blank">OIV</a> -->
-						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling" target="_blank">OLS</a>&nbsp;
-						<a class="btn btn-default" href="https://e-services.co.Sarasota-beach.fl.us/scheduling/admin" target="_blank">OLS Admin</a>&nbsp;
+						<a class="btn btn-default" href="https://ols.jud12.local" target="_blank">OLS</a>&nbsp;
+						<a class="btn btn-default" href="https://ols.jud12.local/admin" target="_blank">OLS Admin</a>&nbsp;
 						<!--<a class="btn btn-default"href="{$vrbUrl}/scheduler/calendar" target="_blank">VRB</a> -->
 						<a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-question-circle"></i> Help <span class="caret"></span></a>
 						<ul class="dropdown-menu" aria-labeledby="Help Dropdown">
@@ -384,7 +386,7 @@
 							<ul id="second_row_list" class="nav nav-tabs">
 								{$thirdRow = 0}
 								{foreach from=$tabs key=key item=tab}
-									{if $tab.tabs && ($active == $tab.parent)}
+									{if ((isset($tab.tabs) && ($tab.tabs)) && ($active == $tab.parent))}
 										{foreach from=$tab.tabs key=inner_key item=inner_tab}
 											{if $activeTab == $inner_tab.parent}
 												{$thirdRow = 1}
@@ -404,4 +406,4 @@
 					</div>
 				</ul>
 			</nav>
-		</div>	
+		</div>

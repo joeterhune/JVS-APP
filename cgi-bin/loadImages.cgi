@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -38,7 +38,7 @@ my $caselist = $info->param('caselist');
 my @cases = split(",", $caselist);
 #@cases = ("50-2012-TR-098065-AXXX-SB", "50-2009-MM-018477-AXXX-SB");
 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 

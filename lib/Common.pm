@@ -1,9 +1,5 @@
 package Common;
 
-BEGIN {
-	use lib "$ENV{'PERL5LIB'}";
-};
-
 use strict;
 use warnings;
 use Data::Dumper qw(Dumper);
@@ -12,7 +8,7 @@ use Date::Calc qw (:all Parse_Date);
 use DateTime;
 use Carp qw(cluck);
 use Net::FTP;
-use Mail::RFC822::Address qw(valid);
+use Email::Valid;
 use Template;
 use MIME::Lite;
 use File::Basename;
@@ -28,6 +24,7 @@ use JSON;
 use XML::Simple;
 use PHP::Session;
 use CGI::Cookie;
+use Sys::Hostname;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -98,6 +95,10 @@ our @EXPORT_OK = qw(
 	$session
 	checkLoggedIn
 	getSession
+    readFileToHash
+    writeFileFromHash
+    verifyFieldsExist
+    @adminMails
 );
 
 our %courtTypes = (
@@ -122,7 +123,8 @@ our %courtTypes = (
 	'IN' => 'Civil Traffic',
 	'4D' => 'Appellate Criminal',
 	'WO' => 'Probate',
-	'DA' => 'Domestic Relations/Family'
+	'DA' => 'Domestic Relations/Family',
+	'WP' => 'Circuit Civil'
 );
 
 our %portalTypes = (
@@ -193,7 +195,7 @@ our @months = (
 	"Dec"
 );
 
-our $templateDir = "$ENV{'APP_ROOT'}/templates";
+our $templateDir = $ENV{'JVS_ROOT'} . "/templates";
 
 # An array of statuses that we won't want in the pending reports but still need
 # to exist in e-Service.  Stupid, stupid hack.
@@ -212,6 +214,22 @@ $string =~ s/[\(\)\']//g;
 # And split it up
 our @INACTIVECODES = split(/,/, $string);
 
+our @adminMails = (
+	{
+		'fullname' => 'Joe Terhune',
+		'email_addr' => 'jterhune@jud12.flcourts.org'
+	}
+);
+
+# Build the email address to use for sending messages
+my $host = hostname;
+my @pwent = getpwuid($>);
+
+our %defSender = (
+	'fullname' => $pwent[0],
+	'email_addr' => $pwent[0] . '@' . $host
+);
+
 
 sub uploadFile {
     my $info = shift;
@@ -225,7 +243,7 @@ sub uploadFile {
 
 	# Don't need the uploaded files visible to the webserver
 	my $uploaduser = getUser();
-	my $upload_base = $ENV{'DOCUMENT_ROOT'} . "/uploads";
+	my $upload_base = $ENV{'JVS_DOCROOT'} . "/uploads";
 
 	# Keep users from possibly stomping on each other's uploads
 	my $upload_dir = "$upload_base/$uploaduser";
@@ -284,7 +302,7 @@ sub getSystemType {
     my $config = shift;
     
     if (!defined($config)) {
-        $config = getConfig(("$ENV{'APP_ROOT'}/conf/ICMS.xml"));
+		$config = getConfig($ENV{'JVS_ROOT'} . "/conf/ICMS.xml");
     }
     
     if (defined($config->{'systemType'})) {
@@ -316,7 +334,6 @@ sub getArrayPieces {
 	if (!defined($quote)) {
 		$quote = 0;
 	}
-	
 
 	my $end = $first + $count - 1;
 
@@ -327,7 +344,7 @@ sub getArrayPieces {
 		$element =~ s/^\s+//g;
 		$element =~ s/\s+$//g;
 		next if ($element eq "");
-		if (($quote) && ($element =~ /\D/)) {
+		if ($quote) {
 			# String value - quote it
 			push(@{$targetRef}, "'$element'");
 		} else {
@@ -446,16 +463,16 @@ sub doTemplate {
 			INCLUDE_PATH => $inclDir
 		}
 	);
-	
+
 	my $output;
-	
+
 	$tt->process(
 		$templateFile,
 		{
 			data => $dataref
 		}, \$output
 	) || writeDebug($tt->error());
-	
+
 	if ($printOutput) {
 		print $output;
 		return undef;
@@ -655,36 +672,64 @@ sub transferFile {
 	my $file = shift;
 	my $ftpConfig = shift;
 	my $useASCII = shift;
-
+	
+	my $script = $0;
+	my $msg;
+	my $subject;
+	
 	if (!defined($useASCII)) {
 		# Don't use ASCII transfers unless explicitly required.
 		$useASCII = 0;
 	}
-
-	my $ftp = Net::FTP->new($ftpConfig->{'ftpHost'}, Debug => 0) ||
+	
+	my $ftp = Net::FTP->new($ftpConfig->{'ftpHost'}, Debug => 0);
+	if (!defined($ftp)) {
+		$msg = sprintf("The FTP connection to %s failed, with the following error:\n\n%s", $ftpConfig->{'ftpHost'}, $@);
+		$subject = sprintf("%s: Error connecting to FTP server.", $0);
+		sendMessage(\@adminMails,\%defSender,undef,$subject,$msg,undef,0,0);
 		die "Cannot connect to $ftpConfig->{'ftpHost'}: $@";
-
-	$ftp->login($ftpConfig->{'ftpUser'}, $ftpConfig->{'ftpPass'}) ||
+	}
+	
+	if (!$ftp->login($ftpConfig->{'ftpUser'}, $ftpConfig->{'ftpPass'})) {
+		$msg = sprintf("The FTP LOGIN to %s failed, with the following error:\n\n%s", $ftpConfig->{'ftpHost'}, $ftp->message);
+		$subject = sprintf("%s: Error logging in to FTP server.", $0);
+		sendMessage(\@adminMails,\%defSender,undef,$subject,$msg,undef,0,0);
 		die "Cannot login: ", $ftp->message;
-
-	$ftp->cwd($ftpConfig->{'ftpDir'}) ||
-		die "Cannot change working directory: ", $ftp->message;
-
+	}
+	
+	if (!$ftp->cwd($ftpConfig->{'ftpDir'})) {
+		$msg = sprintf("The FTP cwd command on %s failed (to directory %s), with the following error:\n\n%s",
+					   $ftpConfig->{'ftpHost'}, $ftpConfig->{'ftpDir'}, $ftp->message);
+		$subject = sprintf("%s: Changing directory on FTP server.", $0);
+		sendMessage(\@adminMails,\%defSender,undef,$subject,$msg,undef,0,0);
+		die "Cannot change working directory: ", $ftp->message;		
+	}
+	
 	if ($useASCII) {
 		$ftp->ascii;
 	}
-
-	$ftp->put($file) ||
-		die "PUT of file '$file' failed: ", $ftp->message;
-
+	
+	my $result = $ftp->put($file);
+	if (!defined($result)) {
+		$msg = sprintf("The FTP PUT command on %s failed (file %s).\n\n",
+							 $ftpConfig->{'ftpHost'}, $file);
+		$subject = sprintf("%s: Error logging in to FTP server.", $0);
+		sendMessage(\@adminMails,\%defSender,undef,$subject,$msg,undef,0,0);
+		die "PUT of file '$file' failed: ", $ftp->message;	
+	}
+	
 	$ftp->quit;
+	
+	$msg = sprintf("Transfer of file %s to server %s successful.", $file, $ftpConfig->{'host'});
+	$subject = "FTP transfer complete";
+	sendMessage(\@adminMails,\%defSender,undef,$subject,$msg,undef,0,0);
 }
 
 sub sanitizeEmail {
 	my $email = shift;
 	my @temp = split(/[;,\ ]+/, $email);
 	foreach my $piece (@temp) {
-		if (valid($piece)) {
+		if (Email::Valid->address($piece)) {
 			return $piece;
 		}
 	}
@@ -865,7 +910,7 @@ sub readHash {
 sub redirectOutput {
 	my $prog = shift;
 
-	my $basepath = "/var/jvs/icms/bin/results";
+	my $basepath = "$ENV{'JVS_PERL5LIB'}/results";
 
 	open OUTPUT, '>', "$basepath/$prog.stdout.txt" ||
 		die "Unable to redirect STDOUT to $basepath/$prog.stdout.txt: $!\n\n";
@@ -921,49 +966,67 @@ sub readCSV {
 }
 
 sub buildName {
-	# Builds a name string from the supplied person hash - required elements are FirstName and LastName, and
-	# MiddleName is optional
-	my $person = shift;
-	my $lastFirst = shift;
+    # Builds a name string from the supplied person hash - required elements are FirstName and LastName, and
+    # MiddleName is optional
+    my $person = shift;
+    my $lastFirst = shift;
 
-	if (!defined($lastFirst)) {
-		$lastFirst = 0;
-	}
+    if (!defined($lastFirst)) {
+        $lastFirst = 0;
+    }
+    
+    my $name;
 
-	my $name;
-
-	if ((!defined($person->{'MiddleName'})) || ($person->{'MiddleName'} eq '')) {
-		# No middle name specified; build from just the first and last
-		if ($lastFirst) {
-			if (defined($person->{'FirstName'})) {
-				$name = sprintf("%s, %s", $person->{'LastName'}, $person->{'FirstName'});
-			} else {
-				$name = $person->{'LastName'};
-			}
-		} else {
-			if (defined($person->{'FirstName'})) {
-				$name = sprintf("%s %s", $person->{'FirstName'}, $person->{'LastName'});
-			} else {
-				$name = $person->{'LastName'}
-			}
-		}
-		return $name;
-	} else {
-		if ((!defined($person->{'FirstName'})) || ($person->{'FirstName'} eq '')) {
-			# No first name?  Must be a company name.  Just use the last name/
-			$name = $person->{'LastName'};
-			return $name;
-		}
-		# If we're here, we have all 3 names.  Just put them into the correct order.
-		if ($lastFirst) {
-			$name = sprintf("%s, %s %s", $person->{'LastName'}, $person->{'FirstName'},
-							$person->{'MiddleName'});
-		} else {
-			$name = sprintf("%s %s %s", $person->{'FirstName'}, $person->{'MiddleName'},
-							$person->{'LastName'});
-		}
-	}
-	return $name;
+    if ((!defined($person->{'MiddleName'})) || ($person->{'MiddleName'} eq '')) {
+        # No middle name specified; build from just the first and last
+        if ($lastFirst) {
+            if (defined($person->{'FirstName'})) {
+                if ((defined($person->{'Suffix'})) && ($person->{'Suffix'} ne '')) {
+                    $name = sprintf("%s %s, %s", $person->{'LastName'}, $person->{'Suffix'}, $person->{'FirstName'});
+                } else {
+                    $name = sprintf("%s, %s", $person->{'LastName'}, $person->{'FirstName'});
+                }
+            } else {
+                $name = $person->{'LastName'};
+            }
+        } else {
+            if (defined($person->{'FirstName'})) {
+                if ((defined($person->{'Suffix'})) && ($person->{'Suffix'} ne '')) {
+                    $name = sprintf("%s %s, %s", $person->{'FirstName'}, $person->{'LastName'}, $person->{'Suffix'});
+                } else {
+                    $name = sprintf("%s %s", $person->{'FirstName'}, $person->{'LastName'});
+                }
+            } else {
+                $name = $person->{'LastName'}
+            }
+        }
+        return $name;
+    } else {
+        if ((!defined($person->{'FirstName'})) || ($person->{'FirstName'} eq '')) {
+            # No first name?  Must be a company name.  Just use the last name/
+            $name = $person->{'LastName'};
+            return $name;
+        }
+        # If we're here, we have all 3 names.  Just put them into the correct order.
+        if ($lastFirst) {
+            if ((defined($person->{'Suffix'})) && ($person->{'Suffix'} ne '')) {
+                $name = sprintf("%s %s, %s %s", $person->{'LastName'}, $person->{'Suffix'}, $person->{'FirstName'},
+                                $person->{'MiddleName'});
+            } else {
+                $name = sprintf("%s, %s %s", $person->{'LastName'}, $person->{'FirstName'},
+                            $person->{'MiddleName'});
+            }
+        } else {
+            if ((defined($person->{'Suffix'})) && ($person->{'Suffix'} ne '')) {
+                $name = sprintf("%s %s %s, %s", $person->{'FirstName'}, $person->{'MiddleName'},
+                                $person->{'LastName'}, $person->{'Suffix'});
+            } else {
+                $name = sprintf("%s %s %s", $person->{'FirstName'}, $person->{'MiddleName'},
+                                $person->{'LastName'});
+            }
+        }
+    }
+    return $name;
 }
 
 sub stripWhiteSpace {
@@ -1146,6 +1209,11 @@ sub writeJsonFile {
 	# Writes the data structure $dataRef to a JSON file
 	my $dataRef = shift;
 	my $jsonFile = shift;
+    my $pretty = shift;
+    
+    if (!defined($pretty)) {
+        $pretty = 1;
+    }
     
     if (!defined($jsonFile)) {
         my $fh = File::Temp->new (
@@ -1163,7 +1231,12 @@ sub writeJsonFile {
 		warn "WARNING: Unable to create JSON file '$jsonFile': !\n\n";
 		return undef;
 	}
-	my $json_text = JSON->new->ascii->pretty->encode($dataRef);
+	my $json_text;
+    if ($pretty) {
+        $json_text = JSON->new->ascii->pretty->encode($dataRef);
+    } else {
+        $json_text = JSON->new->ascii->encode($dataRef);
+    }
 	print JSONFILE $json_text;
 	close JSONFILE;
 	
@@ -1188,14 +1261,13 @@ sub sanitizeCaseNumber {
     # Strip leading "58" and any dashes.
     $casenum =~ s/^58//g;
     $casenum =~ s/-//g;
-	######## Added 11/6/2018 jmt Strip spaces. benchmark uses spaces.
-	$casenum =~ s/ //g;
     
     if ($casenum =~ /^(\d{1,6})(\D\D)(\d{0,6})(.*)/) {
         my $year = $1;
         my $type = $2;
         my $seq = $3;
         my $suffix = $4;
+        
         # If we have a 2-digit year, adjust it (we'll use 60 as the split point)
         if ($year < 100) {
             if ($year > 60) {
@@ -1207,38 +1279,25 @@ sub sanitizeCaseNumber {
         
         if (inArray(\@SCCODES,"'$type'")) {
             # If it's a Showcase code, prepend the 58
-            #$year = sprintf("58-%04d", $year);
-			########## Modified 11/6/2018 jmt removing dashes for benchmark
-			$year = sprintf("58%04d", $year);
+            $year = sprintf("58-%04d", $year);
             if ($suffix =~ /(\w\w\w\w)(\D\D)/) {
-			   
-                #$suffix = sprintf("%s-%s", $1, $2);
-				########## Modified 11/6/2018 jmt removing dashes for benchmark
-				 $suffix = sprintf("%s%s", $1, $2);
+                $suffix = sprintf("%s-%s", $1, $2);
             }
         } elsif ($type eq "AP") {
 			if ($seq > 900000) {
 				# It's a criminal appeal
-				#$year = sprintf("58-%04d", $year);
-				########## Modified 11/6/2018 jmt removing dashes for benchmark
-				$year = sprintf("58%04d", $year);
+				$year = sprintf("58-%04d", $year);
 				if ($suffix =~ /(\w\w\w\w)(\D\D)/) {
-					#$suffix = sprintf("%s-%s", $1, $2);
-					########## Modified 11/6/2018 jmt removing dashes for benchmark
-					$suffix = sprintf("%s%s", $1, $2);
+					$suffix = sprintf("%s-%s", $1, $2);
 				}
 			}
 		}
         
         
         if ((!defined($suffix)) || ($suffix eq ''))  {
-          #  return sprintf("%s%s%06d", $year, $type, $seq);
-		  ########## Modified 11/6/2018 jmt removing dashes for benchmark
-		  return sprintf("%s%s%06d", $year, $type, $seq);
+            return sprintf("%s-%s-%06d", $year, $type, $seq);
         } else {
-            #return sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
-			########## Modified 11/6/2018 jmt removing dashes for benchmark
-			return sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
+            return sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
         }  
     }
 }
@@ -1255,17 +1314,10 @@ sub convertCaseNumber {
     # them without the dashes.  This routine will be called when we need to be sure
     # the number we're working with has the dashes.
     if ($casenum =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
-        #return sprintf("%04d-%s-%06d", $1, $2, $3);
-		########## Modified 11/6/2018 jmt removing dashes for benchmark
-		return sprintf("%04d%s%06d", $1, $2, $3);
+        return sprintf("%04d-%s-%06d", $1, $2, $3);
     }
-	#elsif($btoSC eq 1 && ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/)){
-	########## Modified 11/6/2018 jmt removing dashes for benchmark
-		elsif($btoSC eq 1 && ($casenum =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/)){
-
-		#return sprintf("%04d-%s-%06d", $2, $3, $4);
-		########## Modified 11/6/2018 jmt removing dashes for benchmark
-		return sprintf("%04d%s%06d", $2, $3, $4);
+	elsif($btoSC eq 1 && ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/)){
+		return sprintf("%04d-%s-%06d", $2, $3, $4);
 	}else {
         # No change necessary.  Return the original case
         return $casenum;
@@ -1323,7 +1375,7 @@ sub isShowcase {
 
 sub getShowcaseDb {
     # Get the name of the Showcase DB from the ICMS.xml file
-    my $xml = XMLin($ENV{'DOCUMENT_ROOT'} . "/../conf/ICMS.xml");
+    my $xml = XMLin($ENV{'JVS_ROOT'} . "/conf/ICMS.xml");
     if (!defined($xml->{'showCaseDb'})) {
         return ("showcase-prod");
     }
@@ -1623,5 +1675,126 @@ sub getSession{
 	
 	return $session;
 }
+
+# Similar to the difference between sqlHashArray() and sqlHashHash(), this
+# function performs essentially the same function as readHashArray(), but
+# instead of populating an array of hash references, it populates a hash ref
+# with additional hash refs, keyed on the $hashkey value.
+sub readFileToHash {
+	my $hashfile = shift;
+    my $hashref = shift;
+    my $delimiter = shift;
+    my @fields = @_;
+
+    my $hashkey = $fields[0];
+
+    if (!open (INFILE, $hashfile)) {
+        print "Unable to open input file '$hashfile': $!\n";
+        return 0;
+    }
+
+    while (my $line = <INFILE>) {
+        chomp $line;
+        my @temp = split(/$delimiter/, $line, -1);
+        my $count = 0;
+        my $datahash = {};
+        foreach my $field (@fields) {
+            $datahash->{$field} = $temp[$count++];
+        }
+        $hashref->{$datahash->{$hashkey}} = $datahash;
+    }
+    close INFILE;
+    return 1;
+}
+
+sub writeFileFromHash {
+	# Improved version of writehash.  Instead of accepting a hash, it accepts
+	# a reference to an array of hashes, as returned from sqlHashArray().  This
+	# offers greater flexibility - instead of having a pre-built hash, keyed on
+	# a single element and having a lot of tilde-delimited strings, it iterates
+	# through the array and builds the strings as it likes (allowing reuse of
+	# arrays)
+	# Arguments are the array reference, and then the name of the file to be
+	# created, and then hash fields that we'll want to deal with, in the order
+	# we'd like to deal with them
+	my $hashref = shift;
+	my $hashfile = shift;
+	my $keep = shift;
+	my $first = shift;
+	my @fields = @_;
+
+	if ((defined($first)) && scalar(@fields)) {
+		# Create a temporary file in the target directory, to avoid race conditions
+		my $dir = dirname($hashfile);
+
+		my $fh = File::Temp->new(
+			DIR => $dir,
+			UNLINK => 0
+		);
+
+		my $fname = $fh->filename;
+
+		# No sense trying to process them if we don't have any field names
+        foreach my $row (sort keys %{$hashref}) {
+            print $fh $hashref->{$row}->{$first} . "`";
+            my @stringArray;
+            foreach my $field (@fields) {
+                push(@stringArray,$hashref->{$row}->{$field});
+            }            
+            print $fh join("~",@stringArray) . "\n";   
+		}
+		close ($fh);
+
+		# Make the file readable
+		chmod(0644,$fname);
+		# Clean up
+		if ($keep) {
+			# We've been asked to keep the original file.  Back it up using the
+			# old file's mtime
+			if (!keepOldFile($hashfile)) {
+				print "Backup of original file '$hashfile' was requested, but the ".
+					"backup failed.  No action taken.\n";
+				return 0;
+			}
+		} else {
+			# Not asked to keep the old file.  Remove it.
+			if ((-e $hashfile) && (!unlink($hashfile))) {
+				print "Unable to remove original file '$hashfile'.  No action ".
+					"taken.\n";
+				return 0;
+			}
+		}
+		# Rename the temp file.
+		if (!rename($fname, $hashfile)) {
+			print "Unable to rename temp file '$fname' to '$hashfile'.  You ".
+				"should manually rename the file if you need it.\n";
+			return 0;
+		} else {
+			return 1;
+		}
+	} else {
+		# Nothing was done
+		return 0;
+	}
+}
+
+
+sub verifyFieldsExist {
+    # Just ensure that a field in a hash exists; create it as an empty string if not
+    my $hashref = shift;
+    my $fields = shift;
+    
+    my $changed = 0;
+    
+    foreach my $field (@{$fields}) {
+        if (!defined($hashref->{$field})) {
+            $hashref->{$field} = '';
+            $changed = 1;
+        }
+    }
+    
+    return $changed;
+}
+
 
 1;

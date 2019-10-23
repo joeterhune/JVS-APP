@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -78,15 +78,9 @@ if ($flagTypes ne 'all') {
 	};
 }
 
-if ($active) {
-	$query .= qq {
-		and active=1
-	};
-}
-
 if ($division ne "'all'") {
 	$query .= qq {
-		and division IN ($division)
+		and REPLACE(division, '\\0FH', '') IN ($division)
 	};
 } else {
 	$division = "All";
@@ -112,6 +106,14 @@ my $perquery = 1000;
 
 my @outCases;
 my @needLookup;
+
+my $activeClause;
+if ($active) {
+	$activeClause = " AND casestatus NOT IN ('Closed', 'Disposed') ";
+}
+else{
+	$activeClause = "";
+}
 
 while ($count < scalar(@cases)) {
     my @temp;
@@ -140,6 +142,7 @@ while ($count < scalar(@cases)) {
             summaries
         where
             casenum in ($inString)
+            $activeClause
         order by
             casenum
     };

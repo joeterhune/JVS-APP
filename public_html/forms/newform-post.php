@@ -1,6 +1,6 @@
 <?php
-require_once ('../php-lib/db_functions.php');
-require_once ('../php-lib/common.php');
+require_once ($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once ($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
 require_once('Smarty/Smarty.class.php');
 
 $smarty = new Smarty;
@@ -71,7 +71,7 @@ if ($copyfrom) {
     
     rename($_FILES["rtfUpload"]["tmp_name"],$target_file);
     chmod($target_file, 0755);
-    chdir("/var/www/html/case/forms");
+    chdir("/var/www/html/forms");
     $command = "/usr/bin/oowriter --headless --nologo --convert-to html --outdir $html_dir $target_file";
     
     $output = exec($command);

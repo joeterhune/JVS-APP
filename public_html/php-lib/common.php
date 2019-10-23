@@ -4,29 +4,67 @@ session_start();
 
 require_once('Crypt/CBC.php');
 require_once('ldap_functions.php');
-require_once "mpdf60/mpdf.php";
 
 require_once('Smarty/Smarty.class.php');
-//require_once("../icmslib.php");
 
-// Some variables that may be neede globally
+// Constants for exit codes
+define("SUCCESS",0);
+define("DB_CONNECT_ERROR",1);
+define("CANNOT_OBTAIN_LOCK",2);
+define("FILE_NOT_FOUND",3);
+
+// Some variables that may be needed globally
 $SCCODES = array('CF','MM','MO','CO','CT','IN','TR');
 $SIGPATH = "/tmp";
 $SIGXTWIPS = 4000;
 $SIGYTWIPS = 1000;
 $SIGXPIXELS = 400;
 $SIGYPIXELS = 100;
+$CRIMCODES = array(
+                   "'CF'",
+                   "'MM'",
+                   "'MO'",
+                   "'CO'",
+                   "'CT'",
+                   "'IN'",
+                   "'TR'"
+                   );
+$JUVDIVS = array(
+                 "'DG'",
+                 "'JA'",
+                 "'JK'",
+                 "'JL'",
+                 "'JM'",
+                 "'JO'",
+                 "'JS'"
+                 );
 
-# This value ($_SERVER['APP_ROOT']) is set in the Apache config file
+$NOTACTIVE =  "('Closed','Disposed')";
+
+$MOTIONS = array(
+    'AMWF','CORS','DAPP','EMOT','FURL','GCMN','JMNOH','LIMI','MACP','MCC',
+    'MCIJ','MCMP','MCMT','MCNT','MCON','MCPT','MCSNT','MDCH','MDFT','MDIS',
+    'MEXT','MFC','MFD','MFFJ','MFP','MFSJ','MFWR','MITE','MITS','MJCRD','MMP',
+    'MMPRO','MMSNT','MNJD','MNOH','MOMD','MONIS','MONRT','MOT','MOTD','MOTDC',
+    'MOTR','MRAD','MREH','MRH','MRSC','MSAJ','MSBD','MSID','MSJT','MSLT',
+    'MSNJ','MSOP','MSTR','MTJR','MTP','MTRC','MTS','MTSJ','MTSV','MTWD',
+    'OPCB','POST','REDS','RMAN','SCOU','VENU','VMTN','ZPOST','MFORD',
+    'MFPO','MORD','MWPU','MCONCIV','MREHCIV'
+);
+
+# This value ($_SERVER['JVS_ROOT']) is set in the Apache config file
 # for this VirtualHost.
-$appDir = $_SERVER['APP_ROOT'];
-$confDir = "$appDir/conf";
-$icmsXml = "$confDir/ICMS.xml";
+$appDir = $_SERVER['JVS_ROOT'];
+
+$icmsXml = $_SERVER['JVS_ROOT'] . "/conf/ICMS.xml";
 
 # Directories used by Smarty
 $templateDir = "$appDir/templates";
 $compileDir = "$appDir/templates_c";
 $cacheDir = "$appDir/cache";
+
+# Directory where output from the reporting scripts, as well as lock files, should go
+$resultSubDir = "reports/results";
 
 $courtTypes = array(
 	'CF' => 'Circuit Criminal',
@@ -80,6 +118,7 @@ $ranges = array(
     array('lower' => 91, 'upper' => 99999999, 'rangeString' => '91+ days'),
 );
 
+
 function log_this ($logApp, $logType, $logMsg, $logIP = null, $dbh = null) {
     if ($dbh == null) {
         $dbh = dbConnect("icms");
@@ -104,6 +143,8 @@ function log_this ($logApp, $logType, $logMsg, $logIP = null, $dbh = null) {
     doQuery($query, $dbh, array('app' => $logApp, 'type' => $logType, 'msg' => $logMsg, 'ipaddr' => $logIP));
 }
 
+
+
 function replaceHTMLElement($htmlString,$targetID, $replacement) {
     $dom = new DOMDocument();
     
@@ -112,6 +153,7 @@ function replaceHTMLElement($htmlString,$targetID, $replacement) {
     $element = $dom->getElementById($targetID);
     
 }
+
 
 // Get a session value and return it.  If the value isn't set, return NULL.
 function getSessVal($field) {
@@ -154,24 +196,36 @@ function createUser($user, $dbh = nuill) {
         $dbh = dbConnect("icms");
     }
     
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     $ldapConf = $config->{'ldapConfig'};
     $filter = "(sAMAccountName=$user)";
     $userdata = array();
     $adFields = array('givenname','initials','sn','title','telephonenumber','mail','physicaldeliveryofficename');
 
     ldapLookup($userdata, $filter, $ldapConf, null, $adFields, (string) $ldapConf->{'userBase'});
-
-    $first_name = $userdata[0]['givenname'][0];
-    $last_name = $userdata[0]['sn'][0];
+	
+	if (array_key_exists('givenname',$userdata[0])) {
+        $first_name = $userdata[0]['givenname'][0];
+    }else {
+		$first_name = 'FirstName';
+	}
+	if (array_key_exists('sn',$userdata[0])) {
+        $last_name = $userdata[0]['sn'][0];
+    }else {
+		$last_name = 'LastName';
+	}
     $middle_name = "";
     if (array_key_exists('initials',$userdata[0])) {
         $middle_name = $userdata[0]['initials'][0];
     }
     $title = $userdata[0]['title'][0];
     $phone = $userdata[0]['telephonenumber'][0];
-    $email = $userdata[0]['mail'][0];
-    
+	if (array_key_exists('mail',$userdata[0])) {
+        $email = $userdata[0]['mail'][0];
+    }else {
+		$email = $user.'@jud12.flcourts.org';
+	}
+
     $chname = $userdata[0]['physicaldeliveryofficename'][0];
     
     $courthouse = "";
@@ -234,10 +288,9 @@ function sanitizeCaseNumber ($ucn){
     
     $casenum = strtoupper($ucn);
     
-    # Strip leading "50" and any dashes.
+    # Strip leading "58" and any dashes.
     $casenum = preg_replace("/-/","",$casenum);
-    $casenum = preg_replace("/ /","",$casenum);
-    $casenum = preg_replace("/^58/","",$casenum); //58 for sarasota
+    $casenum = preg_replace("/^58/","",$casenum);
     
     if (preg_match("/^(\d{1,6})(\D\D)(\d{0,6})(.*)/", $casenum, $matches)) {
         $year = $matches[1];
@@ -254,17 +307,12 @@ function sanitizeCaseNumber ($ucn){
             }
         }
         
-		# If it's a Showcase code, prepend the 50 - they're all SC codes now!
+		# If it's a Showcase code, prepend the 58 - they're all SC codes now!
         if (preg_match("/(\S\S\S\S)(\S\S)/",$suffix,$smatches) || 
         		(preg_match("/(\S\D\S\S)(\S\S)/",$suffix,$smatches))) {
-/*         	##### modified 11/7/2018 jmt formatting for benchmark also 58 for sarasota
-			$year = sprintf("50-%04d", $year);
+        	$year = sprintf("58-%04d", $year);
 		    $suffix = sprintf("%s-%s", $smatches[1], $smatches[2]);
 		    $retval = sprintf("%s-%s-%06d-%s", $year, $type, $seq, $suffix);
- */			$year = sprintf("58%04d", $year);
-		    $suffix = sprintf("%s%s", $smatches[1], $smatches[2]);
-		    $retval = sprintf("%s%s%06d%s", $year, $type, $seq, $suffix);
-
         }
         else{
         	$dbh = dbConnect("showcase-prod");
@@ -272,21 +320,18 @@ function sanitizeCaseNumber ($ucn){
         	if(strlen($casenum) < 12){
         		$casenum = $year . $type . str_pad($seq, 6, "0", STR_PAD_LEFT);
         	}
-        	if(substr( $casenum, 0, 2 ) != "58" ){
-				$casenum = "58" . $casenum;
-			}
+        	
         	$query = "
             select
-                UCN
+                CaseNumber
             from
                 vCase with(nolock)
             where
-                ( LegacyCaseNumber = :casenum OR UCN LIKE '" . $casenum . "%' ) 
+                ( LegacyCaseNumber = :casenum OR UCN LIKE '58" . $casenum . "%' )
         	";
-        	// changed 50 to 58 for sarasota
-			// 1/22/19 jmt using ucn instead of Casenumber
+        	
         	$caseInfo = getDataOne($query, $dbh, array('casenum' => $casenum));
-        	$retval = $caseInfo['UCN'];
+        	$retval = $caseInfo['CaseNumber'];
         }
         
         $dbtype = "showcase";
@@ -294,13 +339,14 @@ function sanitizeCaseNumber ($ucn){
     }
 }
 
+
 function getCaseDiv ($casenum, $type = null) {
     if ($type == null) {
         list($casenum,$type) = sanitizeCaseNumber($casenum);
     }
     
     $dbh = dbConnect("showcase-prod");
-    
+        
         $query = "
             select
                 DivisionID
@@ -346,6 +392,7 @@ function getCaseDivAndStyle ($casenum, $type = null) {
     }
 }
 
+
 function getBannerExtendedCaseId($casenum, $dbh = null) {
     $dbh = dbConnect("showcase-prod");
     $query = '
@@ -364,6 +411,7 @@ function getBannerExtendedCaseId($casenum, $dbh = null) {
     $rec['CaseStyle'] = preg_replace('/&/','&amp',$rec['CaseStyle']);
     return $rec;
 }
+
 
 function getShowcaseCaseInfo($casenum, $dbh = null) {
     if ($dbh == null) {
@@ -386,9 +434,10 @@ function getShowcaseCaseInfo($casenum, $dbh = null) {
     return $rec;
 }
 
+
 function getPortalServiceList($casenum) {
     //ini_set('soap.wsdl_cache', WSDL_CACHE_NONE);
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     
     list($ucn,$type) = sanitizeCaseNumber($casenum);
     
@@ -404,7 +453,7 @@ function getPortalServiceList($casenum) {
     if (isset($config->{'serviceListWsdl'})) {
         $wsdl = (string) $config->{'serviceListWsdl'};
     } else {
-        $wsdl = '/usr/local/icms/etc/ElectronicServiceListService-PROD.wsdl';
+        $wsdl = $_SERVER['JVS_ROOT'] . '/conf/ElectronicServiceListService-PROD.wsdl';
     }
     
     try {
@@ -449,7 +498,8 @@ function getPortalServiceList($casenum) {
                 }*/
                 
                 //Sometimes this is one array, sometimes it's an array of arrays...
-                foreach ($filers as $filer) {
+            
+                foreach ((array) $filers as $filer) {
                 	if(!is_array($filer)){
                 		$filers = array($serviceList['esdFilers']);
                 		break;
@@ -461,7 +511,7 @@ function getPortalServiceList($casenum) {
                 $psl['Attorneys'] = &$attorneys;
                 $psl['Parties'] = &$parties;
                 
-                foreach ($filers as $filer) {
+                foreach ((array) $filers as $filer) {
                 	
                 	$filer['esdName'] = iconv('UTF-8', 'ASCII//TRANSLIT', $filer['esdName']);
                 	
@@ -586,7 +636,7 @@ function getEServiceList(&$partylist, $ucn, &$psl) {
     $attorneys = &$partylist['Attorneys'];
     $parties = &$partylist['Parties'];
     
-    $olsdbh = dbConnect("ols");
+    $olsdbh = dbConnect("eservice");
     
     foreach ($attorneys as $attorney) {
         $barnum = $attorney['BarNumber'];
@@ -711,11 +761,15 @@ function sanitizeString ($string) {
 function buildAddress (&$party) {
     $addrFields = array ("FirstName","MiddleName","LastName","Address1","Address2","City","State","ZipCode","FullName");
     
-    $party['Suffix'] = null;
+    //$party['Suffix'] = null;
     $party['FullName'] = buildName($party);
     foreach ($addrFields as $field) {
         // Sanitize the string a little
-        $party[$field] = sanitizeString($party[$field]);
+        if (key_exists($field, $party)) {
+            $party[$field] = sanitizeString($party[$field]);
+        } else {
+            $party[$field] = '';
+        }
     }
     
     if ($party['Address1'] == "") {
@@ -738,6 +792,11 @@ function getServiceList(&$partylist, $ucn) {
     if($psl == 'Error'){
     	sleep(3);
     	$psl = getPortalServiceList($ucn);
+    	
+    	//Still an error... just set it to an empty array
+    	if($psl == 'Error'){
+    		$psl = array();
+    	}
     }
     
     // Then, get the e-Service list from our system, merging with $psl as needed
@@ -760,7 +819,7 @@ function getServiceList(&$partylist, $ucn) {
 				}
 			}
 		}
-		
+        
 		$attCount = count($partylist['Attorneys']);
 		if(!empty($psl['Attorneys'])){
 			foreach($psl['Attorneys'] as $key => $a){
@@ -776,27 +835,15 @@ function getServiceList(&$partylist, $ucn) {
     
 	if(is_array($partylist['Parties'])){
 		$count = count($partylist['Parties']);
-	    //foreach ($partylist['Parties'] as &$party) {
-			if(is_array($psl['Parties'])){
-				foreach($psl['Parties'] as $key => $p){
-					//Amy says we can't match people just on name alone...
-					/*if(trim(strtoupper($p['Name'])) == trim(strtoupper($party['FullName']))){
-						foreach($p['Addresses'] as $pAdd){
-							if(!in_array($pAdd, $party['ServiceList'])){
-								$party['ServiceList'][] = strtolower($pAdd);
-							}
-						}
-					}
-					else{*/
-						$partylist['Parties'][$count]['FullName'] = trim(strtoupper($p['Name']));
-						$partylist['Parties'][$count]['ServiceList'] = $p['Addresses'];
-						$partylist['Parties'][$count]['check'] = 1;
-						unset($psl['Parties'][$key]);
-						$count++;
-					//}
-				}
-			}
-	    //}
+        if(key_exists('Parties', $psl) && is_array($psl['Parties'])){
+            foreach($psl['Parties'] as $key => $p){
+                $partylist['Parties'][$count]['FullName'] = trim(strtoupper($p['Name']));
+                $partylist['Parties'][$count]['ServiceList'] = $p['Addresses'];
+                $partylist['Parties'][$count]['check'] = 1;
+                unset($psl['Parties'][$key]);
+                $count++;
+            }
+        }
 	}
 	
 	$oldArray = $partylist;
@@ -866,6 +913,7 @@ function array_sort($array, $on, $order = SORT_ASC){
 
 	return $new_array;
 }
+
 
 function getLinkedCases($caseid, $caseString = true, $caseList = false, $caseListAndStatus = false){
 	$dbh = dbConnect("showcase-prod");
@@ -1094,6 +1142,75 @@ function getChildrenAndDOBs($caseid){
 	}
 }
 
+function getChildNamesOnly($caseid){
+	$dbh = dbConnect("showcase-prod");
+	$schema = getDbSchema("showcase-prod");
+
+	$children = array();
+	$results = array();
+	$query = "
+				SELECT
+					FirstName,
+					MiddleName,
+					LastName
+				FROM
+					$schema.vAllParties
+				WHERE CaseID = :caseid
+				AND PartyTypeDescription = 'CHILD'
+				AND Active = 'Yes'
+				AND (Discharged = 0 OR Discharged IS NULL)
+				ORDER BY DOB DESC";
+
+	getData($results, $query, $dbh, array("caseid" => $caseid));
+
+	$count = 0;
+	if(!empty($results)){
+		foreach($results as $r){
+			$name = $r['FirstName'];
+				
+			if(!empty($r['MiddleName'])){
+				$name .= " " . $r['MiddleName'] . " ";
+			}
+				
+			$name .= " " . $r['LastName'];
+			$children[$count]['name'] = $name;
+			$count++;
+		}
+	}
+
+	$returnString = "";
+	if($count > 0){
+		$returnString .= "<table style='display:inline-table;'>";
+		$returnString .= "<tr>";
+		$returnString .= "<td>";
+		$returnString .= "<strong>CHILD NAME</strong>";
+		$returnString .= "</td>";
+		$returnString .= "</tr>";
+		foreach($children as $c){
+			$returnString .= "<tr>";
+			$returnString .= "<td>";
+			$returnString .= $c['name'];
+			$returnString .= "</td>";
+			$returnString .= "</tr>";
+		}
+		$returnString .= "</table>";
+		return $returnString;
+	}
+	else{
+		$returnString .= "<table style='display:inline-table;'>";
+		$returnString .= "<tr>";
+		$returnString .= "<td>";
+		$returnString .= "<strong>CHILD NAME</strong>";
+		$returnString .= "</td>";
+		$returnString .= "</tr>";
+		$returnString .= "<tr>";
+		$returnString .= "<td> </td>";
+		$returnString .= "</tr>";
+		$returnString .= "</table>";
+		return $returnString;
+	}
+}
+
 function getPetitionerName($caseid) {
 	$dbh = dbConnect("showcase-prod");
 
@@ -1302,6 +1419,53 @@ function getRespondentAttorneyBarNumber($caseid) {
 	return $barNumber;
 }
 
+function getAllegedIncapacitatedName($caseid) {
+	$dbh = dbConnect("showcase-prod");
+	$schema = getDbSchema("showcase-prod");
+
+	$query = "
+            select
+                FirstName,
+				MiddleName,
+				LastName
+            from
+                $schema.vAllParties
+            where
+                CaseID = :caseid
+			and
+				PartyTypeDescription IN ('ALLEGED INCAPACITATED PERSON')
+			and
+				Active = 'Yes'
+        ";
+
+	$results = array();
+	getData($results, $query, $dbh, array('caseid' => $caseid));
+
+	$count = 0;
+	$respName = "";
+	if(!empty($results)){
+		foreach($results as $r){
+			if($count > 0){
+				$respName .= ", ";
+			}
+
+			$respName .= $r['FirstName'];
+
+			if(!empty($r['MiddleName'])){
+				$respName .= " " . $r['MiddleName'] . " ";
+			}
+
+			$respName .= " " . $r['LastName'];
+			$count++;
+		}
+	}
+	else{
+		$respName = "";
+	}
+
+	return $respName;
+}
+
 function getPlaintiffName($caseid) {
 	$dbh = dbConnect("showcase-prod");
 
@@ -1396,7 +1560,8 @@ function getDefendantName($caseid) {
 
 function getPlaintiffNameAndAddress($caseid) {
 	$dbh = dbConnect("showcase-prod");
-
+	$schema = getDbSchema("showcase-prod");
+	
 	$query = "
              SELECT
                 p.FirstName,
@@ -1407,9 +1572,9 @@ function getPlaintiffNameAndAddress($caseid) {
 				State,
 				ZipCode
             FROM
-				vAllParties p
+				$schema.vAllParties p
 			LEFT OUTER JOIN 
-				vAllPartyAddress a
+				$schema.vAllPartyAddress a
 			ON 
 				p.CaseID = a.CaseID
 				AND p.PersonID = a.PartyID
@@ -1459,6 +1624,307 @@ function getPlaintiffNameAndAddress($caseid) {
 	}
 
 	return $address;
+}
+
+function getDefendantNameAndAddress($caseid) {
+    $dbh = dbConnect("showcase-prod");
+    $schema = getDbSchema("showcase-prod");
+    
+    $query = "
+             SELECT
+                p.FirstName,
+				p.LastName,
+				Address1,
+				Address2,
+				City,
+				State,
+				ZipCode
+            FROM
+				$schema.vAllParties p
+			LEFT OUTER JOIN
+				$schema.vAllPartyAddress a
+			ON
+				p.CaseID = a.CaseID
+				AND p.PersonID = a.PartyID
+				AND a.DefaultAddress = 'Yes'
+			WHERE
+				p.CaseID = :caseid
+			AND
+				p.PartyTypeDescription IN ('DEFENDANT', 'DEFENDANT/RESPONDENT')
+			and
+				p.Active = 'Yes'
+        ";
+    
+    $results = array();
+    getData($results, $query, $dbh, array('caseid' => $caseid));
+    
+    $count = 0;
+    $dftName = "";
+    $address = "";
+    if(!empty($results)){
+        foreach($results as $r){
+            if($count > 0){
+                $address .= ", ";
+            }
+            
+            $dftName = $r['FirstName'];
+            
+            if(!empty($r['MiddleName'])){
+                $dftName .= " " . $r['MiddleName'] . " ";
+            }
+            
+            $dftName .= " " . $r['LastName'];
+            
+            $address .= $dftName . ", ";
+            $address .= $r['Address1'];
+            
+            if(!empty($r['Address2'])){
+                $address .= ", " . $r['Address2'];
+            }
+            if(!empty($r['Address1'])){
+                $address .= ", " . $r['City'] . ", " . $r['State'] . " " . $r['ZipCode'];
+            }
+            
+            $count++;
+        }
+    }
+    else{
+        $address = "";
+    }
+    
+    return $address;
+}
+
+function getAttorneyInfo($caseid, $info, $represents, $casetype) {
+    $dbh = dbConnect("showcase-prod");
+    $schema = getDbSchema("showcase-prod");
+    
+    $query = "
+             SELECT DISTINCT
+                AttorneyName,
+                Address1,
+                Address2,
+                City,
+                State,
+                Zip,
+                PhoneNumber,
+                p.PartyTypeDescription AS Rep_Party,
+				a.PartyType as Att_Party
+            FROM
+				$schema.vAttorney a
+			LEFT OUTER JOIN
+				$schema.vAllParties p
+			ON
+				a.CaseID = p.CaseID
+				AND a.Represented_PersonID = p.PersonID
+				AND p.Active = 'Yes'
+				AND ( p.Discharged = 0 OR p.Discharged IS NULL ) 
+				AND ( p.CourtAction IS NULL OR p.CourtAction = '' )    
+			WHERE
+				a.CaseID = :caseid ";
+				
+	$results = array();
+	getData($results, $query, $dbh, array('caseid' => $caseid));
+	
+	//Now filter based on what we want
+	if(!empty($results)){
+	   foreach($results as $key => $r){
+	       if($represents == "plaintiff"){
+	           if(($casetype == "Felony" || ($casetype == "Misdemeanor") || ($casetype == "Traffic"))){
+	               if(!empty($r['Rep_Party'])){
+	                   unset($results[$key]);
+	               }
+	           }
+	           else{
+	               if($r['Rep_Party'] != "PLAINTIFF" && ($r['Rep_Party'] != "PLAINTIFF/PETITIONER")){
+	                   unset($results[$key]);
+	               }
+	           }
+	       }
+	       else if($represents == "defendant"){
+	           if($r['Rep_Party'] != "DEFENDANT" && ($r['Rep_Party'] != "DEFENDANT/RESPONDENT")){
+	               unset($results[$key]);
+	           }
+	       }
+        }
+    }
+	
+	$results = array_values($results);
+				
+	$count = 0;
+	$resultString = "";
+	if($info == "phone"){
+    	$phoneNo = "";
+    	if(!empty($results)){
+    	    foreach($results as $r){
+    	        if($count > 0 && ($phoneNo != " ")){
+    	            $phoneNo .= ", ";
+    	        }
+    			        
+    	        if(!empty($r['PhoneNumber'])){
+    	            $number = preg_replace("/[^\d]/", "", $r['PhoneNumber']);
+    	            $length = strlen($number);
+    	            if($length == 10) {
+    	                $number = preg_replace("/^1?(\d{3})(\d{3})(\d{4})$/", "($1) $2-$3", $number);
+    	            }
+    	            $phoneNo .= $number;
+    	        }
+    	        else{
+    	            $phoneNo .= " ";
+    	        }
+    	        $count++;
+    	    }
+    	}
+    	else{
+    	    $phoneNo = " ";
+    	}
+    	
+    	$resultString = $phoneNo;
+	}
+	else{
+	    $count = 0;
+	    $address = "";
+	    if(!empty($results)){
+	        foreach($results as $r){
+	            
+	            $name = explode(", ", $r['AttorneyName']);
+	            $firstName = $name[1];
+	            $lastName = $name[0];
+	            
+	            if($count > 0){
+	                $address .= ", ";
+	            }
+	            
+	            $address .= $firstName . " " . $lastName . ", ";
+	            $address .= $r['Address1'];
+	            if(!empty($r['Address2'])){
+	                $address .= ", " . $r['Address2'];
+	            }
+	            if(!empty($r['Address1'])){
+	                $address .= ", " . $r['City'] . ", " . $r['State'] . " " . $r['Zip'];
+	            }
+	            
+	            $count++;
+	        }
+	    }
+	    else{
+	        $address = " ";
+	    }
+	    
+	    $resultString = $address;
+	}
+		
+	return $resultString;
+}
+
+function getPlaintiffPhone($caseid) {
+    $dbh = dbConnect("showcase-prod");
+    $schema = getDbSchema("showcase-prod");
+    
+    $query = "
+             SELECT
+                a.PhoneNumber
+            FROM
+				$schema.vAllParties p
+			LEFT OUTER JOIN
+				$schema.vAllPartyAddress a
+			ON
+				p.CaseID = a.CaseID
+				AND p.PersonID = a.PartyID
+				AND a.DefaultAddress = 'Yes'
+			WHERE
+				p.CaseID = :caseid
+			AND
+				p.PartyTypeDescription IN ('PLAINTIFF', 'PLAINTIFF/PETITIONER')
+			and
+				p.Active = 'Yes'
+        ";
+				
+	$results = array();
+	getData($results, $query, $dbh, array('caseid' => $caseid));
+				
+	$count = 0;
+	$phoneNo = "";
+	if(!empty($results)){
+        foreach($results as $r){
+            if($count > 0 && ($phoneNo != " ")){
+                $phoneNo .= ", ";
+		    }
+				        
+			if(!empty($r['PhoneNumber'])){
+			    $number = preg_replace("/[^\d]/", "", $r['PhoneNumber']);
+			    $length = strlen($number);
+			    if($length == 10) {
+			        $number = preg_replace("/^1?(\d{3})(\d{3})(\d{4})$/", "($1) $2-$3", $number);
+			    }
+			    $phoneNo .= $number;
+			}
+			else{
+			    $phoneNo .= " ";
+			}
+			$count++;
+		}
+    }
+	else{
+	    $phoneNo = " ";
+	}
+				
+	return $phoneNo;
+}
+
+function getDefendantPhone($caseid) {
+    $dbh = dbConnect("showcase-prod");
+    $schema = getDbSchema("showcase-prod");
+    
+    $query = "
+             SELECT
+                a.PhoneNumber
+            FROM
+				$schema.vAllParties p
+			LEFT OUTER JOIN
+				$schema.vAllPartyAddress a
+			ON
+				p.CaseID = a.CaseID
+				AND p.PersonID = a.PartyID
+				AND a.DefaultAddress = 'Yes'
+			WHERE
+				p.CaseID = :caseid
+			AND
+				p.PartyTypeDescription IN ('DEFENDANT', 'DEFENDANT/RESPONDENT')
+			and
+				p.Active = 'Yes'
+        ";
+				
+	$results = array();
+	getData($results, $query, $dbh, array('caseid' => $caseid));
+				
+	$count = 0;
+	$phoneNo = "";
+	if(!empty($results)){
+	    foreach($results as $r){
+	        if($count > 0 && ($phoneNo != " ")){
+	            $phoneNo .= ", ";
+	        }
+			        
+	        if(!empty($r['PhoneNumber'])){
+	            $number = preg_replace("/[^\d]/", "", $r['PhoneNumber']);
+	            $length = strlen($number);
+	            if($length == 10) {
+	               $number = preg_replace("/^1?(\d{3})(\d{3})(\d{4})$/", "($1) $2-$3", $number);
+	            }
+	            $phoneNo .= $number;
+	        }
+	        else{
+	            $phoneNo .= " ";
+	        }
+	        $count++;
+	    }
+	}
+	else{
+	    $phoneNo = " ";
+	}
+			
+	return $phoneNo;
 }
 
 function getPersonalRepresentativeAttorneyAddress($caseid){
@@ -1865,7 +2331,7 @@ function getAllPetRespNames($caseid){
 }
 
 function getADAText(){
-	$config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+	$config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
 	$adaCoordinator = $config->{'ADACoordinator'};
 	$text = '<pagebreak />
 			<p>This notice is provided pursuant to Administrative Order No. 2.207</p>
@@ -1876,13 +2342,20 @@ function getADAText(){
 	return base64_encode($text);
 }
 
+function getADATextShort(){
+	$config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
+	$adaCoordinator = $config->{'ADACoordinator'};
+	$text = '<p><strong>If you are a person with a disability who needs any accommodation in order to participate in this proceeding, you are entitled, at no cost to you, to the provision of certain assistance.  Please contact ' . $adaCoordinator . ', Americans with Disabilities Act Coordinator, Sarasota County Courthouse, 205 North Dixie Highway, West Sarasota, Florida 33401; telephone number (561) 355-4380 least 7 days before your scheduled court appearance, or immediately upon receiving this notification if the time before the scheduled appearance is less than 7 days; if you are hearing or voice impaired, call 711.</strong></p>';
+	return base64_encode($text);
+}
+
 function getInterpreterText(){
 	$text = '<div style="border:1px solid black; padding:0.5%; text-align:left;">
-			<strong><u>INTERPRETERS:</u> It is the responsibility of the party needing an interpreter to bring to court an interpreter who is <u>certified, language skilled, provisionally approved or who is registered with the Office of State Court Administrator</u>, as required by Rule 2.560 and Rule 2.565 of the Florida Rules of Judicial Administration.  For further information or for assistance locating an interpreter, please visit our website at <a href="http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters</a>. Persons unable to obtain an interpreter may bring someone to assist. The Court shall determine if they are qualified to interpret the proceedings.</strong>
+			<strong><u>INTERPRETERS:</u> It is the responsibility of the party needing an interpreter to bring to court an interpreter who is <u>certified, language skilled, provisionally approved or who is registered with the Office of State Court Administrator</u>, as required by Rule 2.560 and Rule 2.565 of the Florida Rules of Judicial Administration.  For further information or for assistance locating an interpreter, please visit our website at <a href="http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters</a>. Persons unable to obtain an interpreter may bring someone to assist. The Court shall determine if they are qualified to interpret the proceedings.</strong>
 			<br/><br/>
-			<strong><u>INT&Eacute;RPRETES:</u> Si una parte litigante necesita un int&eacute;rprete, es su responsabilidad  traer consigo al tribunal un int&eacute;rprete <u>certificado,  aprobado provisionalmente, capacitado en idiomas, o que este registrado con la Oficina Administrativa del Tribunal Estatal</u>, conforme a la Regla 2.560, y la Regla 2.565, de las Reglas Judiciales Administrativas de la Florida. Si requiere m&aacute;s informaci&oacute;n o necesita ayuda para localizar un int&eacute;rprete, por favor visite nuestro sitio web en <a href="http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters</a>. Las personas que no puedan obtener un int&eacute;rprete, pueden traer una persona que les pueda asistir. El Juez determinar&aacute; si la persona est&aacute; calificada para interpretar en dicho procedimiento.</strong>
+			<strong><u>INT&Eacute;RPRETES:</u> Si una parte litigante necesita un int&eacute;rprete, es su responsabilidad  traer consigo al tribunal un int&eacute;rprete <u>certificado,  aprobado provisionalmente, capacitado en idiomas, o que este registrado con la Oficina Administrativa del Tribunal Estatal</u>, conforme a la Regla 2.560, y la Regla 2.565, de las Reglas Judiciales Administrativas de la Florida. Si requiere m&aacute;s informaci&oacute;n o necesita ayuda para localizar un int&eacute;rprete, por favor visite nuestro sitio web en <a href="http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters</a>. Las personas que no puedan obtener un int&eacute;rprete, pueden traer una persona que les pueda asistir. El Juez determinar&aacute; si la persona est&aacute; calificada para interpretar en dicho procedimiento.</strong>
 			<br/><br/>
-			<strong><u>ENT&Egrave;PR&Egrave;T:</u> Selon R&egrave;gleman 2.560 and R&egrave;gleman 2.565 Administrasyon Jidisy&egrave; Florid, se responsablite moun ke bezwen <u>ent&egrave;pr&egrave;t la ki sipoze mennen yon ent&egrave;pr&egrave;t s&egrave;tifye, kalifye, aprouve provizwaman, oswa anrejistre ak Biro Administrasyon Tribinal Leta</u>. Pou plis enf&ograve;masyon sou asistans lokalize yon ent&egrave;pr&egrave;t, tanpri vizite sit Ent&egrave;n&egrave;t <a href="http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.Sarasota-beach.fl.us/web/guest/court-interpreters</a>. Moun ki pa kapab jwenn yon ent&egrave;pr&egrave;t gendwa mennen yon moun pou &egrave;de.  Tribinal la va det&egrave;mine si moun sa a kalifye pou ent&egrave;prete nan prosedi yo.</strong>
+			<strong><u>ENT&Egrave;PR&Egrave;T:</u> Selon R&egrave;gleman 2.560 and R&egrave;gleman 2.565 Administrasyon Jidisy&egrave; Florid, se responsablite moun ke bezwen <u>ent&egrave;pr&egrave;t la ki sipoze mennen yon ent&egrave;pr&egrave;t s&egrave;tifye, kalifye, aprouve provizwaman, oswa anrejistre ak Biro Administrasyon Tribinal Leta</u>. Pou plis enf&ograve;masyon sou asistans lokalize yon ent&egrave;pr&egrave;t, tanpri vizite sit Ent&egrave;n&egrave;t <a href="http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters">http://15thcircuit.co.palm-beach.fl.us/web/guest/court-interpreters</a>. Moun ki pa kapab jwenn yon ent&egrave;pr&egrave;t gendwa mennen yon moun pou &egrave;de.  Tribinal la va det&egrave;mine si moun sa a kalifye pou ent&egrave;prete nan prosedi yo.</strong>
 			</div>';
 	
 	return base64_encode($text);
@@ -1890,7 +2363,7 @@ function getInterpreterText(){
 
 function getGMVacateText(){
 	$text = '<div style="border:1px solid black; padding:0.5%; text-align:left;">
-			<strong>ANY PARTY AFFECTED BY THIS ORDER MAY MOVE TO VACATE THE ORDER BY FILING A MOTION TO VACATE WITHIN TEN (10) DAYS FROM THE ENTRY OF THIS ORDER.  FOR THE PURPOSE OF HEARING ON A MOTION TO VACATE, A RECORD SHALL BE PROVIDED TO THE COURT BY THE PARTY SEEKING REVIEW IN CONFORMITY WITH RULE 12.491 OF FLA. FAM. L. R. P.  TRANSCRIPTS AND ELECTRONIC RECORDINGS CAN BE OBTAINED THROUGH THE COURT REPORTING SERVICES WEB REQUEST FORM AT <a href="https://e-services.co.Sarasota-beach.fl.us/crtrpt/" target="_blank">https://e-services.co.Sarasota-beach.fl.us/crtrpt/</a>.  PURSUANT TO RULE 12.491(G), ANY PARTY MAY PETITION TO MODIFY THE ORDER AT ANY TIME.</strong>
+			<strong>ANY PARTY AFFECTED BY THIS ORDER MAY MOVE TO VACATE THE ORDER BY FILING A MOTION TO VACATE WITHIN TEN (10) DAYS FROM THE ENTRY OF THIS ORDER.  FOR THE PURPOSE OF HEARING ON A MOTION TO VACATE, A RECORD SHALL BE PROVIDED TO THE COURT BY THE PARTY SEEKING REVIEW IN CONFORMITY WITH RULE 12.491 OF FLA. FAM. L. R. P.  TRANSCRIPTS AND ELECTRONIC RECORDINGS CAN BE OBTAINED THROUGH THE COURT REPORTING SERVICES WEB REQUEST FORM AT <a href="https://e-services.co.palm-beach.fl.us/crtrpt/" target="_blank">https://e-services.co.palm-beach.fl.us/crtrpt/</a>.  PURSUANT TO RULE 12.491(G), ANY PARTY MAY PETITION TO MODIFY THE ORDER AT ANY TIME.</strong>
 			</div>';
 
 	return base64_encode($text);
@@ -1900,7 +2373,7 @@ function getFileExpText(){
 	$text = '<div style="border:1px solid black; padding:0.5%;">
 			<strong>
 				<div style="text-align:center"><u>NOTICE RE: FILING EXCEPTIONS, RULE 12.490</u></div>
-				<div style="text-align:left">SHOULD YOU WISH TO SEEK REVIEW OF THE REPORT AND RECOMMENDATIONS MADE BY THE GENERAL MAGISTRATE, YOU MUST FILE EXCEPTIONS IN ACCORDANCE WITH RULE 12.490 (f), FLA. FAM. L. R.P.   YOUR EXCEPTIONS MUST BE FILED WITHIN TEN (10) DAYS OF THE ABOVE DATE OR WITHIN FIFTEEN (15) DAYS IF YOU WERE SERVED WITH THIS REPORT BY MAIL.  SERVE A COPY ON THE OPPOSING PARTY AND THE GENERAL MAGISTRATE.  YOU WILL BE REQUIRED TO PROVIDE THE COURT WITH A RECORD SUFFICIENT TO SUPPORT YOUR EXCEPTIONS OR YOUR EXCEPTIONS WILL BE DENIED.  THE PERSON SEEKING REVIEW MUST HAVE THE TRANSCRIPT PREPARED IF NECESSARY FOR THE COURT\'S REVIEW.  TRANSCRIPTS AND ELECTRONIC RECORDINGS MAY BE OBTAINED THROUGH THE COURT REPORTING SERVICES WEB REQUEST FORM AT <a href="https://e-services.co.Sarasota-beach.fl.us/crtrpt/" target="_blank">https://e-services.co.Sarasota-beach.fl.us/crtrpt/</a>.</div>
+				<div style="text-align:left">SHOULD YOU WISH TO SEEK REVIEW OF THE REPORT AND RECOMMENDATIONS MADE BY THE GENERAL MAGISTRATE, YOU MUST FILE EXCEPTIONS IN ACCORDANCE WITH RULE 12.490 (f), FLA. FAM. L. R.P.   YOUR EXCEPTIONS MUST BE FILED WITHIN TEN (10) DAYS OF THE ABOVE DATE OR WITHIN FIFTEEN (15) DAYS IF YOU WERE SERVED WITH THIS REPORT BY MAIL.  SERVE A COPY ON THE OPPOSING PARTY AND THE GENERAL MAGISTRATE.  YOU WILL BE REQUIRED TO PROVIDE THE COURT WITH A RECORD SUFFICIENT TO SUPPORT YOUR EXCEPTIONS OR YOUR EXCEPTIONS WILL BE DENIED.  THE PERSON SEEKING REVIEW MUST HAVE THE TRANSCRIPT PREPARED IF NECESSARY FOR THE COURT\'S REVIEW.  TRANSCRIPTS AND ELECTRONIC RECORDINGS MAY BE OBTAINED THROUGH THE COURT REPORTING SERVICES WEB REQUEST FORM AT <a href="https://e-services.co.palm-beach.fl.us/crtrpt/" target="_blank">https://e-services.co.palm-beach.fl.us/crtrpt/</a>.</div>
 			</strong>
 			</div>';
 
@@ -1959,6 +2432,7 @@ function getUserQueues (&$queues, $dbh) {
     }
 }
 
+
 function buildName (&$name, $lastfirst = 0) {    
     if ($name == null) {
         return null;
@@ -1999,13 +2473,13 @@ function curlJson ($url, $postFields) {
         array_push($args, sprintf("%s=%s", $key, $value));
     }
     
-    curl_setopt($ch, CURLOPT_POST, count($fields));
+    curl_setopt($ch, CURLOPT_POST, count($postFields));
     curl_setopt($ch, CURLOPT_POSTFIELDS, implode("&", $args));
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     
     $user = $_SESSION['user'];
-    $pass = $_SERVER['PHP_AUTH_PW'];
+    $pass = key_exists('PHP_AUTH_PW',$_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
     curl_setopt($ch, CURLOPT_USERPWD, "$user:$pass");
                 
     $result = curl_exec($ch);
@@ -2013,6 +2487,7 @@ function curlJson ($url, $postFields) {
     
     return $result;
 }
+
 
 function eFileInfo  ($user, $dbh) {
     $query = "
@@ -2030,7 +2505,7 @@ function eFileInfo  ($user, $dbh) {
     
     $userInfo = getDataOne($query, $dbh, array('userid' => $user));
     
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     $ldapConf = $config->{'ldapConfig'};
     $filter = "(sAMAccountName=$user)";
     $userdata = array();
@@ -2044,7 +2519,7 @@ function eFileInfo  ($user, $dbh) {
 }
 
 function getCaseInfo ($casenum) {
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     $wsUrl = sprintf("%s/vrbcaseinfo", $config->{'icmsWebService'});
     
     $postFields = array (
@@ -2071,6 +2546,7 @@ function getDivType($division, $dbh = null) {
     $div = getDataOne($query, $dbh, array('division' => $division));
     return $div['division_type'];
 }
+
 
 function getEsigs (&$sigs, $user) {
     // Returns information on the e-signatures this user is permitted to use
@@ -2116,6 +2592,7 @@ function getEsigs (&$sigs, $user) {
     return sizeof($sigs);
 }
 
+
 function getDocInfo ($docid, $dbh = null) {
     if ($dbh == null) {
         $dbh = dbConnect("icms");
@@ -2152,6 +2629,7 @@ function getDocInfo ($docid, $dbh = null) {
         where
             doc_id = :docid
     ";
+    
     return getDataOne($query, $dbh, array('docid' => $docid));
 }
 
@@ -2174,7 +2652,8 @@ function getTitle($sigUser, $docid, $dbh = null, $wdbh = null) {
     }
     
     $docInfo = getDocInfo($docid, $wdbh);
-    $ucn = $docInfo['UCN'];
+    
+    $ucn = key_exists('UCN', $docInfo) ? $docInfo['UCN'] : null;
     
     $query = "
         select
@@ -2196,7 +2675,7 @@ function getTitle($sigUser, $docid, $dbh = null, $wdbh = null) {
     if (array_key_exists('user_sig', $sigInfo)) {
         $sigInfo['FullName'] = buildName($sigInfo);
         // Ok, we have a signature.  Look up information on the user and generate the file
-        $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+        $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
         $ldapConf = $config->{'ldapConfig'};
         $filter = "(sAMAccountName=$sigUser)";
         $userdata = array();
@@ -2223,6 +2702,9 @@ function getTitle($sigUser, $docid, $dbh = null, $wdbh = null) {
 		return $sigInfo;
 	
 }
+
+
+
 
 function generateSignature($sigUser, $docid, $dbh = null, $wdbh = null) {
 	
@@ -2259,7 +2741,7 @@ function generateSignature($sigUser, $docid, $dbh = null, $wdbh = null) {
     if (array_key_exists('user_sig', $sigInfo)) {
         $sigInfo['FullName'] = buildName($sigInfo);
         // Ok, we have a signature.  Look up information on the user and generate the file
-        $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+        $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
         $ldapConf = $config->{'ldapConfig'};
         $filter = "(sAMAccountName=$sigUser)";
         $userdata = array();
@@ -2347,7 +2829,7 @@ function generateSignature($sigUser, $docid, $dbh = null, $wdbh = null) {
         imagettftext($newimg, $textheight+2, 0, 40,120,
                      $black, $font2, $titleString);
         
-        $outfile=tempnam("/var/jvs/public_html/tmp", "sig");
+        $outfile=tempnam($_SERVER['JVS_ROOT'] . "/tmp", "sig");
         $outfile .= ".jpg";
         ob_start();
         imagejpeg($newimg);
@@ -2398,30 +2880,12 @@ function getFilingGroup($portalDesc, $dbh = null) {
     return $rec['file_group'];
 }
 
-function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
-	
+function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {	
 	list($ucn, $db_type) = sanitizeCaseNumber($ucn);
-	if ($db_type == 'banner') {
-		$ucn = getBannerExtendedCaseId($ucn);
-	}
 	
 	$margins = "-L 0mm -R 0mm -B 19.5mm -T 19.5mm";
 	$topMargin = "0%";
 	$leftMargin = "0%";
-	
-	/*if($isTemplate){
-		$margins = "-L 0mm -R 0mm -B 18mm -T 25.4mm";
-		$topMargin = "-1%";
-		$leftMargin = "12%";
-	}
-	else{
-		$margins = "-L 25.4mm -R 25.4mm -B 20mm -T 25.4mm";
-		$topMargin = "-1%";
-		$leftMargin = "0%";
-		
-		//I don't think I can do this... I don't want to always remove underlines for PropOrds
-		//$formhtml = str_replace("text-decoration:underline", "", $formhtml);
-	}*/
 	
 	$formhtml = str_replace("<pagebreak>", "<div style=\"page-break-after: always\"><span style=\"display: none;\"> </span></div>", $formhtml);
 	
@@ -2430,7 +2894,7 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	//Sigh, they don't want this
 	$form_name = "";
 	
-	$h_fname = "/var/jvs/public_html/tmp/header-order-" . $ucn . "-" . uniqid();
+	$h_fname = $_SERVER['JVS_ROOT'] . "/tmp/header-order-" . $ucn . "-" . uniqid();
 	$h_file = fopen($h_fname . ".html", "w");
 	$h_html = "<!DOCTYPE html>
 			<head>
@@ -2459,7 +2923,7 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	fwrite($h_file, $h_html);
 	$finalHFileName = $h_fname . ".html";
 	
-	$f_fname = "/var/jvs/public_html/tmp/footer-order-" . $ucn . "-" . uniqid();
+	$f_fname = $_SERVER['JVS_ROOT'] . "/tmp/footer-order-" . $ucn . "-" . uniqid();
 	$f_file = fopen($f_fname . ".html", "w");
 	
 	//I don't like this but I found it online
@@ -2479,13 +2943,28 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 	fwrite($f_file, $f_html);
 	$finalFFileName = $f_fname . ".html";
 	
-	$fname = "/var/jvs/public_html/tmp/order-" . $ucn . "-" . uniqid();
+	$fname = $_SERVER['JVS_ROOT'] . "/tmp/order-" . $ucn . "-" . uniqid();
 	$file = fopen($fname . ".html", "w");
 	fwrite($file, $formhtml);
-	$finalFileName = $fname . ".pdf";
-	
-	system("/usr/share/wkhtmltopdf/bin/wkhtmltopdf --footer-spacing 5 --header-spacing 5 --page-size Letter --header-html " . $finalHFileName . " --footer-html " . $finalFFileName . " --disable-smart-shrinking " . $margins . " --encoding utf-8 --user-style-sheet /var/jvs/public_html/orders/custom_forms.css " . $fname . ".html" . " " . $finalFileName);
-
+    $outfile = basename($fname); 
+	$finalFileName = $_SERVER['JVS_DOCROOT'] . "/tmp/$outfile.pdf";
+    
+    $tries = 0;
+    $retCode = 1;
+    
+    while (($retCode != 0) && ($tries < 3)) {
+        system("wkhtmltopdf --footer-spacing 5 --header-spacing 5 --page-size Letter --header-html " . $finalHFileName . " --footer-html " . $finalFFileName . " --disable-smart-shrinking " . $margins . " --encoding utf-8 --user-style-sheet " .
+               $_SERVER['JVS_DOCROOT'] . "/orders/custom_forms.css " . $fname . ".html" . " " . $finalFileName, $retCode);
+        
+        if ($retCode != 0) {
+           $tries++; 
+        }
+    }
+    
+    if ($retCode != 0) {
+        print "D'oh!!!"; exit;
+    }
+    
 	unlink($fname . ".html");
 	unlink($finalHFileName);
 	unlink($finalFFileName);
@@ -2493,7 +2972,7 @@ function createOrderPDF ($formhtml, $ucn, $form_name, $isTemplate = null) {
 }
 
 function getEmailFromAD ($user) {
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     
     $ldapConf = $config->{'ldapConfig'};
     $filter = "(sAMAccountName=$user)";
@@ -2509,12 +2988,14 @@ function getEmailFromAD ($user) {
     }
 }
 
+
 function encodeFile ($filename) {
     # Returns a Base64-encoded representation of $filename
     $binary = file_get_contents($filename);
     $encoded = base64_encode($binary);
     return $encoded;
 }
+
 
 function getFileType ($file) {
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -2540,15 +3021,6 @@ function returnJson($data) {
     print json_encode($data);
 }
 
-function initSmarty() {
-	global $templateDir,$compileDir,$cacheDir;
-    $smarty = new Smarty;
-    $smarty->setTemplateDir($templateDir);
-    $smarty->setCompileDir($compileDir);
-    $smarty->setCacheDir($cacheDir);
-    return $smarty;
-}
-
 function fancydate($date) {
 	$month = "";
 	$day = "";
@@ -2566,21 +3038,24 @@ function fancydate($date) {
 
 function createTab($tabName, $href, $active, $close, $parent, $tabs = array()){
 	$sess_tabs = $_SESSION['tabs'];
-	$next_key = count($sess_tabs);
+    
+	$next_key = count((array) $sess_tabs);
 	
 	#Deactivate all tabs
-	foreach($sess_tabs as $key => $my_tabs){
+	foreach((array) $sess_tabs as $key => $my_tabs){
 		$sess_tabs[$key]['active'] = 0;
 		
 		if($sess_tabs[$key]['name'] == $tabName){
 			$next_key = $key;
 		}
-		
-		if(count($sess_tabs[$key]['tabs']) > 0){
-			foreach($sess_tabs[$key]['tabs'] as $t_key => $e_tabs){
-				$sess_tabs[$key]['tabs'][$t_key]['active'] = 0;
-			}
-		}
+        
+        if (key_exists('tabs', $sess_tabs[$key])) {
+            if(count($sess_tabs[$key]['tabs']) > 0){
+                foreach($sess_tabs[$key]['tabs'] as $t_key => $e_tabs){
+                    $sess_tabs[$key]['tabs'][$t_key]['active'] = 0;
+                }
+            }
+        }
 	}
 
 	$keepTabs = "";
@@ -2609,8 +3084,8 @@ function createTab($tabName, $href, $active, $close, $parent, $tabs = array()){
 	}
 	
 	if(isset($tabs) && !empty($tabs)){
-		$tab_key = count($sess_tabs[$next_key]['tabs']);
-		
+        $tab_key = key_exists('tabs', $sess_tabs[$next_key]) ? count((array) $sess_tabs[$next_key]['tabs']) : 0;
+        
 		if(isset($sess_tabs[$next_key]['tabs']) && !empty($sess_tabs[$next_key]['tabs'])){
 			foreach($sess_tabs[$next_key]['tabs'] as $tkey => $exist_tabs){
 				if($sess_tabs[$next_key]['tabs'][$tkey]['name'] == $tabs['name']){
@@ -2691,7 +3166,7 @@ function checkLoggedIn() {
 
 function getShowcaseDb(){
     # Get the name of the Showcase DB from the ICMS.xml file
-    $xml = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $xml = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     if (empty($xml->showCaseDb)) {
         return "showcase-prod";
     }
@@ -2766,8 +3241,8 @@ function getDocData($doc_id){
 				if(isset($data['order_html']) && !empty($data['order_html'])){
 					//$_SESSION['order_html'] = $data['order_html'];
 					//$_SESSION['form_data'] = $data['form_data'];
-					$docInfo['order_html'] = $data['order_html'];
-					$docInfo['form_data'] = $data['form_data'];
+					$docInfo['order_html'] = key_exists('order_html', $data) ? $data['order_html'] : null;
+					$docInfo['form_data'] = key_exists('form_data', $data) ? $data['form_data'] : null;
 				}
 			}
 			if(!empty($r['doc_id'])){
@@ -2915,7 +3390,7 @@ function getMediatorRoom($location){
 function getCurrentUserName(){
 
 	$user = $_SESSION['user'];
-	$config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+	$config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
 	$ldapConf = $config->{'ldapConfig'};
 	$filter = "(sAMAccountName=$user)";
 	$userdata = array();
@@ -3134,4 +3609,188 @@ function getRespDOB($caseid){
 
 	return $dob;
 
+}
+
+function getCaseType ($casenum){
+	$dbh = dbConnect("showcase-prod");
+	$schema = getDbSchema("showcase-prod");
+
+	$query = "
+            select
+                CaseType
+            from
+                $schema.vCase with(nolock)
+            where
+                CaseNumber = :casenum
+        ";
+
+
+	$caseInfo = getDataOne($query, $dbh, array('casenum' => $casenum));
+
+	if (sizeof($caseInfo)) {
+		return ($caseInfo['CaseType']);
+	} else {
+		return null;
+	}
+}
+
+function getDVNext ($division, $type){
+	$dbh = dbConnect("showcase-prod");
+	$schema = getDbSchema("showcase-prod");
+
+	$query = "
+		select TOP 1
+			CourtSessionDate,
+			CourtSessionTime
+		from
+			$schema.vCourtSessionAdmin with(nolock)
+		where
+			Division LIKE '" . $division ."%'
+		AND
+			CONCAT(CourtSessionDate, ' ', CourtSessionTime)  > '" . date("Y-m-d H:i:s") . "'
+        ORDER BY CourtSessionDate ASC, CourtSessionTime ASC";
+
+	$session = getDataOne($query, $dbh, array());
+
+	$val = null;
+	if(!empty($session)){
+		if($type == "date"){
+			$val = date("m/d/Y", strtotime($session['CourtSessionDate']));
+		}
+		else{
+			$val = date("h:i A", strtotime($session['CourtSessionTime']));
+		}	
+	}
+	
+	return $val;
+}
+
+
+function getFileLock($fp, $timeout = 5) {
+    // Get an exclusive file lock on the specified file pointer (must be a pointer, NOT a file);
+    // fails if it cannot be obtained in $timeout seconds
+    
+    $count = 0;
+    $got_lock = true;
+    while (!flock($fp, LOCK_EX | LOCK_NB, $wouldblock)) {
+        if ($wouldblock && $count++ < $timeout) {
+            sleep(1);
+        } else {
+            $got_lock = false;
+            break;
+        }
+    }
+    
+    return $got_lock;
+}
+
+
+function readJsonFile(&$data, $infile) {
+    if (file_exists($infile)) {
+        $json_in = file_get_contents($infile);
+        $data = json_decode($json_in,true);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function writeJsonFile ($data, $outfile) {
+    $json = json_encode($data);
+    if (file_put_contents($outfile, $json)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function hasCalendar($div, &$divDesc) {
+	$dbh = dbConnect("judge-divs");
+
+	$query = "
+		select
+			division_type,
+			IFNULL(has_ols,0) as has_ols
+		from
+			divisions
+		where
+			division_id = :div
+	";
+	
+    $calDivs = getDataOne($query, $dbh, array('div' => $div));
+	
+	if (!array_key_exists('division_type', $calDivs)) {
+		return 0;
+	};
+
+    $divDesc = $calDivs['division_type'];
+    
+	// Is this an OLS division OR is it a division where the clerk schedules events?
+	if (($calDivs['has_ols']) ||
+		(preg_match('/Felony|Misdemeanor|VA|Mental Health|Juvenile/', $calDivs['division_type']))) {
+		return 1;
+	}
+
+	return 0;
+}
+
+function getCaseAge ($caseref, $today) {
+    // Calculate the age of a case.  If a case is reopened, then the age is
+    // calculated from the date of the reopen.  If a case is closed, then the age
+    // calculation will stop with the close date.
+    
+    $openDate = $caseref['FileDate'];
+    
+    if ($openDate == null) {
+        // Crappy CMS data - can't calculate case age if we don't have a file date
+        return 0;
+    }
+    
+    # Default to today.  Overrides below.
+    $endDate = $today;
+    
+    if ($caseref['ReopenDate'] != '') {
+        // A reopened case
+        $openDate = $caseref['ReopenDate'];
+        if ($caseref['ReopenCloseDate'] != '') {
+            // A reopened and then re-disposed case with a reopen disposition date
+            if (in_array($caseref['CaseStatus'], array('Closed','Disposed'))) {
+                $endDate = $caseref['ReopenCloseDate'];
+            }
+        }
+    } elseif ($caseref['DispositionDate'] != '') {
+        // A case that wasn't reopened but has been disposed.
+        $endDate = $caseref['DispositionDate'];
+    }
+    
+    $begin = date_create_from_format('m/d/Y', $openDate);
+    
+    if ($begin == false) {
+        var_dump($caseref); exit;
+    }
+    
+    $end = date_create_from_format('m/d/Y', $endDate);
+    $ddiff = date_diff($begin, $end);
+    $caseAge = $ddiff->format('%a') ; // Days elapsed between start and end
+    
+    # We want the dates in th
+    return $caseAge;
+}
+
+function getSCcasetype ($courttype, $casetype) {
+    // Map court types to case types
+    $ctMap = array(
+                   'CF' => 'CF',
+                   'CO' => 'CO',
+                   'CT' => 'IN',
+                   'IN' => 'MI',
+                   'MM' => 'MS',
+                   'MO' => 'MO',
+                   'TR' => 'TI'
+    );
+
+    if(($casetype == '') && (key_exists($courttype, $ctMap))) {
+        return $ctMap[$courttype];
+    }
+    return $casetype;
 }

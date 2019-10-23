@@ -66,7 +66,8 @@
                                             <td class="left" style="word-break:break-word;">[% docket.DocketText %]</td>
                                             <td class="center printHide">
                                                 [% IF docket.Image == 'Y' %]
-                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-casenum="[% docket.UCN %]" data-ucnobj="[% docket.UCNObj %]" data-docketid ="[% docket.ObjectID %]" data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]">Image</a>
+                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-docketid ="[% docket.ObjectID %]" data-casenum="[% docket.CaseNumber %]" data-ucnobj="[% docket.UCNObj %]"
+                                                    data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]">Image</a>
                                                 &nbsp; &nbsp;
                                                 <input class="docketcheck" type="checkbox" name="selected" value="[% docket.UCNObj %]"/>
                                                 [% ELSE %]
@@ -76,7 +77,8 @@
                                             [% IF data.showTif %]
                                             <td class="center printHide [% IF docket.Image == 'Y' %]popup[% END %]">
                                                 [% IF docket.Image == 'Y' %]
-                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-casenum="[% docket.UCN %]" data-ucnobj="[% docket.UCNObj %]" data-docketid ="[% docket.ObjectID %]" data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]" data-showTif="1">TIF</a>
+                                                <a class="imageLink" data-docketcode="[% docket.DocketCode %]" data-casenum="[% docket.CaseNumber %]" data-docketid ="[% docket.ObjectID %]" data-ucnobj="[% docket.UCNObj %]"
+                                                    data-docname="[% docket.DocketDescription %]" data-caseid="[% docket.CaseID %]" data-showTif="1">TIF</a>
                                                 [% ELSE %]
                                                 &nbsp;
                                                 [% END %]

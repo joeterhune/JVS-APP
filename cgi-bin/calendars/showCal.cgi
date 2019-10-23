@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
+	$ENV{'TNS_ADMIN'} = "/var/jvs/";
 };
 
 use strict;
@@ -46,7 +47,6 @@ use Calendars qw (
 	getFirstAppearance
 	getScEvents
 	getVRBCalendar
-	getCaseStyles
 	getOLSJudges
 	getDivType
 	getMagistrateCalendar
@@ -85,8 +85,7 @@ my @allqueues = (@myqueues, @sharedqueues);
 my %queueItems;
 
 my $wfcount = getQueues(\%queueItems, \@allqueues, $cdbh);
-############### Added 11/6/2018 jmt security from conf 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 
 my $secretUser = inGroup($user,$secGroup);
@@ -133,13 +132,6 @@ my @magistrates;
 my @mediators;
 my $judgeID = undef;
 
-#$data{'foo'} = 'bar';
-#my $foo = JSON->new->ascii->encode(\%data);
-#print $info->header(
-#    -type => 'application/json',
-#    -expires => '-1d'
-#);
-#print $foo; exit;
 
 if ($params{'calType'} eq 'fapcal') {
 	$data{'isFap'} = 1;
@@ -192,7 +184,7 @@ else{
 	$title = "Division " . $division . " Calendar";
 }
 
-my $href = "/cgi-bin/case/calendars/showCal.cgi?div=" . $division . "&fapch=" . $params{'fapch'} . "&calType=" . $params{'calType'};
+my $href = "/cgi-bin/calendars/showCal.cgi?div=" . $division . "&fapch=" . $params{'fapch'} . "&calType=" . $params{'calType'};
 
 if(defined($params{'otherday'})){
 	$href .= "&otherday=" . $params{'otherday'} . "&judgeID=" . $params{'judgeID'};
@@ -220,7 +212,7 @@ foreach my $judge (@divJudges) {
 	$divJudges{$judge->{'DivisionID'}} = $judge;
 }
 
-if (!$has_ols || ($params{'calType'} eq "expcal")) {
+if (!$has_ols || ($params{'calType'} eq "expcal") || ($params{'calType'} eq "magcal")) {
 	if ($params{'calType'} eq 'fapcal') {
 		getJudges($jddbh, \@judges, $fapdivs->[0]);
 	}elsif($params{'calType'} eq 'magcal') {
@@ -336,8 +328,7 @@ my @exportHeaders;
 if ($divtype eq "crim") {
 	
 	getVRBCalendar(\@events, $judgeID, $start, $end, $division, $vdbh, 0, "crim");
-	
-	#
+    
 	# Use this to specify the order of the headers in a generated spreadsheet
 	@exportHeaders = (
 		{
@@ -507,6 +498,20 @@ elsif($params{'calType'} eq "magcal"){
 				'cellClass' => 'caseStyle'
 			},
 			{
+				'Column' => 'Division',
+				'XMLField' => 'DivisionID',
+				'filterType' => 'filter-select',
+				'filterPlaceholder' => 'Select Division',
+				'cellClass' => 'timeDate'
+			},
+			{
+				'Column' => 'Case Filing Date',
+				'XMLField' => 'FileDate',
+				'filterType' => 'filter-select',
+				'filterPlaceholder' => 'Case Filing Date',
+				'cellClass' => 'timeDate'
+			},
+			{
 				'Column' => 'Magistrate',
 				'XMLField' => 'JudgeName',
 				'filterType' => 'filter-select',
@@ -561,6 +566,12 @@ elsif($params{'calType'} eq "magcal"){
 				'cellClass' => 'timeDate'
 			},
 			{
+				'Column' => 'Notes',
+				'XMLField' => 'EventNotes',
+				'filterPlaceholder' => 'Search Notes',
+				'cellClass' => 'notes'
+			},
+			{
 				'Column' => 'Attorney',
 				'XMLField' => 'AttorneyInfo',
 				'filterPlaceholder' => 'Search Attorney Name',
@@ -570,6 +581,12 @@ elsif($params{'calType'} eq "magcal"){
 				'Column' => 'Contact',
 				'XMLField' => 'ContactInfo',
 				'filterPlaceholder' => 'Search Contact Name',
+				'cellClass' => 'contact'
+			},
+			{
+				'Column' => 'Attorneys',
+				'XMLField' => 'Attorneys',
+				'filterPlaceholder' => 'Search Attorney Info',
 				'cellClass' => 'contact'
 			}
 		);
@@ -867,9 +884,9 @@ elsif($params{'calType'} eq "expcal"){
 	$data{'cookieName'} = "icms-mh-cal";
 
 }else {
-	if ($has_ols) {		
+	if ($has_ols) {
 		getVRBCalendar(\@events, $judgeID, $start, $end, $division, $vdbh, 1, "civ");
-	        
+        
 		# Use this to specify the order of the headers in a generated spreadsheet
 		@exportHeaders = (
 			{
@@ -890,6 +907,13 @@ elsif($params{'calType'} eq "expcal"){
 				'XMLField' => 'CaseStyle',
 				'filterPlaceholder' => 'Part of case style',
 				'cellClass' => 'caseStyle'
+			},
+			{
+				'Column' => 'Case Filing Date',
+				'XMLField' => 'FileDate',
+				'filterType' => 'filter-select',
+				'filterPlaceholder' => 'Case Filing Date',
+				'cellClass' => 'timeDate'
 			},
 			{
 				'Column' => 'Judge',
@@ -946,6 +970,12 @@ elsif($params{'calType'} eq "expcal"){
 				'cellClass' => 'timeDate'
 			},
 			{
+				'Column' => 'Notes',
+				'XMLField' => 'EventNotes',
+				'filterPlaceholder' => 'Search Notes',
+				'cellClass' => 'notes'
+			},
+			{
 				'Column' => 'Attorney',
 				'XMLField' => 'AttorneyInfo',
 				'filterPlaceholder' => 'Search Attorney Name',
@@ -955,6 +985,12 @@ elsif($params{'calType'} eq "expcal"){
 				'Column' => 'Contact',
 				'XMLField' => 'ContactInfo',
 				'filterPlaceholder' => 'Search Contact Name',
+				'cellClass' => 'contact'
+			},
+			{
+				'Column' => 'Attorneys',
+				'XMLField' => 'Attorneys',
+				'filterPlaceholder' => 'Search Attorney Info',
 				'cellClass' => 'contact'
 			}
 		);
@@ -971,6 +1007,7 @@ elsif($params{'calType'} eq "expcal"){
 		}
 		$data{'cookieName'} = "icms-ols-cal";
 	} else {
+		
 		getVRBCalendar(\@events, $judgeID, $start, $end, $division, $vdbh, "civ");
 		
 		@exportHeaders = (
@@ -1055,7 +1092,7 @@ foreach my $event (@events) {
 }
 
 # Check to see if there's an export XML def file.
-my $exportXMLdef = sprintf("/var/www/cgi-bin/case/calendars/exportXMLdefs/cal_def_%s.xml", uc($division));
+my $exportXMLdef = sprintf("/var/www/cgi-bin/calendars/exportXMLdefs/cal_def_%s.xml", uc($division));
 if (-e $exportXMLdef) {
 	$data{'exportXMLdef'} = $exportXMLdef;
 }

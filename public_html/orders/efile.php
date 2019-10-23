@@ -1,13 +1,16 @@
 <?php
-require_once "../php-lib/common.php";
-require_once "../php-lib/db_functions.php";
-require_once "../php-lib/ldap_functions.php";
-require_once "../icmslib.php";
-require_once "../caseinfo.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/ldap_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/caseinfo.php");
 
 require_once "Smarty/Smarty.class.php";
 
-$smarty = initSmarty();
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
 
 $templateData = array();
 
@@ -89,7 +92,7 @@ $templateData['bar_id'] = $efInfo['bar_num'];
 
 $templateData['case_type'] = $divlist[$div]['PortalNameSpace'];
 $templateData['casestyle'] = $style;
-$templateData['countyid'] = 50;
+$templateData['countyid'] = 58;
 $templateData['court_id'] = $divlist[$div]['CourtTypeID'];
 $templateData['jud_circuit'] = "Twelfth Circuit";
 $templateData['county'] = "Sarasota County";
@@ -108,7 +111,7 @@ $docdesc = $rec['efiling_document_description'];
 
 if ($signedDoc == "") {
     
-    $html=`/var/www/html/case/orders/merge.cgi paramfile=$paramfile`;
+    $html=`/var/www/html/orders/merge.cgi paramfile=$paramfile`;
     
     # now write the resulting html to a file
     $orderfile=tempnam("/var/www/html/tmp","order");
@@ -131,7 +134,7 @@ if ($signedDoc == "") {
         $protocol = "https";
     }
 
-    $url = sprintf("%s://%s/case/orders/genpdf.php", $protocol, $_SERVER['HTTP_HOST']);
+    $url = sprintf("%s://%s/orders/genpdf.php", $protocol, $_SERVER['HTTP_HOST']);
     $orderJson = curlJson($url, $postFields);
     $ofile = json_decode($orderJson,true);
     $orderfname = sprintf("/var/www/html%s", $ofile['filename']);
@@ -158,7 +161,8 @@ $smarty->assign('data', $templateData);
 
 $xml = $smarty->fetch('portal/ReviewFiling.tpl');
 
-$config = simplexml_load_file($icmsXml);
+
+$config = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
 
 $wsdl = (string) $config->{'eFilingWsdl'};
 

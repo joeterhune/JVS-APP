@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
+	$ENV{'TNS_ADMIN'} = "/var/www/";
 };
 
 use strict;
@@ -36,7 +37,7 @@ my $caseList = $params{'cases'};
 
 my @cases = split(",", $caseList);
 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 

@@ -1,0 +1,96 @@
+JISRPT=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(PORT=1526)(HOST=issdbjisrptcc.clerk.local)))(CONNECT_DATA=(SERVICE_NAME=j10.co.palm-beach.fl.us)))
+
+JISPROD=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(PORT=1526)(HOST=ejisprod.co.palm-beach.fl.us)(Port=1526)))(CONNECT_DATA=(SERVICE_NAME=j10.co.palm-beach.fl.us)))
+
+#   (DESCRIPTION=
+#      (ADDRESS_LIST=
+#          (ADDRESS= (PROTOCOL=TCP)(Host=ejisprod.co.palm-beach.fl.us)(Port=1526))
+#       )
+#       (CONNECT_DATA=
+#           (SID = JISRPT)(SERVICE_NAME=j10p.co.palm-beach.fl.us)
+#       )
+#    )
+
+
+
+DATABASE2 =
+   (DESCRIPTION =
+      (ADDRESS_LIST =
+         (ADDRESS = (PROTOCOL = TCP)(Host = 151.132.206.65)(Port = 1521))
+      )
+      (CONNECT_DATA =
+         (SID = DATABASE2)
+      )
+)
+
+TRKD =
+   (DESCRIPTION = 
+      (ADDRESS_LIST =
+             (ADDRESS = (PROTOCOL = TCP) (HOST = ccc2b.clerk.local) (PORT = 1521))
+        )
+     (CONNECT_DATA =
+           (SID=TRKD) 
+        )
+   )
+
+trkp=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(PORT=1521)(HOST=ufp02adbvip.clerk.local)))(CONNECT_DATA=(SID=tk10prd1)))
+#  (CONNECT_DATA=(SERVICE_NAME=trkprd)))
+
+# trkp =
+#  (DESCRIPTION =
+#    (ADDRESS = (PROTOCOL = TCP)(HOST = ufp02adbvip.clerk.local)(PORT = 1521))
+#    (ADDRESS = (PROTOCOL = TCP)(HOST = ufp02bdbvip.clerk.local)(PORT = 1521))
+#    (ADDRESS = (PROTOCOL = TCP)(HOST = ufp02cdbvip.clerk.local)(PORT = 1521))
+#    (ADDRESS = (PROTOCOL = TCP)(HOST = ufp02ddbvip.clerk.local)(PORT = 1521))
+#    (LOAD_BALANCE = yes)
+#    (CONNECT_DATA =
+#      (SERVICE_NAME = trkprd)
+#      (FAILOVER_MODE =
+#        (TYPE = SELECT)
+#        (METHOD = BASIC)
+#      )
+#    )
+#  )
+
+#   (DESCRIPTION =
+#      (ADDRESS_LIST =
+#             (ADDRESS = (PROTOCOL = TCP) (HOST = ufccc3b.clerk.local) (PORT = 1521))
+#        )
+#     (CONNECT_DATA =
+#           (SID=TRKP)
+#        )
+#   )
+
+
+TRKQ =
+   (DESCRIPTION = 
+      (ADDRESS_LIST =
+             (ADDRESS = (PROTOCOL = TCP) (HOST = ccc3a.clerk.local) (PORT = 1521))
+        )
+     (CONNECT_DATA =
+           (SID=TRKQ) 
+        )
+   )
+
+
+
+TRKT =
+   (DESCRIPTION = 
+      (ADDRESS_LIST =
+             (ADDRESS = (PROTOCOL = TCP) (HOST = ccc3a.clerk.local) (PORT = 1521))
+        )
+     (CONNECT_DATA =
+           (SID=TRKT) 
+        )
+   )
+
+J10A=
+   (DESCRIPTION =
+      (ADDRESS_LIST =
+         (ADDRESS = (PROTOCOL = TCP)(Host = gcjistest.co.palm-beach.fl.us)(Port = 1521))
+      )
+      (CONNECT_DATA =
+         (SERVICE_NAME=j10a.co.palm-beach.fl.us)
+      )
+   )
+

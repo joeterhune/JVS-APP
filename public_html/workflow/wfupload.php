@@ -42,6 +42,7 @@ $ts=date("m/d/Y h:i:s A");
 if ($wf_id=="0") {
     $wf_id="";
 }
+
 if ($wf_id=="" && $wf_docref=="" && $_FILES["wf_file"]["name"]) {
     # we're trying to upload a file, or a docref
     if ($_FILES["wf_file"]["error"] > 0) {
@@ -60,7 +61,6 @@ $dbh = dbConnect("icms");
 $creator = $_SESSION['user'];
 
 $ffile = $_FILES["wf_file"]["name"];
-
 $tname = $_FILES["wf_file"]["tmp_name"];
 log_this('JVS','workflow',"Uploaded file - " . $ffile, $_SERVER['REMOTE_ADDR'], $dbh);
 $duedate = db_date($wf_due_date);
@@ -87,14 +87,12 @@ if ($wf_id=="") {
     if ($wf_docref!="") {  # a document ref, so just copy over
         $filename = preg_replace("/^$wf_ucn\./","", $wf_docref);
         # we know it's a pdf...
-		// 1/22/19 jmt updated directory to new location
-        $inpath = "$appDir/public_html/pdfs/$filename";
+        $inpath = "/var/www/html/pdfs/$filename";
         
         $encFile = encodeFile($inpath);
     }
 	else{
-		// 1/22/19 jmt updated directory to new location
-		$docpath="$appDir/public_html/uploads/".$creator;
+		$docpath="/var/www/html/uploads/".$creator;
 	}
 	
 	// Make directory is user directory does not exsist

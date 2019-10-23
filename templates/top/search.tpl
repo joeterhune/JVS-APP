@@ -263,7 +263,7 @@
 	                                        {$count = 0} {$perCol = 10}
 	                                        {while $count < $divlist|@count} 
 	                                        <div style="display: table-row">
-	                                            {for $inc=0; $inc < $perCol; $inc++}{$div = $divlist[$count + $inc]}
+												{for $inc=0; $inc < $perCol; $inc++}{if isset($divlist[$count + $inc])}{$div = $divlist[$count + $inc]}{else}{$div = ""}{/if}
 	                                            {if $div != ""}
 	                                            <div style="display: table-cell; width: 1em; margin-right: 1em;">
 	                                                <input type="checkbox" class="optCheck" name="limitdiv" value="{$div}"/>
@@ -305,7 +305,7 @@
 	                                        {$count = 0} {$perCol = 3}
 	                                        {while $count < $divtypes|@count} 
 	                                        <div style="display: table-row">
-	                                            {for $inc=0; $inc < $perCol; $inc++}{$divtype = $divtypes[$count + $inc]}
+	                                            {for $inc=0; $inc < $perCol; $inc++}{if isset($divtypes[$count + $inc])}{$divtype = $divtypes[$count + $inc]}{else}{$divtype=""}{/if}
 	                                            {if $divtype != ""}
 	                                            <div style="display: table-cell; width: 20em; margin-right: 2em" title="{$divtype.division_type}">
 	                                                <input type="checkbox" class="optCheck" name="limittype" value="{$divtype.division_type}"/>{$divtype.division_type}
@@ -351,7 +351,7 @@
 	                                        {$count = 0} {$perCol = 3}
 	                                        {while $count < $partyTypes|@count} 
 	                                        <div style="display: table-row">
-	                                            {for $inc=0; $inc < $perCol; $inc++}{$partytype = $partyTypes[$count + $inc]}
+												{for $inc=0; $inc < $perCol; $inc++}{if isset($partyTypes[$count + $inc])}{$partytype = $partyTypes[$count + $inc]}{/if}
 	                                            {if $partytype.PartyTypeDescription != ""}
 	                                            <div style="display: table-cell; width: 1em; margin-right: 2em">
 	                                                <input type="checkbox" class="optCheck {$partytype.PartyClass}" name="partyTypeLimit" value="{$partytype.PartyType}"/>
@@ -393,7 +393,7 @@
 	                                                {$key}
 	                                            </div>
 	                                            {$inc = $inc + 1}
-	                                        {if (($inc == $perCol) || ($charges.last))}
+	                                        {if (($inc == $perCol) || (isset($charges) && ($charges|@end)))}
 	                                        {$inc = 0}
 	                                        </div>
 	                                        <div style="display: table-row;">
@@ -430,7 +430,7 @@
 	                                                {$key}
 	                                            </div>
 	                                            {$inc = $inc + 1}
-	                                        {if (($inc == $perCol) || ($charges.last))}
+	                                        {if (($inc == $perCol) || ($charges|@end))}
 	                                        {$inc = 0}
 	                                        </div>
 	                                        <div style="display: table-row;">

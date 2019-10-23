@@ -1,6 +1,6 @@
 <?php
-require_once("php-lib/common.php");
-require_once("php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 ################################################
 #    icmslib.php - PHP library for ICMS        #
@@ -14,7 +14,7 @@ $CONFIG['DBTYPE']="mysql";
 $CONFIG['DBNAME']="icms";
 $CONFIG['DBUSER']="icmsuser";
 $CONFIG['DBPASS']="2Acc3ss";
-$USER=strtolower($_SESSION['user']);
+$USER=strtolower(getSessVal('user'));
 $ROLE=""; # the short subcategory of a role (JUDGE,JA,GM,STAFF)
 $FULLROLE="";
 $FULLNAME="";
@@ -28,14 +28,13 @@ $PROFMAX=0;
 $PROFMIN=9999;
 
 $WEBPATH="/icmsdata/workflow/documents";
-$DOCPATH="/var/www$WEBPATH";
+$DOCPATH=$_SERVER['JVS_DOCROOT'];
 //$SIGPATH="/var/icms/conf/signatures"; # where raw esigs are stored...
 $SETTINGSPATH="/var/www/icmsdata/settings"; # user settings stored here
 $TMPPATH="/var/www/icmsdata/tmp"; # temp files go here...
 $GROUPS=array();
 
 ################## SQL ROUTINES (via OpenCourt) ##################
-$CONFPATH = "/usr/local/icms/etc";
 $DATABASES="";
 
 #
@@ -48,29 +47,16 @@ function has_allow_group() {
 }
 
 #
-# is_conf_file returns 1 if a conf file exists, 0 otherwise
-#
-function is_conf_file($confname) {
-   global $CONFPATH;
-   $fpath="$CONFPATH/$confname";
-   if (file_exists($fpath)) { return 1; }
-   return 0;
-}
-
-
-#
 # load_conf_file loads a given JSON configuration file and 
 #                returns a PHP object.
 
 function load_conf_file($confname) {
-   global $CONFPATH;
-   $fpath="$CONFPATH/$confname";
-   if (!file_exists($fpath)) {
-      echo "load_conf_file: can't load $fpath\n";
+   if (!file_exists($confname)) {
+      echo "load_conf_file: can't load '$confname': file does not exist\n";
       exit(1);
    }
 
-   return json_decode(file_get_contents($fpath));
+   return json_decode(file_get_contents($confname));
 }
 
 
@@ -740,9 +726,9 @@ function set_user_globals($dbh) {
             userid = :user
     ";
     $vals = getDataOne($query,$dbh,array('user' => $USER));
-    $role=$vals['role'];
+    $role = key_exists('role',$vals) ? $vals['role'] : '';
     $name = buildName($vals);
-    $roletype=$vals['roletype'];
+    $roletype = key_exists('roletype',$vals) ? $vals['roletype'] : '';
     $FULLROLE=$role;
     $FULLNAME = $name;
     $ROLE=$roletype;

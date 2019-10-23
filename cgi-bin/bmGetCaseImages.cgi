@@ -6,7 +6,7 @@
 #
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -33,7 +33,7 @@ sub main{
 	my @docketIds;
 	my $info = new CGI;
 	my %params = $info->Vars;
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $appRoot =$conf->{'BenchMark'}->{'appRoot'};
 	my $loginPage = $appRoot . $conf->{'BenchMark'}->{'loginPage'};
 	my $caseSearchAction = $appRoot . $conf->{'BenchMark'}->{'caseSearchAction'};

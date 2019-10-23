@@ -1,12 +1,15 @@
 <?php
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
 
 $docInfo = array();
 $docid = getReqVal('docid');
@@ -27,6 +30,7 @@ else{
 
 if(!empty($new) && ($new == 'Y')){
 	unsetQueueVars();
+	unset($_SESSION['saved_form_data']);
 }
 
 $case_id = getReqVal('caseid');
@@ -36,13 +40,14 @@ if(empty($case_id)){
 
 $formid = getReqVal('formid');
 if(empty($formid)){
-	$formid = $docInfo['formid'];
+	$formid = key_exists('formid', $docInfo) ? $docInfo['formid'] : null;
 }
 
 $division = getCaseDiv($ucn);
+$real_case_type = getCaseType($ucn);
+
 $myqueues = array($user);
 $sharedqueues = array();
-
 $dbh = dbConnect("icms");
 
 getSubscribedQueues($user, $dbh, $myqueues);
@@ -50,7 +55,7 @@ getSharedQueues($user, $dbh, $sharedqueues);
 $allqueues = array_merge($myqueues,$sharedqueues);
 $wfcount = getQueues($queueItems,$allqueues,$dbh);
 
-$url = "/case/orders/igo.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
+$url = "/orders/igo.php?fromTabs=1&docid=" . $docid . "&ucn=" . $ucn;
 
 createTab($ucn, $url, 1, 1, "cases",
 	array(
@@ -86,8 +91,9 @@ $query = "
 		forms
 	where
 		case_types like '%$casetype%'
-		and (is_private is null OR (is_private=1 and shared_with like '%$USER%'))
+		and (is_private is null OR (is_private=1 and shared_with like '%$USER%') )
 		and ols_form = 0
+		and (real_case_types like '%$real_case_type%' OR (real_case_types IS NULL) )
 	order
 		by form_name
 	";
@@ -111,7 +117,7 @@ if ($docid != "") { # get the formid
 	
 	    $doc = getDataOne($query, $dbh, array('docid' => $docid));
 	    $formdata = json_decode($doc['data'],true);
-	    $formid=$formdata['form_id'];
+	    $formid=$doc['form_id'];
 	    $smarty->assign('formid', $formid);
 }
 

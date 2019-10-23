@@ -164,7 +164,28 @@
         
         {if $isOrder}
 	       	$(document).on('click','#step1',function() {
-				window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+				$('#dialogSpan').html("By clicking OK, you will be returned to the form selection screen.  Your current document will be completely regenerated and any text changes you have made will be overwritten.");
+				$('#dialogDiv').dialog({
+					resizable: false,
+					minheight: 150,
+					width: 500,
+					modal: true,
+					title: 'Order Regeneration',
+					buttons: {
+					   	"OK": function() {
+					       	$(this).dialog( "close" );
+					       	window.location = '/orders/igo.php?ucn={$ucn}&docid={$docid}';
+					        return false;
+					    },
+					    "Cancel": function() {
+					       	$(this).dialog( "close" );
+					        return false;
+					    }
+					}
+				});
+					                
+				return false;
+								
 			});
 		{/if}
 		
@@ -300,7 +321,7 @@
 					{foreach $merge_docs as $md}
 						<tr id="merge-{$md.supporting_doc_id}">
 							<td><a href="{$md.file}" target="_blank">{$md.document_title}</a></td>
-							<td><a href="#\" class="removeMergeDoc" data-docid="{$md.supporting_doc_id}"><img src="../icons/delete.png"/></a></td>
+							<td><a href="#\" class="removeMergeDoc" data-docid="{$md.supporting_doc_id}"><img src="../jvsicons/delete.png"/></a></td>
 						</tr> 
 					{/foreach}
 				</tbody>
@@ -357,7 +378,7 @@
 								<input type="checkbox" name="attachToEfiling" id="efile_cb_{$od.supporting_doc_id}" class="attachToEfiling" data-docid="{$od.supporting_doc_id}" data-file="{$od.file}"/> 
 							{/if}
 						</td>
-						<td><a href="#\" class="deleteDoc" data-docid="{$od.supporting_doc_id}"><img src="../icons/delete.png"/></a></td>
+						<td><a href="#\" class="deleteDoc" data-docid="{$od.supporting_doc_id}"><img src="../jvsicons/delete.png"/></a></td>
 					</tr> 
 				{/foreach}
 			</tbody>

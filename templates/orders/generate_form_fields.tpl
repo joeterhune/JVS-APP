@@ -120,6 +120,11 @@
 				else{
 					$(".show-{$ofld.trigger_parent_field}-" + trigger_parent_value).hide();
 				}
+				
+				{if isset($saved_form_data[$ofld.trigger_parent_field]) && !empty($saved_form_data[$ofld.trigger_parent_field])}
+					{assign var="filteredValue" value=$saved_form_data[$ofld.trigger_parent_field]|regex_replace: '/[^a-zA-Z0-9]+/' : ''}
+					$(".show-{$ofld.trigger_parent_field}-{$filteredValue}").show();
+				{/if}
 			{/if}
 		{/foreach}
 	});
@@ -152,18 +157,18 @@
 		<div class="col-sm-6">
         {if $ofld.field_code == 'event_date'}
 		<div class="input-group col-md-6 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
-			<input type="text" class="datepicker form-control {$showClass}" name="{$ofld.field_code}" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}">
+			<input type="text" class="datepicker form-control {$showClass}" name="{$ofld.field_code}" value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 		</div>
         {else if $ofld.field_type == 'DATE'}
 		<div class="input-group date col-md-6 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
-			<input type="text" class="datepicker form-control {$showClass}" name="{$ofld.field_code}" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}">
+			<input type="text" class="datepicker form-control {$showClass}" name="{$ofld.field_code}" value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 			
 		</div>
 		{else if $ofld.field_code == 'event_time' || ($ofld.field_type == 'TIME')}
 			<div class="col-sm-6 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <div class="form-group">
 	                <div class="input-group date timepicker {$showClass}">
-	                    <input type="text" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}" />
+	                    <input type="text" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}" />
 	                    <span class="input-group-addon {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	                        <span class="glyphicon glyphicon-time"></span>
 	                    </span>
@@ -172,20 +177,20 @@
 	        </div>
 		 {else if $ofld.field_type == 'NUMBER'}
 			<div class="input-group col-md-3 time {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
-				<input type="number" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}">
+				<input type="number" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 			</div>
 		{else if $ofld.field_type == 'TEXTAREA'}
 			<div class="input-group col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
-				<textarea type="number" rows="10"  class="form-control {$showClass}" name="{$ofld.field_code}" wrap="hard" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}">{$formdata.$fldcode}</textarea>
+				<textarea type="number" rows="10"  class="form-control {$showClass}" name="{$ofld.field_code}" wrap="hard" {$show} data-tl_parent="{$ofld.top_level_parent}">{$saved_form_data[$fldcode]}</textarea>
 			</div>
         {else if $ofld.field_type == 'CHECKBOX'}
-			<input type="checkbox" class="{$showClass}" name="{$ofld.field_code}" title="{$ofld.field_description}" {if $formdata.$fldcode== 1}checked="checked"{/if} value=1 {$show} data-tl_parent="{$ofld.top_level_parent}">
+			<input type="checkbox" class="{$showClass}" name="{$ofld.field_code}" title="{$ofld.field_description}" {if $saved_form_data[$fldcode]== 1}checked="checked"{/if} value=1 {$show} data-tl_parent="{$ofld.top_level_parent}">
         {else if $ofld.field_type == 'SELECT'}
         	{if $ofld.field_code == "magistrate"}
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $magistrates as $m}
-	            	 	<option value="{$m}" {$show} {if $ofld.field_default == $m}selected="selected"{/if}>{$m}</option>
+	            	 	<option value="{$m}" {$show} {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $m)}selected="selected"{else if $ofld.field_default == $m}selected="selected"{/if}>{$m}</option>
 	            	 {/foreach}
 	            </select>
 				</div>
@@ -193,7 +198,7 @@
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $magistrates as $m}
-	            	 	<option value="{$m}" {$show} {if $ofld.field_default == $m}selected="selected"{/if}>{$m}</option>
+	            	 	<option value="{$m}" {$show}  {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $m)}selected="selected"{else if $ofld.field_default == $m}selected="selected"{/if}>{$m}</option>
 	            	 {/foreach}
 	            </select>
 				</div>	
@@ -201,7 +206,7 @@
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $ufc_cm_names as $u}
-	            	 	<option value="{$u}" {$show}>{$u}</option>
+	            	 	<option value="{$u}" {$show} {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $u)}selected="selected"{else if $ofld.field_default == $u}selected="selected"{/if}>{$u}</option>
 	            	 {/foreach}
 	            </select>
 				</div>
@@ -209,7 +214,7 @@
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $addresses as $key => $a}
-	            	 	<option value="{$key}" {$show}>{$a}</option>
+	            	 	<option value="{$key}" {$show} {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $key)}selected="selected"{else if $ofld.field_default == $key}selected="selected"{/if}>{$a}</option>
 	            	 {/foreach}
 	            </select>
 				</div>
@@ -217,7 +222,7 @@
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $names as $key => $n}
-	            	 	<option value="{$key}" {$show}>{$n}</option>
+	            	 	<option value="{$key}" {$show} {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $key)}selected="selected"{else if $ofld.field_default == $key}selected="selected"{/if}>{$n}</option>
 	            	 {/foreach}
 	            </select>
 				</div>
@@ -225,7 +230,7 @@
         		<div class="col-md-8 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 	            <select class="form-control {$showClass}" style="margin-left:-15px" name="{$ofld.field_code}" data-tl_parent="{$ofld.top_level_parent}">
 	            	 {foreach $names as $key => $n}
-	            	 	<option value="{$key}" {$show}>{$n}</option>
+	            	 	<option value="{$key}" {$show} {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $key)}selected="selected"{else if $ofld.field_default == $key}selected="selected"{/if}>{$n}</option>
 	            	 {/foreach}
 	            </select>
 				</div>
@@ -236,7 +241,7 @@
 	                {assign var="selopts" value="\r\n"|explode:$vals}
 	                {foreach $selopts as $selopt}
 	                	<option  value="{$selopt}" 
-	                		{if $formdata.$fldcode == $selopt}
+	                		{if $saved_form_data[$fldcode] == $selopt}
 	                			selected="selected"
 	                		{else if $ofld.field_default == $selopt}
 	                			selected="selected"
@@ -249,16 +254,16 @@
 			{/if}
 		{else if $ofld.field_code == 'courtroom'}
 			<div class="input-group col-md-3 time {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">
-				<input type="text" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}">
+				<input type="text" class="form-control {$showClass}" name="{$ofld.field_code}" value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}">
 			</div>
         {else if $ofld.field_type == 'TEXT'}
-			<input type="text" class="form-control col-sm-4 col-md-6 col-lg-8 {$showClass}" name="{$fldcode}"  value="{$formdata.$fldcode}" {$show} data-tl_parent="{$ofld.top_level_parent}"/>
+			<input type="text" class="form-control col-sm-4 col-md-6 col-lg-8 {$showClass}" name="{$fldcode}"  value="{$saved_form_data[$fldcode]}" {$show} data-tl_parent="{$ofld.top_level_parent}"/>
 			
 			{if $ofld.field_code == "Event Location"}
             <label for="{$ofld.field_code}" class="control-label col-sm-2 {$showClass}" {$show} data-tl_parent="{$ofld.top_level_parent}">Event Courthouse:</label>
                 <select class="chaddress" name="courthouse_address" {$show} data-tl_parent="{$ofld.top_level_parent}">
                     {foreach from=$chaddress  key=ch item=addr}
-                    <option value="$addr">$ch</option>
+                    <option value="$addr" {if isset($saved_form_data[$fldcode]) && ($saved_form_data[$fldcode] == $addr)}selected="selected"{else if $ofld.field_default == $addr}selected="selected"{/if}>$ch</option>
                     {/foreach}
                 </select>
             

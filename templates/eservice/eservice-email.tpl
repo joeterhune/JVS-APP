@@ -17,7 +17,7 @@
 
 <ul>
 	<li>
-		This email is from the Twelfth Judicial Circuit
+		This email is from the Fifteenth Judicial Circuit
 	</li>
 	<li>
 		Case Number:  {$ucn}
@@ -47,11 +47,11 @@
 {/if}
 
 <p>
-	In accordance with the 12th Judicial Circuit's Administrative Order 2.310-4/13, please ensure that
+	In accordance with the 15th Judicial Circuit's Administrative Order 2.310-4/13, please ensure that
 	primary and secondary email addresses are registered with Court Administration at
-	<a href="https://e-services.co.Sarasota-beach.fl.us/scheduling/">https://e-services.co.Sarasota-beach.fl.us/scheduling/</a>.
+	<a href="https://e-services.co.palm-beach.fl.us/scheduling/">https://e-services.co.palm-beach.fl.us/scheduling/</a>.
 </p>
 <p>
 	For a better translation of this document, contact
-	<a href="mailto:CAD-ADA@jud12.flcourts.org">CAD-ADA@jud12.flcourts.org</a>.
+	<a href="mailto:CAD-ADA@pbcgov.org">CAD-ADA@pbcgov.org</a>.
 </p>

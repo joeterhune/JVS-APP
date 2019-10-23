@@ -1,7 +1,7 @@
 package Calendars;
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 };
 
 use strict;
@@ -27,6 +27,10 @@ use DB_Functions qw (
     $DEFAULT_SCHEMA
     lastInsert
     getDbSchema
+);
+
+use PBSO2 qw (
+    getMugshotWithJacketId
 );
 
 our $db = getShowcaseDb();
@@ -60,9 +64,7 @@ our @EXPORT_OK = qw(
     getScEvents
     getBannerEvents
     getOLSDivs
-    getCaseStyles
     sortExternalEvents
-    writeCal
     $SC_SOURCE_ID
     $BANNER_SOURCE_ID
     $OLS_SOURCE_ID
@@ -157,13 +159,13 @@ sub getCaseStyles {
 	my $caseref = shift;
 
 	$division = uc($division);
-	my $divcs = "/var/www/html/case/Sarasota/civ/div".$division."/divcs.txt";
+	my $divcs = "/var/www/html/Palm/civ/div".$division."/divcs.txt";
 
 	open (DIVCS, $divcs);
 	while (my $line = <DIVCS>) {
 		chomp $line;
 		my ($case,$style) = split(/\`/,$line);
-		$case = "50".$case;
+		$case = "58".$case;
 		$caseref->{$case} = $style;
 	}
 	close DIVCS;
@@ -400,7 +402,7 @@ sub getScEvents {
 	getData($dateref, $query, $dbh, {valref => [$startStr, $endStr]});
 
 	foreach my $event (@{$dateref}) {
-		$event->{'CaseNumber'} =~ s/^50-//g;
+		$event->{'CaseNumber'} =~ s/^58-//g;
 		if ($event->{'CourtEventCode'} eq 'VOP') {
 			$event->{'RowClass'} = 'vop';
 		}
@@ -476,7 +478,7 @@ sub getFirstAppearance {
 			CASE ve.Cancelled
 				WHEN 'Yes' THEN 'Y'
 				ELSE 'N'
-			END as Canceled,
+			END as isCanceled,
 			CONVERT(varchar(10),ve.CreateDate,101) as DocketDate,
 			ve.CourtEventNotes as EventNotes,
 			vc.CaseStyle
@@ -497,7 +499,7 @@ sub getFirstAppearance {
 	foreach my $event (@{$eventRef}) {
 		$event->{'CaseNumber'} = sanitizeCaseNumber($event->{'CaseNumber'});
         $event->{'ICMSLink'} = sprintf('<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         
 		if ($event->{'CourtEventCode'} eq 'VOP') {
 			$event->{'RowClass'} = 'vop';
@@ -507,7 +509,7 @@ sub getFirstAppearance {
 			$event->{'CourtEventNotes'} = '&nbsp;';
 		}
 
-		if ($event->{'Canceled'} eq 'Y') {
+		if ($event->{'isCanceled'} eq 'Y') {
 			if (defined($event->{'RowClass'})) {
 				$event->{'RowClass'} .= ' canceled';
 			} else {
@@ -545,7 +547,7 @@ sub getOLSJudges {
 			judge_code as JudgeID,
 			judge_firstname as FirstName,
 			judge_middlename as MiddleName,
-			UPPER(judge_lastname) as LastName,
+			judge_lastname as LastName,
 			judge_suffix as Suffix
 		from
 			judge 
@@ -589,7 +591,7 @@ sub getOLSJudges {
 		}
 		$judge->{'FullName'} .= ", " . $judge->{'FirstName'};
 		if ((defined($judge->{'MiddleName'})) && ($judge->{'MiddleName'} ne '')) {
-			$judge->{'FullName'} .= " " . $judge->{'MiddleName'} . ".";
+			$judge->{'FullName'} .= " " . $judge->{'MiddleName'};
 		}
 	}
 }
@@ -621,7 +623,7 @@ sub getJudges {
 
 		$judge->{'FullName'} .= ", " . $judge->{'FirstName'};
 		if ((defined($judge->{'MiddleName'})) && ($judge->{'MiddleName'} ne '')) {
-			$judge->{'FullName'} .= " " . $judge->{'MiddleName'} . ".";
+			$judge->{'FullName'} .= " " . $judge->{'MiddleName'};
 		}
 	}
 }
@@ -636,7 +638,8 @@ sub getMagistrates {
 		select
 			first_name as FirstName,
 			middle_name as MiddleName,
-			last_name as LastName
+			last_name as LastName,
+			suffix as Suffix
 		from
 			magistrates m
 		where
@@ -651,11 +654,17 @@ sub getMagistrates {
 
 	foreach my $mag (@{$magref}) {
 		$mag->{'FirstName'} =~ s/^MAGISTRATE\s*//g;
-		$mag->{'FullName'} = $mag->{'LastName'};
+		
+		if ((defined($mag->{'Suffix'})) && ($mag->{'Suffix'} ne '')) {
+			$mag->{'FullName'} = $mag->{'LastName'} . ", " . $mag->{'Suffix'};
+		}
+		else{
+			$mag->{'FullName'} = $mag->{'LastName'}
+		}
 
 		$mag->{'FullName'} .= ", " . $mag->{'FirstName'};
 		if ((defined($mag->{'MiddleName'})) && ($mag->{'MiddleName'} ne '')) {
-			$mag->{'FullName'} .= " " . $mag->{'MiddleName'} . ".";
+			$mag->{'FullName'} .= " " . $mag->{'MiddleName'};
 		}
 	}
 }
@@ -740,7 +749,6 @@ sub getMediators {
 }
 
 sub getOLSDivs {
-	# Get a listing of the OLS divisions that are defined in ICMS.conf
 	my $arrayRef = shift;
 	my $dbh = shift;
 	
@@ -762,103 +770,6 @@ sub getOLSDivs {
 	foreach my $div (@temp) {
 		push (@{$arrayRef}, $div->{'division_id'});
 	}
-}
-
-
-sub writeCal {
-	my $div = shift;
-	my $dbh = shift;
-
-	if (!defined($div)) {
-		return -1;
-	}
-
-	my $query = qq {
-		select
-			casenum as CaseNumber,
-			case_div as DivisionID,
-			case_style as CaseStyle,
-			event_title as EventTitle,
-			event_notes as EventNotes,
-			event_date as EventDate,
-			start_time as StartTime,
-			end_time as EndTime,
-			event_location as Location,
-			date_format(created_timestamp,'%m/%d/%Y') as ScheduledDate
-		from
-			events
-		where
-			sched_div='$div'
-		order by
-			event_date asc,
-			start_time asc
-	};
-
-	my @events;
-	getData(\@events,$query, $dbh);
-
-	my $calFile = $easyCalDir . "/div" . $div . ".ics";
-
-	# Start building the calendar object.
-	my $calendar = Data::ICal->new(data => "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:EASYCAL\nEND:VCALENDAR\n");
-
-	foreach my $event (@events) {
-		my ($year, $month, $day) = split(/-/, $event->{'EventDate'});
-		my ($starthour, $startmin, $startsec) = split(/:/, $event->{'StartTime'});
-		my ($endhour, $endmin, $endsec) = split(/:/, $event->{'EndTime'});
-
-		my $startdate = Date::ICal->new(
-			year => $year,
-			month => $month,
-			day => $day,
-			hour => $starthour,
-			min => $startmin,
-			sec => $startsec
-		);
-
-		my $enddate = Date::ICal->new(
-			year => $year,
-			month => $month,
-			day => $day,
-			hour => $endhour,
-			min => $endmin,
-			sec => $endsec
-		);
-
-		my $summary = sprintf("%s (%s)", $event->{'CaseNumber'}, $event->{'CaseStyle'});
-
-
-		my $description = sprintf("Case:\t\t%s\r\nStyle:\t\t%s\r\nEvent:\t\t%s\r\nNotes:\t\t%s\r\nDate Scheduled:\t%s\r\n",
-								  $event->{'CaseNumber'}, $event->{'CaseStyle'}, $event->{'EventTitle'},
-								  $event->{'EventNotes'}, $event->{'ScheduledDate'});
-
-		# Create an event object
-		my $vevent = Data::ICal::Entry::Event->new();
-		$vevent->add_properties(
-			summary => $summary,
-			description => $description,
-			dtstart => $startdate->ical,
-			dtend => $enddate->ical,
-			uid => $event->{'uuid'},
-			location => $event->{'Location'}
-		);
-		$calendar->add_entry($vevent);
-	}
-
-	# Create a temp file
-	my $fh = File::Temp->new(
-		DIR => $easyCalDir,
-		UNLINK => 1
-	);
-	my $filename = $fh->filename;
-	print $fh $calendar->as_string;
-	close $fh;
-
-	# And then rename the calendar file.
-	rename($filename, $calFile);
-
-	# All done!
-	return 0;
 }
 
 
@@ -952,7 +863,7 @@ sub getVRBCalendar {
     my $isOls = shift;
     my $divType = shift;
     
-	my $configXml = $ENV{'APP_ROOT'} . "/conf/ICMS.xml";
+	my $configXml = $ENV{'JVS_ROOT'} . "/conf/ICMS.xml";
 	my $config = XMLin($configXml);
 	
 	# Get the actual name of the DB used for calendars - defaults to olscheduling
@@ -1089,10 +1000,10 @@ sub getVRBCalendar {
             events e left outer join event_cases ec on (e.event_id = ec.event_id)
                 left outer join event_types et on (e.event_type_id = et.event_type_id)
                 left outer join import_sources i on (e.import_source_id = i.import_source_id)
-                left outer join $olsdb.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
-                left outer join $olsdb.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
-                left outer join $olsdb.users u on (ec.sched_user_id = u.user_id)
-                left outer join $olsdb.email_addresses ea on (u.login_id = ea.email_addr_id)
+                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('58', ec.case_num) = a.case_num ))
+                left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
+                left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
+                left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)
         where
             DATE(e.start_date) BETWEEN ? and ?
             and e.division = ?
@@ -1219,10 +1130,10 @@ sub getVRBCalendar {
 	            events e left outer join event_cases ec on (e.event_id = ec.event_id)
 	                left outer join event_types et on (e.event_type_id = et.event_type_id)
 	                left outer join import_sources i on (e.import_source_id = i.import_source_id)
-	                left outer join $olsdb.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
-	        		left outer join $olsdb.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
-	                left outer join $olsdb.users u on (ec.sched_user_id = u.user_id)
-	                left outer join $olsdb.email_addresses ea on (u.login_id = ea.email_addr_id)
+	                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
+	        		left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
+	                left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
+	                left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)
 	        where
 	            DATE(e.start_date) BETWEEN ? and ?
 	            and e.division = ?
@@ -1237,32 +1148,179 @@ sub getVRBCalendar {
     }
     
     $query .= qq { ORDER BY StartDate };
-	
-	getData($eventRef,$query,$dbh,{valref => \@args});
-	
+    
+    getData($eventRef,$query,$dbh,{valref => \@args});
+    
     my @warTemp;
     my $caseString;
     foreach my $event (@{$eventRef}) {
     	$caseString .= "'" . $event->{'CaseNumber'} . "', ";
     }
     
-    $configXml = "$ENV{'APP_ROOT'}/conf/ICMS.xml";
-	$config = XMLin($configXml);
+    $caseString = substr $caseString, 0, -2;
+    
+    my $configXml = "$ENV{'JVS_ROOT'}/conf/ICMS.xml";
+	my $config = XMLin($configXml);
 	my $icms_db = $config->{'dbConfig'}->{'icms'}->{'dbName'};
+	
+	#my @cidTemp;
+	#if($divType eq "crim"){
+    #	# I don't like this but I don't have any other way to do it
+    #	if($caseString ne ""){
+    #		my $cidQuery = qq{
+    #			SELECT
+    #				CaseNumber,
+	#                CountyID
+	#            FROM
+	#                $schema.vDefendant with(nolock)
+	#            WHERE
+	#                CaseNumber IN ($caseString)
+    #		};
+    #		
+    #		getData(\@cidTemp, $cidQuery, $scdbh);
+    #		
+    #		my $warrQuery = qq{
+	#		   	SELECT 
+	#		   		CaseNumber,
+	#		   		WarrantNumber
+	#			FROM
+	#				$schema.vWarrant with(nolock)
+	#			where
+	#				CaseNumber IN ($caseString)
+	#				and Closed = 'N'
+	#		};
+	#		
+	#		getData(\@warTemp, $warrQuery, $scdbh);
+	#	
+    #	}
+   	#}
+   	
+   	#my @partyTemp;
+   	# This is stupid too
+    #if($caseString ne ""){
+    #	my $partyQuery = qq{
+    #		select
+    #        DISTINCT p.PersonID,
+    #        p.FirstName,
+    #        p.MiddleName,
+    #        p.LastName,
+    #        p.PartyType,
+    #        p.PartyTypeDescription,
+    #        p.BarNumber,
+    #        p.PersonID as PartyID,
+    #        CASE
+    #        	WHEN a.Represented_PersonID IS NOT NULL
+	#			THEN AttorneyName
+	#			ELSE 'Pro Se'
+	#		END AS AttorneyName,
+    #        p.CaseID,
+    #        eMailAddress AS email_addr,
+    #        p.CaseNumber
+    #    from
+    #        $schema.vAllParties p with(nolock)
+    #    left outer join
+    #    	$schema.vAttorney a with(nolock)
+    #    	on p.CaseID = a.CaseID
+	#		and p.PersonID = a.Represented_PersonID
+    #    where
+    #        p.CaseNumber IN ($caseString)
+    #        and p.Active = 'Yes'
+    #        and p.PartyType NOT IN ('JUDG', 'WIT', 'CHLD', 'DECD', 'ATTY', 'APD', 'PD', 'ASA')
+    #        AND (p.Discharged IS NULL OR p.Discharged = 0)
+    #        AND (p.CourtAction IS NULL OR p.CourtAction NOT LIKE '%Disposed%') 
+   	#	};
+    #	getData(\@partyTemp, $partyQuery, $scdbh);
+    #}
+    
+    my @fdTemp;
+    if($caseString ne ""){
+    	my $fdQuery = qq{
+    		SELECT
+    			CaseNumber,
+    			CONVERT(varchar,FileDate,101) as FileDate
+	        FROM
+	        	$schema.vCase with(nolock)
+	        WHERE
+	        	CaseNumber IN ($caseString)
+    	};
+    	
+    	getData(\@fdTemp, $fdQuery, $scdbh);
+    }
     
     foreach my $event (@{$eventRef}) {
+    
     	if($divType eq "crim"){
+    		#$event->{'CountyID'} = "";
+	    	#if(scalar(@cidTemp)){
+	    	#	foreach my $cid (@cidTemp){
+	    	#		if($cid->{'CaseNumber'} eq $event->{'CaseNumber'} && ($cid->{'CountyID'} ne "")){
+	    	#			$event->{'CountyID'} = $cid->{'CountyID'};
+	    	#		}
+	    	#	}
+	    	#}
+	    	
+	    	#$event->{'InJail'} = 0;
+	    	#if($event->{'CountyID'} ne ""){
+	    	#	my $pbsoconn = dbConnect("pbso2");
+	    	#	my $photoid;
+	    	#	my $injail;
+	    	#	($photoid, $injail) = getMugshotWithJacketId($event->{'CountyID'}, $pbsoconn);
+	    		
+	    	#	if($injail ne "No"){
+	    	#		$event->{'InJail'} = 1;
+	    	#	}
+	    	#}
+    	
     		$event->{'CPCA'} = sprintf('<a class="showRecord" data-casenum="%s">Image</a>&nbsp;&nbsp;&nbsp;<input type="checkbox" name="selectedCPCA" value="%s"/>', $event->{'CaseNumber'}, $event->{'CaseNumber'});
     	}
     	
-    	$event->{'OpenWarrants'} = 0;
-    	if(scalar(@warTemp)){
-    		foreach my $war (@warTemp){
-    			if($war->{'CaseNumber'} eq $event->{'CaseNumber'}){
-    				$event->{'OpenWarrants'} = 1;
+    	#$event->{'OpenWarrants'} = 0;
+    	#if(scalar(@warTemp)){
+    	#	foreach my $war (@warTemp){
+    	#		if($war->{'CaseNumber'} eq $event->{'CaseNumber'}){
+    	#			$event->{'OpenWarrants'} = 1;
+    	#		}
+    	#	}
+    	#} 
+
+    	$event->{'FileDate'} = "";
+    	if(scalar(@fdTemp)){
+    		foreach my $fd (@fdTemp){
+    			if($fd->{'CaseNumber'} eq $event->{'CaseNumber'}){
+    				$event->{'FileDate'} = $fd->{'FileDate'};
     			}
     		}
     	} 
+    	
+    	my @partyTemp;
+    	my $partyQuery = qq{
+	   		select
+	   			party_name,
+	   			party_represents,
+	   			party_phone
+	   		from
+	   			event_parties
+	   		where
+	   			event_id = ?
+	   		and
+	   			event_cases_id = ?
+	   	};
+	   	getData(\@partyTemp, $partyQuery, $dbh, {valref => [$event->{'VRBEventID'}, $event->{'VRBEventCasesID'}]});
+	   	
+    	$event->{'Attorneys'} = "<ul>";
+    	if(scalar(@partyTemp)){
+    		foreach my $p (@partyTemp){
+    			$event->{'Attorneys'} .= "<li>";
+    			$event->{'Attorneys'} .= $p->{'party_name'} . " (" . $p->{'party_represents'} . ")";
+    			
+    			if($p->{'party_phone'} ne ""){
+    				$event->{'Attorneys'} .= "<br/>" . $p->{'party_phone'};
+    			} 
+    			
+    			$event->{'Attorneys'} .= "</li>";
+    		}
+    	} 
+    	$event->{'Attorneys'} .= "</ul>";
     	    
     	my $ec_motion = $event->{'motion'};
     	my $conf = $event->{'OLSConfNum'};
@@ -1271,44 +1329,36 @@ sub getVRBCalendar {
     	
     	my @ems;
     	my $emQuery = qq{
-    		SELECT
-				m_type,
+    		SELECT m_type,
     			supp_doc_id,
     			m_othertitle
-			FROM
-				event_motions
-			WHERE
-				ols_conf_num = ?
+			FROM event_motions
+			WHERE ols_conf_num = ?
 		};
 		
 		getData(\@ems, $emQuery, $dbh, {valref => [$conf]});
 		
 		if(!scalar(@ems)){
 			my $pdQuery = qq{
-				SELECT
-					m_title
-				FROM
-					$olsdb.predefmotions
-				WHERE
-					m_type = ?
-				AND
-					division = ?
+				SELECT m_title
+				FROM olscheduling.predefmotions
+				WHERE m_type = ?
+				AND division = ?
 			};
-			
+				
 	    	my $pdRow = getDataOne($pdQuery, $dbh, [$ec_motion, $div]);
-	    	
+	    		
 	    	if(defined($pdRow->{'m_title'})){
 	    		$ec_motion = $pdRow->{'m_title'};
-	    	} else {
-				if(!$ex_parte_flag){
-					my $umQuery = qq{
-						SELECT
-							motion_title
-						FROM
-							umc.umc_motion_types 
-						WHERE
-							motion_type = ?
-							AND umc_div = ?
+	    	}
+	    	else{
+	    		
+	    		if(!$ex_parte_flag){
+		    		my $umQuery = qq{
+						SELECT motion_title
+						FROM umc.umc_motion_types 
+						WHERE motion_type = ?
+						AND umc_div = ?
 					};
 						
 			   		my $umRow = getDataOne($umQuery, $dbh, [$ec_motion, $div]);
@@ -1316,15 +1366,13 @@ sub getVRBCalendar {
 			   		if(defined($umRow->{'motion_title'})){
 			   			$ec_motion = $umRow->{'motion_title'};
 			   		}
-		   		} else {
+		   		}
+		   		else{
 		   			my $umQuery = qq{
-						SELECT
-							motion_title
-						FROM
-							umc.ex_parte_motion_types 
-						WHERE
-							motion_type = ?
-							AND ex_parte_div = ?
+						SELECT motion_title
+						FROM umc.ex_parte_motion_types 
+						WHERE motion_type = ?
+						AND ex_parte_div = ?
 					};
 						
 			   		my $umRow = getDataOne($umQuery, $dbh, [$ec_motion, $div]);
@@ -1334,37 +1382,35 @@ sub getVRBCalendar {
 			   		}
 		   		}
 	    	}
-		} else{
+		}
+		else{
 		
 			foreach my $em (@ems) {
 			
 				my $pdQuery = qq{
-					SELECT
-						m_title
-					FROM
-						$olsdb.predefmotions
-					WHERE
-						m_type = ?
-						AND division = ?
+					SELECT m_title
+					FROM olscheduling.predefmotions
+					WHERE m_type = ?
+					AND division = ?
 				};
 				
-				my $pdRow = getDataOne($pdQuery, $dbh, [$em->{'m_type'}, $div]);
-					
+	    		my $pdRow = getDataOne($pdQuery, $dbh, [$em->{'m_type'}, $div]);
+	    		
 	    		if(defined($pdRow->{'m_title'})){
 	    			$em->{'Motion'} = $pdRow->{'m_title'};
-	    		} else {
+	    		}
+	    		else{
+	    		
 	    			if(!$ex_parte_flag){
 		    			my $umQuery = qq{
-							SELECT
-								motion_title
-							FROM
-								umc.umc_motion_types
-							WHERE
-								motion_type = ?
-								AND umc_div = ?
+							SELECT motion_title
+							FROM umc.umc_motion_types 
+							WHERE motion_type = ?
+							AND umc_div = ?
 						};
-						my $umRow = getDataOne($umQuery, $dbh, [$em->{'m_type'}, $div]);
 						
+			    		my $umRow = getDataOne($umQuery, $dbh, [$em->{'m_type'}, $div]);
+			    		
 			    		if(defined($umRow->{'motion_title'})){
 			    			$em->{'Motion'} = $umRow->{'motion_title'};
 			    		}
@@ -1384,7 +1430,8 @@ sub getVRBCalendar {
 			    		}
 		    		}
 	    		}
-    		}	
+    		}
+			
 		}
 		
 		if(scalar(@ems)){
@@ -1400,7 +1447,7 @@ sub getVRBCalendar {
 			    			document_title,
 			    			file
 			    		FROM 
-			    			$olsdb.supporting_documents
+			    			olscheduling.supporting_documents
 			    		WHERE 
 			    			supporting_doc_id = ?
 			    	};
@@ -1434,7 +1481,7 @@ sub getVRBCalendar {
     			document_title,
     			file
     		FROM 
-    			$olsdb.supporting_documents
+    			olscheduling.supporting_documents
     		WHERE 
     			event_id = ?
     		AND 
@@ -1463,7 +1510,7 @@ sub getVRBCalendar {
     	$event->{'Motion'} = "<ul>";
     	
     	foreach my $order (@orderRef) {
-        	$event->{'Motion'} .= sprintf('<li><a href="/case/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
+        	$event->{'Motion'} .= sprintf('<li><a href="/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
         }
         
         if(scalar(@ems)){
@@ -1495,16 +1542,26 @@ sub getVRBCalendar {
         
         $event->{'Motion'} .= "</ul>";
         
-        my $warr;
-        if($event->{'OpenWarrants'}){
-         	$warr = '<img src="/case/asterisk.png" alt="Open Warrants" /> ';
-        }
-        else{
-        	$warr = "";
-        }
+        my $warr = "";
+        #if($event->{'OpenWarrants'}){
+        # 	$warr = '<img src="/asterisk.png" alt="Open Warrants" /> ';
+        #}
+        #else{
+       	#	$warr = "";
+        #}
+        
+        my $inJail = "";
+        #if($event->{'InJail'}){
+        # 	$inJail = '<strong><span style="color:red">(In Jail)</span></strong>';
+        #}
+        #else{
+        #	$inJail = "";
+        #}
+        
+        $event->{'CaseStyle'} = sprintf('%s %s', $event->{'CaseStyle'}, $inJail);
 
         $event->{'ICMSLink'} = sprintf('%s<a href="/cgi-bin/search.cgi?name=%s">%s</a>', $warr, $event->{'CaseNumber'}, $event->{'CaseNumber'});
-        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/case/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
+        $event->{'NAMELink'} = sprintf('<a href="/cgi-bin/relatedSearch.cgi?ucn=%s">%s</a>', $event->{'CaseNumber'}, $event->{'CaseStyle'});
         $event->{'AttorneyInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'AttorneyName'}, $event->{'AttorneyPhone'}, $event->{'AttorneyEmail'});
         $event->{'ContactInfo'} = sprintf("%s<br/>%s<br/>%s<br>", $event->{'ContactName'}, $event->{'ContactPhone'}, $event->{'ContactEmail'});
     }
@@ -1530,7 +1587,7 @@ sub getMagistrateCalendar {
         $endDate = $startDate;
     }
 
-	my $configXml = $ENV{'APP_ROOT'} . "/conf/ICMS.xml";
+	my $configXml = $ENV{'JVS_ROOT'} . "/conf/ICMS.xml";
 	my $config = XMLin($configXml);
 	 
  	# Get the actual name of the DB used for calendars - defaults to olscheduling
@@ -1540,7 +1597,7 @@ sub getMagistrateCalendar {
 	}
     
     my $dbh = dbConnect("vrb2");
-    
+
     my $query = qq {
         select
             e.event_id as VRBEventID,
@@ -1645,13 +1702,13 @@ sub getMagistrateCalendar {
            events e left outer join event_cases ec on (e.event_id = ec.event_id)
 	                left outer join event_types et on (e.event_type_id = et.event_type_id)
 	                left outer join import_sources i on (e.import_source_id = i.import_source_id)
-	                left outer join $olsdb.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
-        			left outer join $olsdb.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
-	                left outer join $olsdb.users u on (ec.sched_user_id = u.user_id)
-	                left outer join $olsdb.email_addresses ea on (u.login_id = ea.email_addr_id)
+	                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('58', ec.case_num) = a.case_num ))
+        			left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
+	                left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
+	                left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)
         where
-            DATE(e.start_date) BETWEEN ? and ?
-            and e.division = ?
+        	e.division = ?
+            AND DATE(e.start_date) BETWEEN ? and ?
             -- and e.is_private = 0
             and i.import_source_name <> 'Banner'
             AND ( e.is_scheduled = 1 OR ec.event_cases_id IS NOT NULL )
@@ -1764,10 +1821,10 @@ sub getMagistrateCalendar {
 	            events e left outer join event_cases ec on (e.event_id = ec.event_id)
 	                left outer join event_types et on (e.event_type_id = et.event_type_id)
 	                left outer join import_sources i on (e.import_source_id = i.import_source_id)
-	                left outer join $olsdb.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
-	        		left outer join $olsdb.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
-	                left outer join $olsdb.users u on (ec.sched_user_id = u.user_id)
-	                left outer join $olsdb.email_addresses ea on (u.login_id = ea.email_addr_id)
+	                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('58', ec.case_num) = a.case_num ))
+	        		left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
+	                left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
+	                left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)
 	                inner join judge_divs.magistrates m on (m.division = ? and e.division = m.juv_cal_divisions)
 	        where
 	            DATE(e.start_date) BETWEEN ? and ?
@@ -1785,11 +1842,76 @@ sub getMagistrateCalendar {
     
     getData($eventRef,$query,$dbh,{valref => \@args});
     
-    $configXml = "$ENV{'APP_ROOT'}/conf/ICMS.xml";
-	$config = XMLin($configXml);
+    my $configXml = "$ENV{'JVS_ROOT'}/conf/ICMS.xml";
+	my $config = XMLin($configXml);
 	my $icms_db = $config->{'dbConfig'}->{'icms'}->{'dbName'};
+	
+	my $caseString;
+    foreach my $event (@{$eventRef}) {
+    	$caseString .= "'" . $event->{'CaseNumber'} . "', ";
+    }
+	
+	my @fdTemp;
+    if($caseString ne ""){
+    
+    	$caseString = substr $caseString, 0, -2;
+    
+    	my $fdQuery = qq{
+    		SELECT
+    			CaseNumber,
+    			CONVERT(varchar,FileDate,101) as FileDate,
+    			DivisionID
+	        FROM
+	        	$schema.vCase with(nolock)
+	        WHERE
+	        	CaseNumber IN ($caseString)
+    	};
+    	
+    	getData(\@fdTemp, $fdQuery, $scdbh);
+    }
     
     foreach my $event (@{$eventRef}) {
+    
+    	$event->{'FileDate'} = "";
+    	$event->{'DivisionID'} = "";
+    	if(scalar(@fdTemp)){
+    		foreach my $fd (@fdTemp){
+    			if($fd->{'CaseNumber'} eq $event->{'CaseNumber'}){
+    				$event->{'FileDate'} = $fd->{'FileDate'};
+    				$event->{'DivisionID'} = $fd->{'DivisionID'};
+    			}
+    		}
+    	} 
+    
+    	my @partyTemp;
+    	my $partyQuery = qq{
+	   		select
+	   			party_name,
+	   			party_represents,
+	   			party_phone
+	   		from
+	   			event_parties
+	   		where
+	   			event_id = ?
+	   		and
+	   			event_cases_id = ?
+	   	};
+	   	getData(\@partyTemp, $partyQuery, $dbh, {valref => [$event->{'VRBEventID'}, $event->{'VRBEventCasesID'}]});
+	   	
+    	$event->{'Attorneys'} = "<ul>";
+    	if(scalar(@partyTemp)){
+    		foreach my $p (@partyTemp){
+    			$event->{'Attorneys'} .= "<li>";
+    			$event->{'Attorneys'} .= $p->{'party_name'} . " (" . $p->{'party_represents'} . ")";
+    			
+    			if($p->{'party_phone'} ne ""){
+    				$event->{'Attorneys'} .= "<br/>" . $p->{'party_phone'};
+    			} 
+    			
+    			$event->{'Attorneys'} .= "</li>";
+    		}
+    	} 
+    	$event->{'Attorneys'} .= "</ul>";
     	
     	my $ec_motion = $event->{'motion'};
     	my $conf = $event->{'OLSConfNum'};
@@ -1801,23 +1923,18 @@ sub getMagistrateCalendar {
     		SELECT m_type,
     			supp_doc_id,
     			m_othertitle
-			FROM
-				event_motions
-			WHERE
-				ols_conf_num = ?
+			FROM event_motions
+			WHERE ols_conf_num = ?
 		};
 		
 		getData(\@ems, $emQuery, $dbh, {valref => [$conf]});
 		
 		if(!scalar(@ems)){
 			my $pdQuery = qq{
-				SELECT
-					m_title
-				FROM
-					$olsdb.predefmotions
-				WHERE
-					m_type = ?
-					AND division = ?
+				SELECT m_title
+				FROM olscheduling.predefmotions
+				WHERE m_type = ?
+				AND division = ?
 			};
 				
 	    	my $pdRow = getDataOne($pdQuery, $dbh, [$ec_motion, $div]);
@@ -1862,13 +1979,10 @@ sub getMagistrateCalendar {
 			foreach my $em (@ems) {
 			
 				my $pdQuery = qq{
-					SELECT
-						m_title
-					FROM
-						$olsdb.predefmotions
-					WHERE
-						m_type = ?
-						AND division = ?
+					SELECT m_title
+					FROM olscheduling.predefmotions
+					WHERE m_type = ?
+					AND division = ?
 				};
 				
 	    		my $pdRow = getDataOne($pdQuery, $dbh, [$em->{'m_type'}, $div]);
@@ -1880,13 +1994,10 @@ sub getMagistrateCalendar {
 	    		
 	    			if(!$ex_parte_flag){
 		    			my $umQuery = qq{
-							SELECT
-								motion_title
-							FROM
-								umc.umc_motion_types 
-							WHERE
-								motion_type = ?
-								AND umc_div = ?
+							SELECT motion_title
+							FROM umc.umc_motion_types 
+							WHERE motion_type = ?
+							AND umc_div = ?
 						};
 						
 			    		my $umRow = getDataOne($umQuery, $dbh, [$em->{'m_type'}, $div]);
@@ -1927,7 +2038,7 @@ sub getMagistrateCalendar {
 			    			document_title,
 			    			file
 			    		FROM 
-			    			$olsdb.supporting_documents
+			    			olscheduling.supporting_documents
 			    		WHERE 
 			    			supporting_doc_id = ?
 			    	};
@@ -1990,7 +2101,7 @@ sub getMagistrateCalendar {
     	$event->{'Motion'} = "<ul>";
     	
     	foreach my $order (@orderRef) {
-        	$event->{'Motion'} .= sprintf('<li><a href="/case/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
+        	$event->{'Motion'} .= sprintf('<li><a href="/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
         }
         
         if(scalar(@ems)){
@@ -2161,7 +2272,7 @@ sub getMediatorCalendar {
 		getData(\@divTemp, $divQuery, $scdbh);
 	}
     
-    my $configXml = "$ENV{'APP_ROOT'}/conf/ICMS.xml";
+    my $configXml = "$ENV{'JVS_ROOT'}/conf/ICMS.xml";
 	my $config = XMLin($configXml);
 	my $icms_db = $config->{'dbConfig'}->{'icms'}->{'dbName'};
     
@@ -2310,7 +2421,7 @@ sub getExParteCalendar {
            events e left outer join event_cases ec on (e.event_id = ec.event_id)
 	                left outer join event_types et on (e.event_type_id = et.event_type_id)
 	                left outer join import_sources i on (e.import_source_id = i.import_source_id)
-	                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
+	                left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('58', ec.case_num) = a.case_num ))
 	                left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
 	                left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
 	                left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)
@@ -2339,7 +2450,7 @@ sub getExParteCalendar {
 
     getData($eventRef,$query,$dbh,{valref => \@args});
     
-    my $configXml = "$ENV{'APP_ROOT'}/conf/ICMS.xml";
+    my $configXml = "$ENV{'JVS_ROOT'}/conf/ICMS.xml";
 	my $config = XMLin($configXml);
 	my $icms_db = $config->{'dbConfig'}->{'icms'}->{'dbName'};
 	
@@ -2538,7 +2649,7 @@ sub getExParteCalendar {
     	$event->{'Motion'} = "<ul>";
     	
     	foreach my $order (@orderRef) {
-        	$event->{'Motion'} .= sprintf('<li><a href="/case/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
+        	$event->{'Motion'} .= sprintf('<li><a href="/orders/preview.php?fromWF=1&ucn=%s&docid=%s&isOrder=0">%s</a></li>', $event->{'CaseNumber'}, $order->{'doc_id'}, $order->{'title'});
         }
         
         if(scalar(@ems)){
@@ -2703,7 +2814,7 @@ sub getMentalHealthCalendar {
 	            events e left outer join event_cases ec on (e.event_id = ec.event_id)
 	            left outer join event_types et on (e.event_type_id = et.event_type_id)
 	            left outer join import_sources i on (e.import_source_id = i.import_source_id)
-	            left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('50', ec.case_num) = a.case_num ))
+	            left outer join olscheduling.bulk_hearings_allotted_times a on (ec.ols_conf_num = a.conf_num and ( ec.case_num = a.case_num or CONCAT('58', ec.case_num) = a.case_num ))
 				left outer join olscheduling.law_firms lf on (ec.sched_lawfirm_id = lf.lawfirm_id)
 	            left outer join olscheduling.users u on (ec.sched_user_id = u.user_id)
 	            left outer join olscheduling.email_addresses ea on (u.login_id = ea.email_addr_id)

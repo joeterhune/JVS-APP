@@ -1,9 +1,9 @@
 <?php
-include "../php-lib/common.php";
-include "../php-lib/db_functions.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
 require_once('Smarty/Smarty.class.php');
-require_once("wfcommon.php");
-require_once "../icmslib.php";
 
 checkLoggedIn();
 
@@ -12,7 +12,7 @@ $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
-$user = $_SESSION['user'];
+$user = getSessVal('user');
 $dbh = dbConnect("icms");
 
 extract($_REQUEST);
@@ -86,8 +86,8 @@ $query = "
     from
         workflow
     where
-        REPLACE(creator, '@jud12.flcourts.org', '') = :queue
-		and queue <> REPLACE(creator, '@jud12.flcourts.org', '')
+        REPLACE(creator, '@pbcgov.org', '') = :queue
+		and queue <> REPLACE(creator, '@pbcgov.org', '')
     order by
         creation_date desc
 ";

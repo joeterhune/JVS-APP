@@ -14,7 +14,7 @@
 # 07/15/11 lms new objid passed in
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -66,7 +66,7 @@ sub doit {
     #$casenum =~ s/^50//g;
     my $caseid = $params{'caseid'};
 
-	my $workpath = sprintf("%s/casefiles/%s/", $ENV{'DOCUMENT_ROOT'}, $ucn);
+	my $workpath = sprintf($ENV{'JVS_DOCROOT'} . "/casefiles/%s/", $ucn);
 	if (!-d $workpath) {
 		makePaths($workpath);
 	}
@@ -80,7 +80,7 @@ sub doit {
 		$showTif = 1;
 	}
 
-    my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin($ENV{'JVS_ROOT'} . '/conf/ICMS.xml');
 	my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 	my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
     
@@ -157,29 +157,6 @@ sub doit {
 				# User can see ONLY Probate sealed
 				my $canView = 1;
 				
-				# Taking this out for now so Probate people can see sealed images regardless of division - LK 4/21/16
-				#my @divs;
-				#getDivsLDAP(\@divs,$user,$ldap);
-
-				#if (inArray(\@divs, "AllDivs")) {
-				#	$canView = 1;
-				#} else {
-	            #	# What's the case's division?
-	            #    my $query = qq {
-	            #    	select
-	            #        	DivisionID
-	            #        from
-	            #            $schema.vCase with(nolock)
-	            #        where
-	            #            CaseID = ?
-	            #    };
-	            #    my $casediv = getDataOne($query,$dbh,[$caseid]);
-				#	if ((defined($casediv)) && (inArray(\@divs, $casediv->{'DivisionID'}))) {
-				#		# This user is in the case's division
-				#		$canView = 1;
-				#	}
-				#}
-	
 				if ($canView) {
 					# User is allowed to see sealed images on this case.  Use the privileged ID
 					$TMPASS = $conf->{'TrakMan'}->{'sealed'}->{'password'};
@@ -210,9 +187,9 @@ sub doit {
 			}
 		}
 	}
-		
-	my $pdfListFile = getImagesFromNewTM(\@images,\@documents,$TMUSER,$TMPASS,$showTif, undef,undef,$workpath,$params{'pdforder'});
-
+	
+    my $pdfListFile = getImagesFromNewTM(\@images,\@documents,$TMUSER,$TMPASS,$showTif, undef,undef,$workpath,$params{'pdforder'});
+    
     if ($pdfListFile eq 'TIMEOUT') {
 		print $info->header();
 		print "There was a timeout retrieving images from the TrakMan service.  Please try again later.\n\n";
@@ -221,10 +198,10 @@ sub doit {
 	}
 
     # Remove the TIFs (so subsequent users can't see them - in case the document is sealed)
-    #foreach my $tif (@images) {
-    #    my $tifname = sprintf("/tmp/%s.tif", $tif->{'object_id'});
-    #    unlink ($tifname)
-    #}
+    foreach my $tif (@images) {
+        my $tifname = sprintf("/tmp/%s.tif", $tif->{'object_id'});
+        unlink ($tifname)
+    }
 
 	my $finalPdf;
 	if (scalar(@documents) > 1) {
@@ -232,7 +209,7 @@ sub doit {
 	} elsif (scalar(@documents) == 1) {
 		# Just a single file - don't do the GhostScript stuff
 		my $oldFile = $documents[0]->{'file'};
-		my $newFile = sprintf("%s/tmp/%s", $ENV{'DOCUMENT_ROOT'}, basename($oldFile));
+		my $newFile = sprintf($ENV{'JVS_DOCROOT'} . "/tmp/%s", basename($oldFile));
 		if ((!-f $newFile) && (!-l $newFile)) {
 			symlink($oldFile, $newFile);
 		}

@@ -1,7 +1,8 @@
 	var jsonfile = JSON.parse(JSON.stringify({$json}));
+	
 	var labels = jsonfile.map(function(e) {
 		e.label = e.label.replace("<br/>", " ");
-	   return e.label;
+		return e.label;
 	});
 		
 	var data = jsonfile.map(function(e) {

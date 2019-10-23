@@ -1,11 +1,11 @@
 [% INCLUDE top/header.tt %]
 <script src="/javascript/casenotes/notesAndFlags.js?1.6" type="text/javascript"></script>
-<script src="/javascript/casedetails.js?2.1" type="text/javascript"></script>
+<script src="/javascript/casedetails.js?2.2" type="text/javascript"></script>
 <script src="/javascript/casedetails/utils.js?1.9" type="text/javascript"></script>
 <div style="padding-left:1%">
 <script type="text/javascript">
             $(document).ready(function() {
-            	sc_civilGetAsync('[% data.ucn %]', '[% data.caseinfo.CaseNumber %]', '[% data.caseinfo.CaseType %]', '[% data.caseinfo.CaseID %]');
+            	sc_civilGetAsync('[% data.caseinfo.UCN %]', '[% data.caseinfo.CaseNumber %]', '[% data.caseinfo.CaseType %]', '[% data.caseinfo.CaseID %]');
 
                 $("table thead th:eq(6)").data("sorter", false);
 
@@ -956,13 +956,7 @@
                                             [% END %]
      										<td class="eservice" style="color: green; display:none" id="eserviceColumnShow-[% party.PIDM %]"></td>
                                             <td>
-                                            	[% namePieces = party.FullName.split(',') %]
-                                                [% lastName = namePieces.0 %]
-                                                [% midFirst = namePieces.1 | trim %]
-                                                [% midFirst = midFirst.split(' ') %]
-												[% firstName = midFirst.0 %]
-												[% middleName = midFirst.1 %]
-                                                <a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="[% party.DOB %]" data-first="[% firstName %]" data-middle="[% middleName %]" data-last="[% lastName %]"><img src="/jvsicons/search.png" /></a>
+                                                <a class="searchRelatedOneParty" data-ucn="[% data.ucn %]" data-dob="[% party.DOB %]" data-first="[% party.FirstName %]" data-middle="[% party.MiddleName %]" data-last="[% party.LastName %]"><img src="/jvsicons/search.png" /></a>
                                             </td>
                                         </tr>
                                     </table>

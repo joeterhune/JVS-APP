@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -63,13 +63,13 @@ foreach my $doctCode (keys %items) {
     push(@images, $sorted[0]);
 }
 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 
 my $ucn = $casenum;
 $ucn =~ s/-//g;
-my $workPath = sprintf("$ENV{'DOCUMENT_ROOT'}/casefiles/%s", $ucn);
+my $workPath = sprintf("/var/www/html/casefiles/%s", $ucn);
 
 my @documents;
 
@@ -81,7 +81,7 @@ if (scalar(@documents) > 1) {
 } elsif (scalar(@documents) == 1) {
     # Just a single file - don't do the GhostScript stuff
     my $oldFile = $documents[0]->{'file'};
-    my $newFile = sprintf("%s/tmp/%s", $ENV{'DOCUMENT_ROOT'}, basename($oldFile));
+    my $newFile = sprintf("/var/www/html/tmp/%s", basename($oldFile));
     rename($oldFile, $newFile);
     $finalPdf = sprintf("tmp/%s", basename($oldFile));
 } else {

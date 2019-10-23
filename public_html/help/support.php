@@ -12,8 +12,8 @@ if(!empty($_POST)){
 	
 	$plaintext = strip_tags($_POST['message']);
     
-    $recips = "CAD-HELP@jud12.flcourts.org";
-    //$recips = "lkries@jud12.flcourts.org";
+    $recips = "webhelp@jud12.flcourts.org";
+    //$recips = "lkries@pbcgov.org";
     	
     $uid = md5(uniqid(time()));
 
@@ -64,11 +64,11 @@ else{
     <html>
         <head>
             <title>Contact Support</title>
-            <link rel="stylesheet" type="text/css" href="/case/icms1.css?1.2">
-            <link rel="stylesheet" href="/case/style/ICMS.css?1.5">
-            <link rel="stylesheet" href="/case/style/ICMS2.css?1.3">
-            <script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
-            <script src="/case/javascript/vrb.js?1.1" type="text/javascript"></script>
+            <link rel="stylesheet" type="text/css" href="/icms1.css?1.2">
+            <link rel="stylesheet" href="/style/ICMS.css?1.5">
+            <link rel="stylesheet" href="/style/ICMS2.css?1.3">
+            <script src="https://e-services.co.palm-beach.fl.us/cdn/jslib/jquery-1.11.0.min.js" type="text/javascript"></script>
+            <script src="/javascript/vrb.js?1.1" type="text/javascript"></script>
         </head>
     </html>
     

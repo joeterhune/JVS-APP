@@ -36,6 +36,7 @@ if(!empty($docid) && $isOrder){
 }
 else{
 	$orderData = array(
+		"form_data" => $_SESSION['saved_form_data'],
 		"ucn" => $ucn,
 		"order_html" => $_REQUEST['order_html']
 	);

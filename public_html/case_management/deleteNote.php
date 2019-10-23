@@ -1,7 +1,7 @@
 <?php
 
-require_once("/usr/local/icms-web/case/php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 require_once("Smarty/Smarty.class.php");
 
 checkLoggedIn();

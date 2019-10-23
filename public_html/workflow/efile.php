@@ -204,7 +204,7 @@ $query = "
 
 list($div, $style) = getCaseDivAndStyle($doc['UCN']);
 
-if (preg_match("/^50/", $doc['UCN'])) {
+if (preg_match("/^58/", $doc['UCN'])) {
     $clerkid = $doc['UCN'];
 } else {
     $clerkid = preg_replace("/-/","", $doc['UCN']);

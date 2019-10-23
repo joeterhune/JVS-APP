@@ -1,0 +1,1286 @@
+#!/usr/bin/perl
+#
+
+BEGIN {
+	use lib $ENV{'JVS_PERL5LIB'};
+}
+
+use strict;
+use ICMS;
+use Showcase qw (
+	$ACTIVE
+	$NOTACTIVE
+);
+use Casenotes qw (
+    mergeNotesAndFlags
+	updateCaseNotes
+	buildnotes
+);
+use DB_Functions qw (
+    dbConnect
+	getData
+	getDataOne
+	doQuery
+	getDbSchema
+	getVrbEvents
+);
+use Showcase::Reports qw (
+	buildPartyList
+	buildPartyListMag
+);
+use Common qw (
+	dumpVar
+	inArray
+	@skipHack
+	getArrayPieces
+	getShowcaseDb
+	today
+);
+
+use Reports qw (
+    getVrbEventsByCaseList
+    getLastDocketFromList
+	buildNoHearings
+);
+
+use Date::Calc qw (:all Parse_Date);
+use Getopt::Long;
+
+
+my $DEBUG=0;  # will read txt files if set to 1
+my $MSGS=1;   # will spit out diag msgs if set to 1
+
+# No output buffering
+$| = 1;
+
+my $dbName = getShowcaseDb();
+my $schema = getDbSchema($dbName);
+my $dbh = dbConnect($dbName);
+
+my $outpath;
+my $outpath2;
+my $webpath;
+my $county="Palm";
+#my %allcases; # set in buildallcases
+my %caselist; # set in buildcaselist
+my %divlist;  # set in buildcaselist
+my %doblist;
+my %critdesc=(
+	"pend" => "Pending Cases - All",
+    "penddep"=>"Pending Cases - Dependency",
+    "nopenddep"=>"Other Cases - Dependency",
+	"ro" => "Reopened Cases - All",
+    "rodel"=>"Reopened Cases - Delinquency",
+    "rodep"=>"Reopened Cases - Dependency",
+    "pendnedep"=>"Pending Cases with No Events Scheduled - Dependency",
+    "pendwedep"=>"Pending Cases with Events Scheduled - Dependency",
+    "rowedep"=>"Reopened Cases with Events Scheduled - Dependency",
+    "ronedep"=>"Reopened Cases with No Events Scheduled - Dependency",
+    "cldep" => "Other Cases with Future Events - Dependency"
+);
+
+my %warrants; # set in buildwarrants
+my %charges;  # set in buildcharges
+my %caseCharges; # a hash keyed on just the casenumber, pointing to an array of hash refs
+my %chargepending; # set in buildcharges
+my %chargecnt; # set in buildcharges
+my %lastdocket; # set in buildlastdocket
+my %lastactivity; # set in buildlastactivity
+my %reopened; # set in buildcaselist
+my %closed;
+my %noHearings;
+my %partylist;
+my %style;
+
+my %shelterHearings;
+my %depDisposed;
+
+my $reopencodes=",Reopen,";
+my $closedcodes=",Closed,Disposed,";
+
+my %events;
+my %flags;
+my %merged;	# merged notes and flags
+my $icmsdb='ok'; # status of icms database when run - 'ok' or 'bad'
+
+my @casetypes = ('DP');
+my $casetypes="('DP')";
+
+# closed status codes for Juvenile
+# will get these based on inactivecodes in icms.pm
+
+# cdbcase_sealed_ind  3 - sealed/expunged?
+
+#
+# this is for civil cases only..leaves off that final -A
+#
+sub casenumtoucn {
+    my($casenum)=@_;
+    #return substr($casenum,0,4)."-".substr($casenum,4,2)."-".substr($casenum,6,6);
+	return $casenum;
+}
+
+#
+# get list of child's dobs for report
+#
+sub builddobs {
+	my $caselist = shift;
+    my %rawdobs;
+    if ($DEBUG) {
+     	print "DEBUG: Reading dobs.txt\n";
+	%doblist=readhash("$outpath/dobs.txt");
+    } else {
+		
+		my $count = 0;
+		my $perQuery = 1000;
+		
+		while ($count < scalar(@{$caselist})) {
+			my @temp;
+			
+			getArrayPieces($caselist, $count, $perQuery, \@temp, 1);
+			my $inString = join(",", @temp);
+			
+			%rawdobs=sqlhash("SELECT CaseNumber,
+							  1 AS SeqNo,
+							  PersonID,
+							  CONVERT(VARCHAR(10), DOB, 101) AS DOB
+							  FROM $schema.vAllParties
+							  WHERE CaseNumber IN ($inString) 
+							  AND ( 
+							  	PartyType = 'CHLD'
+								  OR (
+								  	PartyType = 'HYBRID'
+								  	AND PartyTypeDescription = 'CHILD (CJ)'
+								  )
+								)", 2, $dbh);
+			foreach (keys %rawdobs) {
+				$doblist{$_}=$rawdobs{$_};
+			}
+		
+			$count += $perQuery;
+		}
+		
+		#foreach my $case (keys %caselist) {
+		#	%rawdobs=sqlhash("SELECT CaseNumber,
+		#					  1 AS SeqNo,
+		#					  PersonID,
+		#					  DOB
+		#					  FROM $schema.vAllParties
+		#					  WHERE CaseNumber='$case' 
+		#					  AND PartyType = 'CHLD'", 2, $dbh);
+		#	foreach (keys %rawdobs) {
+		#		$doblist{$_}=$rawdobs{$_};
+		#	}
+		#}
+		writehash("$outpath/dobs.txt",\%doblist);
+    }
+}
+
+#
+# getfirstchilddob - pulls the dob of the first child found in the doblist
+#
+sub getfirstchilddob {
+	my($dob,$case_id,$i,$key);
+	if (scalar keys %doblist==0) {
+		die "scjuv_mag.pl: getfirstchilddob: doblist is empty.";
+	}
+	$case_id=$_[0];
+	$dob=" ";
+	foreach $i (1..30) {  # 30 parties max
+		$key="$case_id;$i";
+		if (!defined $doblist{$key}) {
+			next;
+		}
+		$dob=(split '~',$doblist{$key})[3];
+		last; # found what we're looking for - - 1st child - get out
+	}
+	return $dob;
+}
+
+# makelist
+#
+# keep these off the list...
+# warrants
+# sworn complaints (no charges filed)
+# disposed cases (case with no pending charges)
+#
+my $surcnt = 0;
+my $totcnt = 0;
+
+sub makelist {
+    my $casetype = shift;
+    my $thisdiv = shift;
+    my $crit = shift;
+    
+    my $jdbh = dbConnect("judge-divs");
+    my $query = qq{
+    	SELECT first_name,
+    	last_name
+    	FROM magistrates
+    	WHERE division = ?
+    };
+    
+    my $magRow = getDataOne($query, $jdbh, [$thisdiv]);
+    
+    my $mag = $magRow->{'last_name'} . ', ' . $magRow->{'first_name'}; 
+    my @list;
+	my @noEventList;
+	my @noShelterDepList;
+	
+    if (!$critdesc{$crit}) {
+        die "invalid criteria $crit\n";
+    }
+    
+    my $cttext;
+    $cttext=getdesc($casetype,$thisdiv);
+
+    foreach my $case (keys %caselist) {
+
+        my($div,$desc,$status,$casetype,$filedate,$dispodate,$reopendate,$reopenclosedate,$ctyp,$real_div)=split '~',$caselist{$case};
+
+		next if (inArray(\@skipHack,$status));
+		
+        if ($thisdiv ne $div) {
+            next;
+        }
+
+        # check for suppress flag...
+        my $ucn=casenumtoucn($case);
+        if ($flags{"$ucn;2"}) {
+            # we have a suppress
+            my $flagdate=(split '~',$flags{"$ucn;2"})[2];
+            my $lastdockdate=(split '~',$lastdocket{$case})[1];
+            # if the last docket date is < flagdate, then skip
+            if (compdate($lastdockdate,$flagdate)==-1) {
+                next;
+            }
+        }
+        
+        if ($crit=~/^pend/) {
+            # pending cases
+            if ($crit =~ /^pendne/ and defined($events{$case}->{'CourtEventDate'})) {
+                next;
+            }
+            if ($crit =~ /^pendwe/ and !defined($events{$case}->{'CourtEventDate'})) {
+                next;
+            }
+            if ($warrants{$case}) {
+                # skip if warrant outstanding
+                next;
+            } 
+            if ($reopened{$case}) {
+                # skip if reopened
+                next;
+            } 
+            if ($closed{$case}) {
+                # skip if closed
+                next;
+            } 
+        } elsif ($crit =~ /^warr/) {
+            if (!$warrants{$case}) {
+                # skip if NO warrant outstanding
+                next;
+            } 
+        } elsif ($crit=~/^ro/) {
+            if ($crit =~ /^rone/ and defined($events{$case}->{'CourtEventDate'})) {
+                next;
+            }
+            if ($crit =~ /^rowe/ and !defined($events{$case}->{'CourtEventDate'})) {
+                next;
+            }
+            if ($warrants{$case}) {
+                # skip if warrant outstanding
+                next;
+            } 
+            if (!$reopened{$case}) {
+                # skip if not reopened
+                next;
+            }
+        } elsif($crit=~/^cl/){
+        	if (!$closed{$case}) {
+                # skip if not closed
+                next;
+            }
+        }
+        
+        
+        # Now, is it a delinquency case or a dependency case?
+        # If it's a delinquency case (CJ), then $crit must end in "del"
+        if (($case =~ /CJ/) && (($crit !~ /del$/) && ($crit ne "pend") && ($crit ne "ro"))) {
+            next;
+        }
+        
+        if (($case !~ /CJ/) && (($crit =~ /del$/) && ($crit ne "pend") && ($crit ne "ro") && ($crit ne "cl"))) {
+            next;
+        }
+        
+        my $age = getScCaseAge($filedate, $dispodate, $reopendate, $reopenclosedate, $status, $dbh);
+		my $dob=getfirstchilddob($case);
+		$desc = (split '~', $style{$case})[0];
+		my $evcode = $events{$case}->{'CourtEventType'};
+		my $evdate = $events{$case}->{'CourtEventDate'};
+		my $ladate = (split '~',$lastactivity{$case})[1];
+        my $charges;
+        my $casenum = $ucn;
+        #$casenum =~ s/-//g;
+        if (defined($caseCharges{$casenum})) {
+            $charges = "<ul>";
+            my @tmpChrg;
+            foreach my $charge (@{$caseCharges{$casenum}}) {
+                push (@tmpChrg, "<li>$charge->{'Desc'}</li>");
+            }
+            $charges .= join(" ", @tmpChrg);
+            $charges .= "</ul>";
+        }
+        	
+		my $listString;
+	
+		if ($crit =~ /dep/) {
+			# Don't show charges for dependency
+			$listString = "$ucn~$desc~$dob~$real_div~$filedate~$age~$ctyp~$status~$ladate~$evcode~$evdate~$merged{$ucn}\n";
+		} else {
+			my $chgs = $chargecnt{$case};
+			$listString = "$ucn~$desc~$dob~$real_div~$filedate~$age~$ctyp~$status~$ladate~$chgs~$charges~$evcode~$evdate~$merged{$ucn}\n";
+		}
+		
+		
+        push(@list, $listString);
+		if (defined($noHearings{$ucn})) {
+			push(@noEventList, $listString);
+		}
+		
+		if ($crit =~ /dep/) {
+			if (defined($shelterHearings{$ucn})) {
+				# There was a shelter hearing requested for this case. Was it disposed?
+				if (!defined($depDisposed{$ucn})) {
+					push(@noShelterDepList, $listString)
+				}
+			}
+		} elsif ($crit =~ /del/) {
+			# Do delinquencey stuff here.
+		}
+		
+    }
+    
+	if ($crit =~ /dep/) {
+		my $outFile = sprintf("%s/%s.txt", $outpath2, $crit);
+	
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+		my $fntitle = "Flags/Most Recent Note";
+		if($icmsdb eq 'bad') {
+			$fntitle.="<br/>* Not Current *";
+		}
+		print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~A~D~A
+EOS
+		print OUTFILE @list;
+		close(OUTFILE);
+		
+		$outFile = sprintf("%s/%s_motNoEvent.txt", $outpath2, $crit);
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+			print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext With Motions But No Events Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~A~D~A
+EOS
+		print OUTFILE @noEventList;
+		close(OUTFILE);
+	
+		
+		$outFile = sprintf("%s/%s_shelterUndisposed.txt", $outpath2, $crit);
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+		print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext Undisposed Shelter Hearings Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~A~D~A
+EOS
+		print OUTFILE @noShelterDepList;
+		close(OUTFILE);
+	} elsif ($crit =~ /del/) {
+		# DELINQUENCY
+		my $outFile = sprintf("%s/%s.txt", $outpath2, $crit);
+	
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+		my $fntitle = "Flags/Most Recent Note";
+		if($icmsdb eq 'bad') {
+			$fntitle.="<br/>* Not Current *";
+		}
+		print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~# of Charges~Charges~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~C~I~A~D~A
+EOS
+		print OUTFILE @list;
+		close(OUTFILE);
+		
+		$outFile = sprintf("%s/%s_motNoEvent.txt", $outpath2, $crit);
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+			print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext With Motions But No Events Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~# of Charges~Charges~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~C~I~A~D~A
+EOS
+		print OUTFILE @noEventList;
+		close(OUTFILE);
+	
+		
+		$outFile = sprintf("%s/%s_shelterUndisposed.txt", $outpath2, $crit);
+		open(OUTFILE,">$outFile") ||
+			die "Couldn't open '$outFile' for writing: $!\n\n";
+		print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County - $cttext Undisposed Shelter Hearings Magistrate $mag
+TITLE2=$critdesc{$crit}
+VIEWER=view.cgi
+FIELDNAMES=Case #~Name~DOB~Division~Initial File~Age~Type~Status~Last Activity~# of Charges~Charges~Event Code~Latest / Farthest Event~$fntitle
+FIELDTYPES=L~I~I~D~D~G~S~A~D~C~I~A~D~A
+EOS
+		print OUTFILE @noShelterDepList;
+		close(OUTFILE);
+		# do delinquency stuff here
+	}
+	
+	return scalar @list;
+}
+
+sub write_nodiv_file
+{
+    my ($f, @nodiv_case) = @_;
+    @nodiv_case = () unless @nodiv_case;
+    open (F, ">>$f");
+    print F @nodiv_case, "\n";
+    close F;
+}
+
+
+# take a casetype and return a "nice" string
+
+sub getdesc {
+    my $casetype=$_[0];
+    my $div=$_[1];
+	if ($div eq "") { return "Juvenile No "; }
+    elsif ( ($div eq "JK") || ($div eq "JL") || ($div eq "JM") ||
+($div eq "JO") || ($div eq "JA") || ($div eq "DG") || ($div eq "JS") || ($div eq "JMH1") || ($div eq "JMH2") || ($div eq "JMH"))
+    { return "Juvenile"; }
+    else { print "Error: unknown casetype of $casetype\n"; }
+}
+
+sub report {
+
+    if ($DEBUG) {
+        print "DEBUG: Building report files\n";
+    }
+    
+    # Build a hash of the charges, keyed on just the case number - it'll be MUCH easier to work with
+    my %chargeHash;
+    
+
+    foreach my $div (keys %divlist) {
+        my $casetype=$divlist{$div};
+		my $cttext=getdesc($casetype,$div);
+        # for each division...
+        my $tim="$YEAR-$M2";
+ 		if (!-d "$outpath/div$div") { mkdir "$outpath/div$div",0755; }
+		$outpath2="$outpath/div$div/$tim";
+		if (!-d "$outpath2") { mkdir("$outpath2",0755); }
+
+		#builddivcs($div);		# write a div case style file
+
+		my $numpend = makelist($casetype,$div,"pend");
+        my $numpenddep = makelist($casetype,$div,"penddep");
+        my $numpendwedep = makelist($casetype,$div,"pendwedep");
+        my $numpendnedep = makelist($casetype,$div,"pendnedep");
+		my $numro = makelist($casetype,$div,"ro");
+        my $numrodep = makelist($casetype,$div,"rodep");
+        my $numrowedep = makelist($casetype,$div,"rowedep");
+        my $numronedep = makelist($casetype,$div,"ronedep");
+        my $numcldep = makelist($casetype,$div,"cldep");
+#       my $numnopend=makelist($casetype,$div,"nopend");
+        if ($numpenddep == 0) {
+            print "WARNING: no pending cases for $div\n";
+        }
+        #
+        # now create the summary file for this division
+        #
+        open OUTFILE,">$outpath2/index.txt" or die "Couldn't open $outpath2/index.txt";
+        print OUTFILE <<EOS;
+DATE=$TODAY
+TITLE1=$county Beach County
+TITLE2=$cttext $casetype
+PATH=case/$county/juv/div$div/$tim/
+HELP=helpbannerciv
+Pending Cases - Dependency~$numpenddep~1~penddep
+With Events - Dependency~$numpendwedep~2~pendwedep
+With No Events - Dependency~$numpendnedep~2~pendnedep
+Reopened Cases - Dependency~$numrodep~1~rodep
+With Events - Dependency~$numrowedep~2~rowedep
+With No Events - Dependency~$numronedep~2~ronedep
+Closed Cases with Future Events - Dependency~$numcldep~1~cldep
+EOS
+        unlink("$outpath/div$div/index.txt");
+        symlink("$outpath2/index.txt","$outpath/div$div/index.txt");
+        }
+
+    }
+
+sub buildwarrants {
+    my(%rawwarrants);
+    if ($DEBUG) {
+        print "DEBUG: Reading warrants.txt\n";
+	    %warrants=readhash("$outpath/warrants.txt");
+    }
+    else {
+	   # get all warrants
+	   # cobdreq_evnt_code = 'JPU'?? @todo
+	   %rawwarrants=sqllookup("SELECT w.CaseNumber
+							   FROM $schema.vWarrant w
+							   INNER JOIN $schema.vCase c
+								ON w.CaseID = c.CaseID
+								AND c.CourtType = 'CJ'
+							   WHERE w.Closed = 'N'", $dbh);
+       writehash("$outpath/rawwarrants.txt",\%rawwarrants);
+       foreach my $c (keys %rawwarrants) {
+	   		if( defined $caselist{$c} ) {
+	             #print "OUTSTANDING WARRANT: $c \n";
+    	         $warrants{$c}=1;
+			}
+       }
+	   if($MSGS) {
+	      print scalar keys %rawwarrants," raw Outstanding warrants\n";
+          print scalar keys %warrants," Outstanding warrants for cases we want \n";
+	   }
+       writehash("$outpath/warrants.txt",\%warrants);
+	}
+}
+
+sub buildcharges {
+    my %rawcharges;
+    if ($DEBUG) {
+        print "DEBUG: Reading charges.txt\n";
+        %charges=readhash("$outpath/charges.txt");
+		%chargecnt=readhash("$outpath/chargecnt.txt");
+    }
+    else {
+       %rawcharges=sqlhash("SELECT h.CaseNumber,
+							h.ChargeCount,
+							CONVERT(VARCHAR(10), h.ChargeDate, 101),
+							h.CourtStatuteNumber,
+							h.CourtStatuteNumSubSect,
+							h.CourtStatuteDescription,
+							h.CourtStatuteLevel,
+							h.CourtStatuteDegree,
+							h.Disposition,
+							CONVERT(VARCHAR(10), h.DispositionDate, 101),
+							1 as fcic
+							FROM $schema.vCharge h
+							INNER JOIN $schema.vCase c
+								ON h.CaseID = c.CaseID
+								AND h.CourtType IN ('CJ') ", 2, $dbh);
+       foreach my $charge (keys %rawcharges) {
+	      my($case,$chrg)=split ';',$charge;
+          if( defined $caselist{$case} ) {
+	         $charges{$case.";".$chrg}=$rawcharges{$charge};
+	      }
+       }
+       writehash("$outpath/charges.txt",\%charges);
+    }
+    foreach (keys %charges) {
+        my($case,$count,$filedate,$statute,$subsec,$desc,$level,$degree,$dispcode,$dispdate,$fcic)=split '~',$charges{$_};
+        if ($dispcode eq "") { $chargepending{$case}=1; }
+        if (!defined($caseCharges{$case})) {
+            $caseCharges{$case} = [];
+        }
+        my %temp = (
+            'FileDate' => $filedate,
+            'Statute' => $statute,
+            'SubSec' => $subsec,
+            'Desc' => $desc,
+            'Level' => $level,
+            'Degree' => $degree
+        );
+        push (@{$caseCharges{$case}}, \%temp);
+    }
+	foreach (keys %caselist) {
+		my $ind=1;
+		while (defined $charges{$_.";".$ind} ) { $ind++; }
+		$chargecnt{$_} = $ind-1;
+	}
+    writehash("$outpath/chargecnt.txt",\%chargecnt);
+    
+    # Build a hash of the charges, keyed on just the case number - it'll be MUCH easier to work
+}
+
+sub buildlastdocket {
+    my %rawlastdocket;
+    if ($DEBUG) {
+        print "DEBUG: Reading lastdocket.txt\n";
+    	%lastdocket=readhash("$outpath/lastdocket.txt");
+    }
+    else {
+       %rawlastdocket=sqlhash("SELECT a.CaseNumber,
+							  CONVERT(varchar(10), MAX(a.EffectiveDate), 101),
+							  MAX(a.DocketCode) AS DocketCode
+	                          FROM $schema.vDocket a
+							  INNER JOIN $schema.vCase b
+								ON a.CaseID = b.CaseID
+								AND b.CourtType in $casetypes
+							  WHERE a.DocketCode NOT IN ('INDIV', 'INACT')	
+							  GROUP BY a.CaseNumber", 1, $dbh);
+       foreach my $case (keys %rawlastdocket) {
+         if( defined $caselist{$case} ) {
+	         $lastdocket{$case}=$rawlastdocket{$case};
+	     }
+       }
+       writehash("$outpath/lastdocket.txt",\%lastdocket);
+    }
+}
+
+# Now, uses cdrdoct_filing_date rather than cdrdoct_activity_date as the last activity date.
+sub buildlastactivity {
+	my $justcases = shift;
+	my $dbh = shift;
+	
+	my %rawlastactivity;
+	if ($DEBUG) {
+		print "DEBUG: Reading lastactivity.txt\n";
+		%lastactivity=readhash("$outpath/lastactivity.txt");
+    } else {
+		my $count = 0;
+		my $perQuery = 1000;
+		
+		while ($count < scalar(@{$justcases})) {
+			my @temp;
+			
+			getArrayPieces($justcases, $count, $perQuery, \@temp, 1);
+			my $inString = join(",", @temp);
+			
+			#my $query = qq {
+			#	SELECT
+			#		a.CaseNumber,
+			#		CONVERT(varchar(10), MAX(a.EffectiveDate), 101) AS FilingDate,
+			#		MAX(a.DocketCode) AS DocketCode
+			#	FROM
+			#		$schema.vDocket a
+			#	INNER JOIN
+			#		$schema.vCase b
+			#		ON a.CaseID = b.CaseID
+			#		AND b.CaseNumber in ($inString)
+			#		-- AND b.CourtType in $casetypes
+			#		GROUP BY a.CaseNumber
+			#};
+			
+			my $query = qq {
+				SELECT 
+					a.CaseNumber,
+					CONVERT(varchar(10), MAX(a.EffectiveDate), 101) AS FilingDate,
+					DocketCode
+				FROM 
+					$schema.vDocket a
+				INNER JOIN $schema.vCase c
+					ON a.CaseID = c.CaseID
+					AND c.CourtType IN $casetypes
+					AND c.CaseNumber in ($inString)
+				WHERE a.EffectiveDate = 
+				(
+					SELECT MAX(b.EffectiveDate)
+					FROM $schema.vDocket b
+					WHERE b.CaseID = a.CaseID
+					AND b.DocketCode NOT IN ('INDIV', 'INACT')
+				)
+				AND a.DocketCode NOT IN ('INDIV', 'INACT')
+				GROUP BY a.CaseNumber, DocketCode
+			};
+			
+			my %rawlastactivity;
+			getData(\%rawlastactivity, $query, $dbh, {hashkey => 'CaseNumber', flatten => 1});
+			
+			foreach my $case (keys %rawlastactivity) {
+				if( defined $caselist{$case} ) {
+					$lastactivity{$case} = sprintf("%s~%s", $rawlastactivity{$case}->{'CaseNumber'}, $rawlastactivity{$case}->{'FilingDate'});
+					#$lastactivity{$case}=$rawlastactivity{$case};
+				}
+			}
+			
+			$count += $perQuery;
+		}
+		writehash("$outpath/lastactivity.txt",\%lastactivity);
+    }
+}
+
+sub buildevents {
+	my $caselist = shift;
+	
+    my %rawevents;
+    if ($DEBUG) {
+        print "DEBUG: Reading events.txt\n";
+        %events=readhash("$outpath/events.txt");
+    } else {
+		
+		getVrbEvents(\%rawevents, 0, $caselist);
+		
+		# Build a new hash with the keys having stripped dashes, so we get the match below
+		#my %newRawEvents;
+		#foreach my $key (keys %rawevents) {
+		#	next if ($key =~ /^50/);
+		#	my $strippedKey = $key;
+		#	$strippedKey =~ s/-//g;
+		#	$newRawEvents{$strippedKey} = $rawevents{$key};
+		#}
+		
+		foreach my $case (keys %rawevents) {
+			if( defined $caselist{$case} ) {
+				$events{$case} = $rawevents{$case};
+			}
+		}
+
+        #writehash("$outpath/events.txt",\%events);
+    }
+}
+
+
+
+sub buildcaselist {
+    my $caselist = shift;
+	my $divs = shift;
+	my $dbh = shift;
+    
+    my $caseString = "";
+    if (defined($caselist)) {
+        my @temp;
+        foreach my $case (@{$caselist}) {
+            push(@temp,"'$case'");
+        }
+        $caseString = "and CaseNumber in (" . join(",", @temp) . ") ";
+    }
+	
+	my $divStr ="";
+	if (defined($divs)) {
+		# This should be an array ref of the divisions.
+		my @temp;
+		foreach my $div (@{$divs}) {
+			push(@temp, "'$div'");
+		}
+		my $inStr = join(",", @temp);
+		$divStr = "and DivisionID in ($inStr)";
+	}
+    
+    my ($nodiv,%divassign,%rawcase,$r);
+    
+    my $flagDbh = dbConnect("icms");
+	my $jdbh = dbConnect("judge-divs");
+    my $magQuery = qq {
+        select
+            juv_cal_divisions AS division,
+            SUBSTRING_INDEX(magistrate_type, '/', 1) AS magistrate_type,
+            last_name,
+            first_name,
+            middle_name,
+            SUBSTRING_INDEX(flagtype, '/', 1) AS flagtype,
+            SUBSTRING_INDEX(hearing_room, '/', 1) AS hearing_room
+        from
+            magistrates
+        where
+            (magistrate_type like '%Juvenile%')
+        order by
+            division
+    };
+    getData(\%divassign, $magQuery, $jdbh, {hashkey => 'division', flatten => 1});
+    
+    my $masterFlagStr;
+    my $magRooms;
+    my $divCount = 0;
+    my $query;
+    foreach my $divID (keys %divassign) {
+        $divlist{$divID} = 'MAGISTRATE ' . $divassign{$divID}->{'last_name'} . ', ' . $divassign{$divID}->{'first_name'} . ' ' . $divassign{$divID}->{'middle_name'};
+    
+    	my %tempFlags;
+    	my @magistrateFlags;
+    	my $flagQuery = qq{
+    		SELECT casenum
+    		FROM flags
+    		WHERE flagtype = ?
+    		AND active = 1
+    	};
+    	
+    	getData(\%tempFlags, $flagQuery, $flagDbh, {valref => [$divassign{$divID}->{'flagtype'}], hashkey => "casenum"});
+	    foreach my $cn (keys %tempFlags) {
+			push(@magistrateFlags, "'$cn'");
+		}
+		
+		my $flagStr = join(",", @magistrateFlags);
+		
+		if($flagStr eq ''){
+			$flagStr = "'x'";
+		}
+		$masterFlagStr .= $flagStr;
+		
+		if($divCount ne 0){
+			$query .= qq{
+				UNION
+			};
+			
+			$magRooms .= ", ";
+		}
+		
+		$magRooms .= "'$divassign{$divID}->{'hearing_room'} (Main Branch)'";
+		
+		$query .= qq{
+			SELECT c.CaseNumber,
+				'$divID' AS DivisionID,
+				c.DivisionID AS Actual_DivisionID,
+				NULL as CaseStyle,
+				c.CaseStatus,
+				c.CourtType,
+				CONVERT(varchar(10), FileDate, 101) AS FileDate,
+				CONVERT(varchar(10), c.DispositionDate, 101) AS DispositionDate,
+				CONVERT(varchar(10), c.ReopenDate, 101) AS ReopenDate,
+				CONVERT(varchar(10), c.ReopenCloseDate, 101) AS ReopenCloseDate,
+				c.CaseType
+			FROM 
+				$schema.vCase c
+			WHERE (
+					c.CaseStatus not in $NOTACTIVE
+					OR (
+						 c.CaseStatus IN $NOTACTIVE
+						 AND c.CaseID IN (
+						 	SELECT e.CaseID
+							FROM $schema.vCourtEvent e
+							WHERE e.CaseID = c.CaseID
+							AND e.CourtEventDate >= CURRENT_TIMESTAMP
+							AND e.Cancelled IN ('N', 'No')
+						 )
+					)
+				)
+				AND Sealed = 'N' 
+				AND Expunged = 'N'
+				$caseString $divStr	
+				AND CaseNumber IN ($flagStr)	
+		};
+		
+		$divCount++;
+    	
+    }
+    
+    # keys=all divisions in use; values=# cases in each
+    if ($DEBUG) {
+        print "DEBUG: Reading rawcase.txt\n";
+		%rawcase=readhash("$outpath/rawcase.txt");
+    } else {
+		if($MSGS) {
+			print "doing rawcase sql... ".timestamp()."\n";
+		}
+		# simplified....
+		$query .= qq {
+			UNION
+			SELECT
+				c.CaseNumber,
+				e.DivisionCode AS DivisionID,
+				c.DivisionID AS Actual_DivisionID,
+				NULL as CaseStyle,
+				c.CaseStatus,
+				c.CourtType,
+				CONVERT(varchar(10), c.FileDate, 101) AS FileDate,
+				CONVERT(varchar(10), c.DispositionDate, 101) AS DispositionDate,
+				CONVERT(varchar(10), c.ReopenDate, 101) AS ReopenDate,
+				CONVERT(varchar(10), c.ReopenCloseDate, 101) AS ReopenCloseDate,
+				c.CaseType
+			FROM
+				$schema.vCourtEvent e
+			INNER JOIN
+				$schema.vCase c
+					ON e.CaseID = c.CaseID 	
+					AND c.Sealed = 'N' 
+					AND c.Expunged = 'N'
+					$caseString $divStr
+					AND c.CaseNumber NOT IN ($masterFlagStr)
+			WHERE
+				CourtRoom IN ($magRooms)	
+				AND CourtEventDate >= CURRENT_TIMESTAMP 
+				AND Cancelled IN ('N', 'No')
+				
+		};
+		
+		getData(\%rawcase, $query, $dbh, {hashkey => "CaseNumber", flatten => 1});
+		
+		if($MSGS) {
+			$r = keys %rawcase;
+			print "got all the rawcase rows - $r of them ".timestamp()."\n";
+		}
+
+    }
+	
+	if($MSGS) {
+		print "coursing through rawcase hash - filling caselist... ".timestamp()."\n";
+	}
+	
+	foreach my $casenum (sort keys %rawcase) {
+		my $rec = $rawcase{$casenum};
+		my $div = $rec->{'DivisionID'};
+		my $desc = $rec->{'CaseStyle'};
+		my $status = $rec->{'CaseStatus'};
+		my $casetype = $rec->{'CourtType'};
+		my $filedate = $rec->{'FileDate'};
+		my $dispodate = $rec->{'DispositionDate'};
+		my $reopendate = $rec->{'ReopenDate'};
+		my $reopenclosedate = $rec->{'ReopenCloseDate'};
+		my $ctyp = $rec->{'CaseType'};
+		my $real_div = $rec->{'Actual_DivisionID'};
+		
+		if ($div eq "") {
+			$nodiv++;
+			write_nodiv_file("$outpath/nodiv_civcases.txt","$casenum, status=$status \n");
+		}
+		
+		$caselist{$casenum}="$div~$desc~$status~$casetype~$filedate~$dispodate~$reopendate~$reopenclosedate~$ctyp~$real_div";
+        
+        if ($reopencodes=~/,$status,/) {
+			# a reopened case
+			$reopened{$casenum}=1;
+		}
+		
+		if ($closedcodes=~/,$status,/) {
+			# a closed case
+			$closed{$casenum}=1;
+		}
+    }
+	
+	if($MSGS) {
+		print "$nodiv Cases with No Division!\n";
+	}
+	
+	write_nodiv_file("$outpath/nodiv_civcases.txt","$nodiv cases with no division");
+	writehash("$outpath/caselist.txt",\%caselist);
+	if($MSGS) {
+		print "done building caselist ".timestamp()."\n";
+	}
+}
+
+sub findit{
+    my($val,$array)= @_;
+	my(@array)= @$array;
+	foreach (@array) {
+	   if ( $val eq $_ ) { return 1; }
+	}
+	return 0;
+}
+
+
+#
+# makeastyle    makes a case style of the form "x v. y" where x and y are the
+#               first plaintiff/defendant, petitioner/respondent, etc.
+#               listed for a case.
+sub makeastyle {
+    my($case_id,$i,$typ,$last,$first,$middle,$name,$fullname,$key,$etal,%ptype,$x,$pidm,$assoc,$ptyp_desc);
+    if (scalar keys %partylist==0) {
+		die "scjuv_mag.pl: makeastyle: partylist is empty.";
+    }
+    
+    $case_id=shift;
+    %ptype=();
+    foreach $i (1..30) {  # 30 parties max
+		$key="$case_id;$i";
+		if (!defined $partylist{$key}) {
+			next;
+		}
+		($typ,$last,$first,$middle,$pidm,$assoc,$ptyp_desc)=(split '~',$partylist{$key})[2..8];
+		
+		#only want kids for this one
+		#if($typ eq "CHLD" && ($pidm == (split '~',$doblist{$key})[2])){
+		if($typ eq "CHLD" || ($typ eq "HYBRID" && ($ptyp_desc eq "CHILD (CJ)"))){
+			if (!defined $middle) {
+				$middle="";
+			}
+			if (!defined $first) {
+				$first="";
+			}
+			if (!defined $last) {
+				$last="";
+			}
+			$middle=trim($middle);
+			$last=trim($last);
+			$first=trim($first);
+			$name="$last";
+			$fullname="$last";
+			if(length($first) > 0) {
+				$fullname="$last, $first $middle";
+			}
+			
+			if ($typ=~/DECD/) {
+				return "Estate of $last, $first $middle";
+			} elsif ($typ=~/WARD/) {
+				return "Guardianship of $last, $first $middle";
+			} elsif ($typ=~/^AI/) {
+				return "Incapacity of $last, $first $middle";
+			} elsif (!defined $ptype{$typ}) {
+				$ptype{$typ} = $fullname;
+			} else {
+				if (!($ptype{$typ}=~/, et al./)) {
+					$ptype{$typ}.=", et al.";
+				}
+			}
+		}
+    }
+    
+    if (defined $ptype{'PLT'} and defined $ptype{'DFT'}) {
+		return "$ptype{'PLT'} v. $ptype{'DFT'}";
+    } elsif (defined $ptype{'CPLT'} and defined $ptype{'DFT'}) {
+		return "$fullname"; # traffic cases
+    } elsif (defined $ptype{'PET'} and defined $ptype{'RESP'}) {
+		return "$ptype{'PET'} v. $ptype{'RESP'}";
+    } else {
+		return join " ", sort values %ptype;
+    }
+}
+
+
+#
+# buildstyles  fills the %style hash with a text style for each case.
+#
+sub buildstyles() {
+	my $dbh;
+    if ($DEBUG) {
+		print "DEBUG: Reading styles.txt\n";
+		%style=readhash("$outpath/styles.txt");
+    } else {
+		foreach my $case (keys %caselist) {
+			my ($div, $style, $name, $status, $type, $filedate, $dispodate, $reopendate, $reopenclosedate, $courttype, $real_div) = split(/~/, $caselist{$case});
+			my $caseage = getScCaseAge($filedate, $dispodate, $reopendate, $reopenclosedate, $status, $dbh);
+			$style{$case} = sprintf("%s~%s~%d", makeastyle($case), $real_div, $caseage);
+		}
+		writehash("$outpath/styles.txt",\%style);
+    }
+}
+
+sub getScCaseAge {
+    # Calculate the age of a case.  If a case is reopened, then the age is
+    # calculated from the date of the reopen.  If a case is closed, then the age
+    # calculation will stop with the close date.
+    my $filedate = shift;
+    my $dispodate = shift;
+    my $reopendate = shift;
+    my $reopenclosedate = shift;
+    my $status = shift;
+    my $dbh = shift;
+    
+	if (!defined($dbh)) {
+		$dbh = dbConnect($dbName);
+	}
+    
+    my $openDate = $filedate;
+    # Default to today.  Overrides below.
+    my $endDate = today();
+    
+    if ((defined($reopendate)) && ($reopendate ne '')) {
+		# A reopened case
+		$openDate = $reopendate;
+		if ((defined($reopenclosedate)) && ($reopenclosedate ne '')) {
+		    # A reopened and then re-disposed case with a reopen disposition date
+		    if (inArray(['Closed','Disposed'], $status)) {
+				$endDate = $reopenclosedate;
+		    }
+		}
+    } elsif ((defined($dispodate)) && ($dispodate) ne '') {
+		# A case that wasn't reopened but has been disposed.
+		$endDate = $dispodate;
+    }
+    
+    # We want the dates in the same format
+    if ($endDate =~ /(\d\d\d\d)-(\d\d)-(\d\d)/) {
+		$endDate = sprintf("%02d/%02d/%04d", $2, $3, $1);
+    }
+    
+    if ($openDate =~ /(\d\d\d\d)-(\d\d)-(\d\d)/) {
+		$openDate = sprintf("%02d/%02d/%04d", $2, $3, $1);
+    }
+    
+    my ($mt,$dt,$yt) = split(/[-\/]/,$endDate);
+    my ($mc,$dc,$yc) = split(/[-\/]/,$openDate);
+    
+    my $days;
+
+    if (defined $yc) {
+		$days = Delta_Days($yc,$mc,$dc,$yt,$mt,$dt);
+    } else {
+		$days = 0;
+    }
+    
+    return $days;
+}
+
+sub doit() {
+	my @divlist;
+	my $readCaseList;
+	
+	GetOptions ("d:s" => \@divlist, "c" => \$readCaseList);
+	
+    if($MSGS) {
+		print "starting juvenile reports scjuv_mag ".timestamp()."\n";
+    }
+    
+    if (@ARGV==1 and $ARGV[0] eq "DEBUG") {
+		$DEBUG=1;
+		print "DEBUG!\n";
+    }
+    $outpath="/var/www/$county/juv";
+    $webpath="/case/$county/juv";
+
+    rename("$outpath/nodiv_juvcases.txt", "$outpath/nodiv_juvcases.txt_prev");
+	
+	if($MSGS) {
+		print "starting buildcaselist ".timestamp()."\n";
+	}
+	
+	if (defined($readCaseList)) {
+		open(INFILE, "/var/www/Palm/civ/caselist.txt");
+		while (my $line = <INFILE>) {
+			chomp $line;
+			my ($case, $data) = split("\`", $line);
+			$caselist{$case} = $data;
+		}
+		close INFILE;
+	} else {
+		if (scalar(@divlist)) {
+			buildcaselist(undef, \@divlist, $dbh);
+		} else {
+			buildcaselist(undef, undef, $dbh);
+		}
+	}
+	
+	
+	if($MSGS) {
+		#print "starting updateCaseNotes ".timestamp()."\n";
+    }
+	
+	my @justcases = keys(%caselist);
+	
+	my @depCases;
+	my @delCases;
+	foreach my $case (@justcases) {
+		if ($case =~ /DP/) {
+			push(@depCases, $case)
+		} elsif ($case =~ /CJ/) {
+			push(@delCases, $case);
+		}
+	}
+	
+	# Get cases with shelter hearings
+	getLastDocketFromList(\@depCases, ['SH'], \%shelterHearings, "showcase", $dbh);
+	
+	my @shelters = keys(%shelterHearings);
+	
+	getLastDocketFromList(\@shelters, ['PDDP'], \%depDisposed, "showcase", $dbh);
+	
+	#updateCaseNotes(\%caselist,\@casetypes);
+	
+	buildNoHearings(\@justcases, \%noHearings);
+	
+    if($MSGS) {
+		print "starting buildwarrants ".timestamp()."\n";
+    }
+    
+    buildwarrants;
+    
+    if($MSGS) {
+		print "starting buildcharges ".timestamp()."\n";
+    }
+    buildcharges;
+    
+    if($MSGS) {
+		print "starting buildlastdocket ".timestamp()."\n";
+    }
+    buildlastdocket;
+    
+    if($MSGS) {
+		print "starting buildlastactivity ".timestamp()."\n";
+    }
+    buildlastactivity (\@justcases, $dbh);
+	
+    if($MSGS) {
+		print "starting buildevents ".timestamp()."\n";
+    }
+    buildevents (\@justcases);
+	
+#	if($MSGS) {
+#		print "starting getVrbEventsByCaseList ".timestamp()."\n";
+#    }
+#	
+#	getVrbEventsByCaseList(\@justcases, \%events);
+#    
+    #if($MSGS) {
+	#	print "starting buildnotes ".timestamp()."\n";
+    #}
+    #buildnotes(\%merged, \%flags, $casetypes, $outpath, $DEBUG);
+	
+	my $merged = \%merged;
+	my $flags = \%flags;
+	
+	foreach my $casenum (keys(%caselist)) {
+        my $caseCopy = $casenum;
+        my $checkCase_vrb;
+        if ($caseCopy =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
+			$checkCase_vrb = sprintf("%04d-%s-%06d", $2, $3, $4);
+		}
+            
+        if (defined($merged->{$checkCase_vrb})) {
+			$merged->{$casenum} = $merged->{$checkCase_vrb};
+            delete $merged->{$checkCase_vrb};
+		}
+		if (defined($flags->{$checkCase_vrb})) {
+			$flags->{$casenum} = $flags->{$checkCase_vrb};
+            delete $flags->{$checkCase_vrb};
+		}
+    }
+    
+    if($MSGS) {
+		print "starting buildpartylist ".timestamp()."\n";
+    }
+	buildPartyListMag(\%partylist,$outpath,\@justcases,$dbh);
+    
+    if($MSGS) {
+		print "starting buildstyles ".timestamp()."\n";
+    }
+    buildstyles;
+    
+    if($MSGS) {
+		print "starting builddobs ".timestamp()."\n";
+	}
+    builddobs(\@justcases);
+    
+    if($MSGS) {
+		print "starting report ".timestamp()."\n";
+    }
+    report;
+    
+    if($MSGS) {
+		print "finished juvenile reports scjuv_mag ".timestamp()."\n";
+    }
+}
+
+
+#
+# MAIN PROGRAM STARTS HERE!
+#
+
+doit();

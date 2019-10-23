@@ -1203,7 +1203,7 @@
 							<td>{$n['event_date']}</td>
 							<td style="width:50%">{$n['note']}</td>
 							<td>{$n['created_by']}</td>
-							<td style="text-align:center"><a href="#/" class="deleteNote" id="{$n['note_id']}"><img src="/icons/delete.png"/></a></td>
+							<td style="text-align:center"><a href="#/" class="deleteNote" id="{$n['note_id']}"><img src="/jvsicons/delete.png"/></a></td>
 						</tr>
 					{/foreach}
 				</tbody>

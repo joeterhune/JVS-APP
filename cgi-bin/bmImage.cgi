@@ -15,7 +15,7 @@
 # 11/05/2018 jmt modified to work with benchmark
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -60,7 +60,7 @@ sub doit {
     my $casenum = getDocketItems($info,\@images,$dbh,$schema);
 	$casenum = $info->param('ucn');
 	my $ucn = $casenum;
-    #$casenum =~ s/^58//g;
+    #$casenum =~ s/^50//g;
     my $caseid = $params{'caseid'};
 	 my $docketid = $params{'docketid'};
 
@@ -77,7 +77,7 @@ sub doit {
 	#	$showTif = 1;
 	#}
 	############## end comment
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
 	my $sealedAppealsGroup = $conf->{'ldapConfig'}->{'sealedappealsgroup'};

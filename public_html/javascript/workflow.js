@@ -670,7 +670,7 @@ function WorkFlowSignFormOrder(docid,signas) {
 function WorkFlowBulkSign(qid) { // selects all rows in the table it's in..
     // qid is the page that this button is on...
     var tid='wf_maintable_'+qid;
-    $("#wf_bulksign_status_"+qid).html('<img src=/icms/icons/spinner.gif>');
+    $("#wf_bulksign_status_"+qid).html('<img src=/icms/jvsicons/spinner.gif>');
     var signed = 0;
     var signcheck = $('#' + tid).find('.signCheck:checked');
     var bulksign = $(signcheck).length;
@@ -714,7 +714,7 @@ function WorkFlowBulkSign(qid) { // selects all rows in the table it's in..
 function WorkFlowBulkEfile(qid) { // selects all rows in the table it's in..
     // qid is the page that this button is on...
     var tid='wf_maintable_'+qid;
-    $("#wf_bulksign_status_"+qid).html('<img src="/icons/spinner.gif">');
+    $("#wf_bulksign_status_"+qid).html('<img src="/jvsicons/spinner.gif">');
     var filed = 0;
     var filecheck = $('#' + tid).find('.fileCheck:checked');
     var bulkfile = $(filecheck).length;

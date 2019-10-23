@@ -1,12 +1,13 @@
 [% INCLUDE top/header.tt %]
 <script src="/javascript/casenotes/notesAndFlags.js?1.6" type="text/javascript"></script>
-<script src="/javascript/casedetails.js?1.7" type="text/javascript"></script>
+<script src="/javascript/casedetails.js?1.8" type="text/javascript"></script>
 <script src="/javascript/casedetails/utils.js?1.5" type="text/javascript"></script>
 <div style="padding-left:1%">
             <script type="text/javascript">
-            $(document).ready(function() {
-                        $('#fullOtherCaseDiv_[% data.ucn %]').on("click", ".allCaseDocket", function () {
-                        var cases = new Array;
+            $(document).ready(function() {     
+            	
+				$('#fullOtherCaseDiv_[% data.ucn %]').on("click", ".allCaseDocket", function () {
+                    var cases = new Array;
                     var case_ids = new Array;
                     $('#othercases_[% data.ucn %]').find('.otherCaseCheck:checked').each(function (i,e) {
                     	var value = $(e).val().split(';');
@@ -854,7 +855,11 @@
                                                                     <td style="text-align: center">[% charge.ChargeCount %]</td>
                                                                     <td class="date">[% charge.ChargeDate %]</td>
                                                                     <td style="text-align: center">[% charge.CourtStatuteNumber %]</td>
-                                                                    <td style="text-align: center">[% charge.CitationNumber %]</td>
+                                                                    [% IF charge.CitationNumber %]
+                                                                    	<td style="text-align: center"><a class="imageLink" data-casenum="[% charge.CaseNumber %]" data-docketcode="[% charge.DocketCode %]" data-caseid="[% charge.CaseID %]" data-docname="[% charge.DocketDescription %]" data-ucnobj="[% charge.UCN %]|[% charge.ObjectId %]">[% charge.CitationNumber %]</a></td>                   
+                                                                    [% ELSE %]
+                                                                    	<td style="text-align: center">&nbsp;</td>
+                                                                    [% END %]
                                                                     <td style="text-align: center">[% charge.CourtStatuteDescription %]</td>
                                                                     <td style="text-align: center">[% charge.CourtStatuteLevel %] [% charge.CourtStatuteDegree %]</td>
                                                                     <td style="text-align: center">[% charge.Disposition %]</td>
@@ -1023,7 +1028,7 @@
                                                             [% FOREACH charge IN data.charges %]
                                                             [% IF charge.CitationNumber %]
                                                                 <tr>
-                                                                    <td>[% charge.CitationNumber %]</td>
+                                                                   	<td style="text-align: center"><a class="imageLink" data-casenum="[% charge.CaseNumber %]" data-docketcode="[% charge.DocketCode %]" data-caseid="[% charge.CaseID %]" data-docname="[% charge.DocketDescription %]" data-ucnobj="[% charge.UCN %]|[% charge.ObjectId %]">[% charge.CitationNumber %]</a></td>                   
                                                                     <td style="text-align: center;[% IF charge.AggressiveDriving == 'Y' %] color: red[% END %]">[% charge.AggressiveDriving %]</td>
                                                                     <td style="text-align: center;[% IF charge.CommercialDL == 'Y' %] color: red[% END %]">[% charge.CommercialDL %]</td>
                                                                     <td style="text-align: center">[% charge.ActualSpeed %]</td>
@@ -1177,6 +1182,16 @@
                                     </td>
                                 </tr>
                                 
+                                <tr>
+                                	<td colspan="2">
+                                    	<br/>
+										[% IF data.odpuser %]
+                                        	<button onclick="window.location.href='/orders/igo.php?ucn=[% data.ucn %]&caseid=[% data.caseinfo.CaseID %]&new=Y'" class="btn btn-primary printHide" title="Create Orders">Create Orders</button>
+										[% ELSE %]
+											<button class="btn btn-primary printHide noaccess" title="You do not have access to create orders.">Create Orders</s></button>
+										[% END %]
+									</td>
+                                </tr>
             
                                 <!-- Docket -->
                                 <tr class="spacer"><td>&nbsp;</td></tr>

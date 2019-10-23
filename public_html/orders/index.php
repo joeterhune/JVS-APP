@@ -1,21 +1,21 @@
 <?php
 # /orders/index.php - filles in and posts web form data, then generates a PDF 
 #                  from JSON data and then allows various options from there...
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/caseinfo.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("../workflow/wfcommon.php");
 
 checkLoggedIn();
-
-include "../icmslib.php";
-include "../caseinfo.php";
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
-
 
 #
 #  MAIN PROGRAM 
@@ -51,8 +51,8 @@ $oucn = $ucn;
 list($ucn, $casetype) = sanitizeCaseNumber($oucn);
 
 if ($casetype == "showcase") {
-    if (!preg_match("/^50/", $ucn)) {
-        $ucn = sprintf("50-%s",$ucn);
+    if (!preg_match("/^58/", $ucn)) {
+        $ucn = sprintf("58-%s",$ucn);
         $smarty->assign('ucn', $ucn);
     }
 } elseif ($casetype == "banner") {
@@ -90,10 +90,10 @@ $queueItems = array();
 $wfcount = getQueues($queueItems, $allqueues, $dbh);
 
 if(isset($docid) && !empty($docid)){
-	$url = "/case/orders/index.php?ucn=" . $ucn . "&docid=" . $docid;
+	$url = "/orders/index.php?ucn=" . $ucn . "&docid=" . $docid;
 }
 else{
-	$url = "/case/orders/index.php?ucn=" . $ucn . "&caseid=" . $case_id;
+	$url = "/orders/index.php?ucn=" . $ucn . "&caseid=" . $case_id;
 }
 
 createTab($ucn, $url, 1, 1, "cases",
@@ -116,7 +116,7 @@ if ((!array_key_exists('DocType', $orderObj)) || ($orderObj['DocType'] == 'IGO' 
 
 $smarty->assign('doc_type', $orderObj['DocType']);
 
-$fromAddr = sprintf("CAD-Division%s@jud12.flcourts.org", $div);
+$fromAddr = sprintf("CAD-Division%s@pbcgov.org", $div);
 
 // Is it an existing document?
 if ($orderObj['docid'] != '') {

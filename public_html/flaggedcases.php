@@ -4,7 +4,7 @@
 // 06/23/10 lms add db connection below for icms
 // 04/11/11 lms Making flags a multiple choice.
 // 06/10/11 lms Check Active Cases as a default.
-require_once $_SERVER['DOCUMENT_ROOT']."/case/php-lib/db_functions.php";
+require_once $_SERVER['JVS_DOCROOT']."/php-lib/db_functions.php";
 
 $lev = 1;
 if (isset($_REQUEST['lev'])) {
@@ -49,7 +49,7 @@ if(isset($dbh)) {
 	}
 
     // generate a list of all divisions using judge page list
-	$fp=fopen("/usr/local/icms/etc/judgepage.conf","r");
+	$fp=fopen($_SERVER['JVS_ROOT'] . "/conf/judgepage.conf","r");
 	while (!feof($fp)) {
 		$line=fgets($fp,1024);
 		$line=substr($line,0,-1);
@@ -67,8 +67,8 @@ if(isset($dbh)) {
 <html>
 	<head>
 		<title>Lookup Flagged Cases</title>
-		<link rel="stylesheet" type="text/css" href="/case/style/jquery-ui.css">
-		<link rel="stylesheet" type="text/css" href="/case/icms1.css">
+		<link rel="stylesheet" type="text/css" href="/style/jquery-ui.css">
+		<link rel="stylesheet" type="text/css" href="/icms1.css">
 
 		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-1.8.3.min.js" type="text/javascript"></script>
 		<script src="https://e-services.co.Sarasota-beach.fl.us/cdn/jslib/jquery-ui-1.10.3.min.js" type="text/javascript"></script>
@@ -99,7 +99,7 @@ if(isset($dbh)) {
 		$(document).ready(function () {
 			$(".datepicker").datepicker({
 				showOn: "both",
-				buttonImage: "/case/style/images/calendar.gif",
+				buttonImage: "/style/images/calendar.gif",
 				buttonImageOnly: true,
 				changeMonth: true,
 				changeYear: true,
@@ -114,8 +114,8 @@ if(isset($dbh)) {
 
 	<body onload="SetBack('ICMS_<?php echo $lev;?>');">
 	<div>
-		<a href="/case/index.php">
-			<img src="/case/icmslogo.jpg" alt="ICMS Logo" style="border: none">
+		<a href="/index.php">
+			<img src="/icmslogo.jpg" alt="ICMS Logo" style="border: none">
 		</a>
 	</div>
 

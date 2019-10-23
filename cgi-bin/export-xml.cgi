@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -89,6 +89,9 @@ my $formath3=$workbook->addformat();
 $formath3->set_bold();
 $formath3->set_size(11);
 
+my $formatst=$workbook->addformat();
+$formatst->set_font_strikeout();
+
 my $row = 2;
 my $col = 0;
 
@@ -135,6 +138,12 @@ my $link="$protocol://$ENV{'HTTP_HOST'}/cgi-bin/search.cgi?name=";
 
 foreach my $case (@{$cases}) {
     $col = 0;
+    
+    my $st = "";
+ 	if ($case->{'isCanceled'} eq "Y") {
+	 	$st = $formatst;
+	}
+    
     foreach my $header (@{$exportHeaders}) {
         $case->{$header->{'XMLField'}} =~ s/&nbsp;/ /g;
         $case->{$header->{'XMLField'}} =~ s/<br\/>/\n/g;
@@ -143,37 +152,43 @@ foreach my $case (@{$cases}) {
             $worksheet->write($row,$col,"",$format1)
         } elsif ($header->{'XMLField'} eq "OpenWarrants") {
             if ($case->{$header->{'XMLField'}}) {
-                $worksheet->write($row,$col,'Y');
+                $worksheet->write($row, $col, 'Y', $st);
             } else {
-                $worksheet->write($row,$col,'N');
+                $worksheet->write($row, $col, 'N', $st);
             }
         } elsif ($header->{'XMLField'} eq "CaseNumber") {
             # A case link
             my $url = sprintf("%s%s", $link, $case->{$header->{'XMLField'}});
-            $worksheet->write_url($row,$col, $url, $case->{$header->{'XMLField'}});
+            $worksheet->write_url($row, $col, $url, $case->{$header->{'XMLField'}}, $st);
         } elsif ($header->{'XMLField'} eq "ConfNum") {
             # Need to force this as a string.
-            $worksheet->write_string($row,$col,$case->{$header->{'XMLField'}});
-        } elsif($header->{'XMLField'} eq "Motion"){
-            my @links = grep(/<a.*href=.*>/, $case->{$header->{'XMLField'}});
-
-			foreach my $c (@links){
-			  $c =~ /<a.*href="([\s\S]+?)".*>/;
-			  my $link = $1;
-			  $c =~ /<a.*href.*>([\s\S]+?)<\/a>/;
-			  my $title = $1;
-			  $worksheet->write_url($row, $col, $link, $title);
-			}
-			
-			if(scalar(@links) == 0){
-				my $hs = HTML::Strip->new();
-        		my $clean_text = $hs->parse($case->{$header->{'XMLField'}});
-  				$hs->eof;
+            $worksheet->write_string($row,$col,$case->{$header->{'XMLField'}}, $st);
+        } elsif($header->{'XMLField'} eq "Motion" || ($header->{'XMLField'} eq "AttorneyInfo") || ($header->{'XMLField'} eq "ContactInfo") || ($header->{'XMLField'} eq "Attorneys")){
+  			
+  			$case->{$header->{'XMLField'}} =~ s/<ul>//g;
+  			$case->{$header->{'XMLField'}} =~ s/<\/ul>//g;
+  			$case->{$header->{'XMLField'}} =~ s/<li>//g;
+  			$case->{$header->{'XMLField'}} =~ s/<\/li>/\n/g;
+  			$case->{$header->{'XMLField'}} =~ s/<br>/\n/g;
+  			
+  			my $hs = HTML::Strip->new();
+        	my $clean_text = $hs->parse($case->{$header->{'XMLField'}});
+  			$hs->eof;
+  			
+  			if($st ne ""){
+        		$worksheet->write($row, $col, $clean_text, $st);
+        	}
+        	else{
             	$worksheet->write($row, $col, $clean_text, $format1);
-			}
+        	}      	
             
         } else {
-            $worksheet->write($row,$col,$case->{$header->{'XMLField'}},$format1);
+        	if($st ne ""){
+        		$worksheet->write($row, $col, $case->{$header->{'XMLField'}}, $st);
+        	}
+        	else{
+            	$worksheet->write($row, $col, $case->{$header->{'XMLField'}}, $format1);
+        	}
         }
         
         if (not defined $max{$col} or ($max{$col}<length($case->{$header->{'XMLField'}}))) {

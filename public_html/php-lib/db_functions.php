@@ -1,8 +1,7 @@
 <?php
 
 function getDbConfig($dbname) {
-    
-    $conf = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $conf = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
     
     $found = 0;
     foreach ($conf->dbConfig as $dbConfig) {
@@ -22,13 +21,15 @@ function getDbConfig($dbname) {
 
 function handleDbError(PDOException $e) {
     //echo "<pre>"; print_r($e); die;
-    print "A database error occurred while running the application. \n\nError Code: " . $e->getMessage() . "\n\nPlease contact your system administration.\n\n ";
+    print "A database error occurred while running the application. \n\nError Code: " . $e->getCode() . "\n\nPlease contact your system administrator.\n\n ";
+    $message = $e->getMessage();
+    error_log("DB Error: $message",0);
 }
 
 
-function dbConnect ($dbname) {
-    $config = simplexml_load_file(__DIR__ . "/../../conf/ICMS.xml");
-
+function dbConnect ($dbname, $timeout = null) {
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
+    
     $found = 0;
     foreach ($config->dbConfig as $dbConfig) {
         if ($dbConfig->name != $dbname) {
@@ -59,7 +60,7 @@ function dbConnect ($dbname) {
     } else {
         $attrs = array(PDO::ATTR_PERSISTENT => true);
     }
-    
+        
     if ($dbConfig->dbType == 'oci') {
         $dsn = sprintf("%s:dbname=%s", $dbConfig->dbType,
                    $dbConfig->dbHost);    
@@ -67,6 +68,12 @@ function dbConnect ($dbname) {
         $dsn = sprintf("%s:dbname=%s;host=%s", $dbConfig->dbType, $dbConfig->dbName,
                    $dbConfig->dbHost);
     
+    }
+    
+    if (isset($timeout)) {
+        // The caller specified a timeout value (in seconds) to override
+        // the default. Set it.
+        $attrs[PDO::ATTR_TIMEOUT] = $timeout;
     }
     
     try {
@@ -127,6 +134,9 @@ function getData(&$arrayref, $query, $dbh, $args = null, $key = null, $flatten =
                     array_push($arrayref[$row[$key]], $row);
                 } else {
                     // Told to flatten it - the row will have a single case
+                    if (key_exists($row[$key], $arrayref)) {
+                        continue;
+                    }
                     $arrayref[$row[$key]] = $row;
                 }
             }
@@ -137,23 +147,6 @@ function getData(&$arrayref, $query, $dbh, $args = null, $key = null, $flatten =
     }
 }
 
-# Added 11/26/2018 jmt Is Valid Case Number
-
-function isValidCase($caseNumber){
-    
-    $dbh = dbConnect("showcase-prod");
-    $query ="
-        select 
-            ucn 
-        from 
-            vCase
-        where
-            casenumber = :casenumber
-        
-    ";
-    return doQuery($query,$dbh,array('casenumber' => $caseNumber));
-    
-}
 
 function doQuery($query, $dbh, $args = null) {
     try {
@@ -288,7 +281,7 @@ function getDbSchema ($dbname) {
     # Gets the schema defined for the database in ICMS.xml.  If not defined,
     # defaults to "dbo".
     
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    $config = simplexml_load_file($_SERVER['JVS_ROOT'] . '/conf/ICMS.xml');
     
     $found = 0;
     foreach ($config->dbConfig as $dbConfig) {

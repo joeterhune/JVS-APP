@@ -52,6 +52,7 @@ $(document).ready(function () {
         }
         var pieces = ucnobj.split("|");
         var objID = pieces[1];
+		ucn = pieces[0];
         var tabname = parentTab + '-' + objID;
         // Commented 11/05/2018 jmt calling Benchmark image handler
         //window.open('/cgi-bin/image-new.cgi?ucn=' + ucn + '&objid=' + objID +'&caseid=' + caseid + showTif, '_blank');

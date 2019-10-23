@@ -52,6 +52,12 @@ sub createPDF {
 	if (! -e $outPath) {
 		# No sense running the conversion if it already exists
 		my $res = system($tifCmd);
+		
+		# Run tiff2pdf again if there was an error
+		if($res != 0){
+			$res = system($tifCmd);
+		}
+		
 		# Clean up the TIF file.
 		#unlink $tifPath;
 	}
@@ -83,13 +89,12 @@ sub buildImageFile {
 
 	my $hadTmpDir = 1;
 	if (!defined($tmpFileDir)) {
-		$tmpFileDir = "$ENV{'APP_ROOT'}/tmp";
+		$tmpFileDir = "$ENV{'JVS_ROOT'}/tmp";
 		$hadTmpDir = 0;
 	}
 
-
 	my ($cfgfh, $cfgfile) = tempfile (
-		DIR => "$ENV{'APP_ROOT'}/tmp",
+		DIR => "$ENV{'JVS_ROOT'}/tmp",
 		UNLINK => 0
 	);
 
@@ -109,17 +114,17 @@ sub buildImageFile {
 		
 		my $texinfo = doTemplate(\%data, $templateDir, $templateFile, 0);
 		my $fh = File::Temp->new(
-								 DIR => "$ENV{'APP_ROOT'}/tmp",
+								 DIR => "/tmp",
 								 UNLINK => 0
 								 );
 		my $texFile= $fh->filename;
 		print $fh $texinfo;
 		close $fh;
 		#
-		my $pdflatex = "pdflatex";
+		my $pdflatex = `which pdflatex`;
+		chomp $pdflatex;
 	
-		$command = "$pdflatex -output-directory $ENV{'DOCUMENT_ROOT'}/tmp -interaction batchmode $texFile";
-		
+		$command = "$pdflatex -output-directory /tmp -interaction batchmode $texFile";
 		$filename = basename("$texFile.pdf");
 		$usePdfTex = 1;
 	} else {
@@ -127,6 +132,8 @@ sub buildImageFile {
 		"$tmpFileDir/$rdfile \@$pdfListFile > /dev/null 2>&1";
 		$filename = $rdfile;
 	}
+	
+	#print "Content-type: text/plain\n\n"; print "COMMAND: '$command'"; exit;
 	
 	my $res = system($command);
 	if ((($usePdfTex) && (($res >> 8) > 1)) || ((!$usePdfTex) && $res)) {
@@ -158,21 +165,30 @@ sub getImagesFromNewTM {
 	my $pdforder = shift;
 	
     if (!defined($tmpPath)) {
-        $tmpPath = "$ENV{'APP_ROOT'}/tmp";
+        $tmpPath = $ENV{'JVS_ROOT'} . "/tmp";
     }
+	
+	if (! -d $tmpPath) {
+		# The tmpPath directory doesn't exist. Make it.
+		makePaths(($tmpPath));
+	}
+	
+	if (! -d "$ENV{'JVS_DOCROOT'}/tmp") {
+		makePaths("$ENV{'JVS_DOCROOT'}/tmp");
+	}
 	
 	if (!defined($pdforder)) {
 		$pdforder = "desc";
 	}
-	
+
 	my $listfh = new File::Temp (
 		UNLINK => 0,
 		DIR => $tmpPath
 	);
-
+	
 	my $listfn = $listfh->filename;
 	
-	my $tempPath = "$ENV{'DOCUMENT_ROOT'}/tmp";
+	my $tempPath = $ENV{'JVS_DOCROOT'} . "/tmp";
 	if (defined($workPath)) {
 		$tempPath = $workPath;
 	}
@@ -233,13 +249,14 @@ sub getImagesFromNewTM {
 			  </RetrieveCaseDocsInput>
 			};
 		}
-
+		
+		
 		my $fh = File::Temp->new(DIR => $tmpPath,UNLINK => 0,SUFFIX => '.meta');
 		my $filename = $fh->filename;
 		print $fh $xml;
 		
-		my $retfile = `php $ENV{'APP_ROOT'}/icms/bin/getTmImages.php -f $filename`;
-
+		my $retfile = `/usr/bin/php $ENV{'JVS_ROOT'}/bin/getTmImages.php -f $filename`;
+		
 		my $docRef;
 
 		eval {
@@ -256,6 +273,8 @@ sub getImagesFromNewTM {
 				your patience.
 			};
 
+			# Send the actual error to STDERR
+			print STDERR $@;
 			exit;
 		}
 
@@ -335,30 +354,27 @@ sub getImagesFromNewTM {
 		if (defined($toConvert{$obj})) {
 			$path = $toConvert{$obj};
 		} else {
-			$path = sprintf("%s/tmp/%s.tif", $ENV{'DOCUMENT_ROOT'}, $image->{'ObjectId'});
+			$path = sprintf("$tmpPath/%s.tif", $image->{'ObjectId'});
 		}
-
-		#next if ((!defined($path)) || ($path eq ""));
-		#my $xname = $path;
-		#$xname =~ s/\.tif$//gi;
 
 		my $pdfPath;
 
 		if (!defined($workPath)) {
-			$pdfPath = "/tmp/$obj.pdf";
+			$pdfPath = "$tmpPath/$obj.pdf";
 			$pdfPath =~ s/^$tmmount/\/tmp/;
 		} else {
 			# We were given a directory name from the system call.
 			my $filename = basename($obj);
 			$pdfPath = sprintf("%s/%s.pdf", $workPath, $filename);
 		}
-
+		
 		if ((defined($showTif)) && ($showTif)) {
 			# Just create a symlink to the original and redirect the user.
             #print "Content-type: text/html\n\n"; dumpVar($image); exit;
 			my $basefile = basename($path);
-			if (!-e "$ENV{'DOCUMENT_ROOT'}/tmp/$basefile") {
-				symlink($path,"$ENV{'DOCUMENT_ROOT'}/tmp/$basefile");
+			
+			if (!-e "$ENV{'JVS_DOCROOT'}/tmp/$basefile") {
+				symlink($path,"$ENV{'JVS_DOCROOT'}/tmp/$basefile");
 			}
 			print "Location: http://$ENV{'HTTP_HOST'}/tmp/$basefile\n\n";
 			exit;

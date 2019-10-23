@@ -454,6 +454,7 @@ function UpdateFormPreview(pane) {
 function eSignOrder(pane) {
     var editor = $('.preview-ta').ckeditor().editor;
     var isOrder = $('#isOrder').val();
+    var sigBlockFound = $('#sigBlockFound').val();
     var sigName = $('.signAs option:selected').text();
     
     SaveToWorkflow(pane);
@@ -471,7 +472,7 @@ function eSignOrder(pane) {
             UpdateEsigStatus(pane);
             $.unblockUI();
             
-            if(isOrder != "0"){
+            if(isOrder != "0" || sigBlockFound){
 	            postData.sig = JSON.stringify($('.signaturediv').html());
 	            $.ajax({
 	                url: '/orders/mergeSig.php',
@@ -624,7 +625,7 @@ function OrderEmailConfirm(pane) {
 // OrderEfileConfirm posts the addresses to the efile.php script,
 // EFILING THE ORDER!!! AND.
 function OrderEfileConfirm(pane) {
-    //$(pane).find(".efilestatus").html(' <img src="/icons/spinner.gif" style="vertical-align:bottom">');
+    //$(pane).find(".efilestatus").html(' <img src="/jvsicons/spinner.gif" style="vertical-align:bottom">');
     var ucn = $(pane).find('.ucn').val();
     var docid = $(pane).find('.docid').val();
     var filingId = $(pane).find('.filingId').val();

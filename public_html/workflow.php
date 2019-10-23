@@ -128,7 +128,7 @@ foreach (array_keys($queueItems) as $queue) {
     }
 }
 
-function smarty_function_getSuppDocs($params, &$smarty){
+function smarty_function_getSuppDocs($params, $smarty){
 	global $dbh;
 	$suppDocs = array();
 	$docs = getSuppDocsForQueueItem($params['doc_id'], $dbh);
@@ -139,7 +139,7 @@ function smarty_function_getSuppDocs($params, &$smarty){
 }
 
 $smarty->registerPlugin('function', 'getSuppDocs', 'smarty_function_getSuppDocs');
-$xml = simplexml_load_file($icmsXml);
+$xml = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
 $smarty->assign('olsURL', $xml->olsURL);
 $smarty->assign('queueItems', $queueItems);
 
@@ -174,6 +174,15 @@ $query = "
 
 $qres = array();
 getData($qres, $query, $dbh);
+
+if(!empty($qres)){
+	foreach($qres as $key => $q){
+		unset($qres[$key]['data']);
+		unset($qres[$key]['signed_pdf']);
+		unset($qres[$key]['signature_img']);
+	}
+}
+
 $smarty->assign('queuejson', json_encode($qres));
 
 $smarty->assign('tabs', $_SESSION['tabs']);

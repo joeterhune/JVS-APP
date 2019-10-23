@@ -10,8 +10,7 @@
     });
     
     function showDivRpt(division,month,divtype,rpttype,range,lop) {
-        var rpath = "case/Sarasota/" + divtype + "/div" + division;
-	    var url = "/genlist.php?rpath=" + rpath + "&divname=" + division + "&rpttype=" + rpttype + "&yearmonth=" + month;   
+		var url = "/reports/div_list.php?divname=" + division + "&type=" + divtype + "&rpttype=" + rpttype + "&yearmonth=" + month;
 	    
 	    if (lop != undefined) {
 	    	url += "&lop=1";

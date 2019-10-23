@@ -1,31 +1,4 @@
 #!/usr/bin/perl
-#
-#  PBSO.pm -- shared subroutines for PBSO access
-#
-# 10/07/10 lms New file created for to get PBSO data -
-#              Retrieves data from the view in the bookingQuery database.
-#              The view name is defined below and should be used by all.
-# 10/25/10 lms Change display of "in custody" to "in jail"
-# 11/01/10 lms Comment only.  The pbso database changed over to IMACS5
-#              yesterday (10/31/10). We DO NOT need to change the view per
-#              PBSO.  We will continue to use vw_PBSOQueryBookingInfo since
-#              the IMACS5 view was to be copied to the other at the time of go
-#              live.
-# 11/29/10 lms New routine - test_pbsoconnection - for others to use...
-# 12/13/10 lms Fix height display (ex showing 603' 03" rather than 6'03")
-# 02/04/11 lms Showcase integration - restore the correct db connection, when
-#              necessary.
-# 02/14/11 lms Add get_inmateid - because showcase data conversion isn't
-#              getting masterjacketnumber reliably!
-# 03/23/11 lms New way to get PBSO booking photos (from pbso).
-# 03/28/11 lms Criminal case numbers can be more than 13 unique characters.
-#              Fix this!
-# 06/16/11 lms In Custody (Jail) will now be 'Y' (in a cell, waiting for a
-#              cell, at or on the way to MDC), 'N' (Released), 'E' (Escaped),
-#              'H' (In-House Arrest), or 'W' (Weekender Out)
-# 07/28/11 lms PBSO photos not showing in Firefox - database call returns
-#              backslashes when it shouldn't.
-#
 
 package PBSO;
 
@@ -109,12 +82,7 @@ my $pbsoconn;
 
 
 sub test_pbsoconnection {
-	#if (defined $dbh) {
-	#	dbdisconnect();
-	#	undef $dbh;
-	#}
-
-	my $pbsoconn=dbconnect($pbso);
+	my $pbsoconn=dbConnect($pbso);
 	return $pbsoconn;
 }
 
@@ -131,17 +99,21 @@ sub get_allpbsocases {
 
 	my $hasDBH = 1;
 	if (!defined($pbsodbh)) {
-		$pbsodbh = dbconnect("pbso2");
+		$pbsodbh = dbConnect("pbso2");
 		$hasDBH = 0;
 	}
 	my $query = qq {
 		select
 			distinct casenumber as PBSOCase,
-			BookingDate,
+			BookingDate as BookingDate,
 			inmateid as InmateID,
 			BookingID as BookingID,
-			releasedate as ReleaseDate,
-			assignedcellid as AssignedCellID
+			CASE
+				WHEN releasedate IS NULL
+					THEN ''
+				ELSE CONVERT(varchar(10),releasedate,110)
+			END as ReleaseDate,
+			ISNULL(assignedcellid,'') as AssignedCellID
 		from
 			$view
 		order by
@@ -165,7 +137,7 @@ sub get_allincustody {
 
 	my $hasDBH = 1;
 	if (!defined($pbsodbh)) {
-		$pbsodbh = dbconnect("pbso2");
+		$pbsodbh = dbConnect("pbso2");
 		$hasDBH = 0;
 	}
 
@@ -394,32 +366,34 @@ sub get_inmateid {
 
 sub get_mostrecentbookingdate {
 	my $inmate = shift;
-	#dbdisconnect();
-	my $pbsodbh = dbconnect("pbso2");
+	my $pbsodbh = shift;
+	
+	if (!defined($pbsodbh)) {
+		$pbsodbh = dbConnect("pbso2");
+	}
+	
 	my $query = qq {
 		select
 			distinct BookingId,
-			BookingDate,
-			convert(varchar(10),bookingdate,101)
+			convert(varchar(10),BookingDate,101) as BookingDate
 		from
 			$view
 		where
-			InmateId='$inmate'
+			InmateId = ?
 		order by
 			BookingDate desc
 	};
 
-	my(@info) = sqllist($query,undef,$pbsodbh);
-	my $bdate;
-	my $fbd;
-	if (scalar @info > 0) {
-		($b,$bdate,$fbd)=split '~',$info[0];
-		undef $b;
-	}
-	if (@info) {
-		return $fbd;
-	} else {
+	my @info;
+	
+	my @args = ($inmate);
+
+	getData(\@info, $query, $pbsodbh, { valref => \@args, hashkey => 'BookingId' });
+	
+	if (!scalar(@info)) {
 		return '';
+	} else {
+		return $info[0]->{'BookingDate'}
 	}
 }
 
@@ -1235,7 +1209,13 @@ sub new_write_pbsoblock {
 # Many require the data to have been gotten and be present in an @alldata array.
 #
 sub write_jacketIdentifier {
-	my($jacket)=@_;
+	my $jacket = shift;
+	my $dbh = shift;
+	
+	if (!defined($dbh)) {
+		$dbh = dbConnect("pbso2");
+	}
+	
 	print qq {
 		<table class="summary" cellspacing="5">
 			<tr>
@@ -1261,10 +1241,16 @@ sub write_jacketIdentifier {
 				</td>\n
 			</tr>
 	};
-	my @names =get_pbsonames($jacket);
-	my @dobs  =get_pbsodobs($jacket);
-	my @mnames=get_pbsomnames($jacket);
-	my $mug=get_mugshot_incustody_usingInmateId($jacket);
+	my @names;
+	my @dobs;
+	my @mnames;
+	
+	get_pbsonames(\@names, $jacket, $dbh);
+	get_pbsodobs(\@dobs, $jacket, $dbh);
+	get_pbsomnames(\@mnames, $jacket, $dbh);
+	
+	my $mug = get_mugshot_incustody_usingInmateId($jacket, $dbh);
+	
 	my($photoid,$injail) = split ';',$mug;
 
 	if ($photoid ne "") {
@@ -1274,17 +1260,19 @@ sub write_jacketIdentifier {
 		}
 	}
 
-	my $mostrec = get_mostrecentbookingdate($jacket);
+	my $mostrec = get_mostrecentbookingdate($jacket, $dbh);
 	print "<tr>\n<td>\n";
-	foreach (@names) {
-		my($n)=split '~',$_;
+	foreach my $name (@names) {
+		my $n = $name->{'InmateName'};
 		print "$n<br/>";
 	}
 	print "<td>";
 	my @cages=();
-	foreach (@dobs) {
-		my($d)=split '~',$_;
+	foreach my $dob (@dobs) {
+		my $d = $dob->{'DOB'};
+		
 		my $a=getageinyears($d);
+		
 		my $ind = index($a, '.');
 		if ($ind>-1) {
 			$a = substr($a,0,$ind);
@@ -1293,13 +1281,13 @@ sub write_jacketIdentifier {
 		print "$d<br/>";
 	}
 	print "<td align=center>";
-	foreach (@cages) {
-		my $a=$_;
-		print "$a<br/>";
-		}
+	foreach my $age (@cages) {
+		print "$age<br/>";	
+	}
 	print "<td>";
-	foreach (@mnames) {
-		my($n)=split '~',$_;
+	
+	foreach my $mname (@mnames) {
+		my $n = $mname->{'MaidenName'};
 		print "$n<br/>";
 	}
 
@@ -1334,9 +1322,18 @@ sub write_jacketIdentifier {
 # Write Booking Header
 #
 sub write_bookingHeader {
-	my($jacket,$bookingid)=@_;
-	my($incustody);
-	my @data=get_bookingHeader($jacket,$bookingid);
+	my $jacket = shift;
+	my $bookingid = shift;
+	my $dbh = shift;
+	
+	if (defined($dbh)) {
+		$dbh = dbConnect("pbso2");
+	}
+	
+	my $incustody;
+	
+	my @data = get_bookingHeader($jacket,$bookingid,$dbh);
+	
 	print qq {
 		<table class="summary" cellspacing="5">
 			<tr>
@@ -1367,9 +1364,23 @@ sub write_bookingHeader {
 			</td>
 		</tr>
 	};
-	my($im,$bd,$rd,$hf,$hi,$w,$age,$days,$sofar,$r,$is,$photoid,$cell)=
-		split '~',$data[0];
-		# replace \ with / in photo - should have been done with the database call!
+	
+	my $rec = $data[0];
+	my $im = $rec->{'InmateId'};
+	my $bd = $rec->{'FBD'};
+	my $rd = $rec->{'ReleaseDate'};
+	my $hf = $rec->{'HeightFeet'};
+	my $hi = $rec->{'HeightInches'};
+	my $w = $rec->{'Weight'};
+	my $age = $rec->{'AgeAtBooking'};
+	my $days = $rec->{'DaysServed'};
+	my $sofar = $rec->{'DaysSoFar'};
+	my $r = $rec->{'Race'};
+	my $is = $rec->{'InmateStatus'};
+	my $photoid = $rec->{'InmatePhoto'};
+	my $cell = $rec->{'AssignedCellID'};
+	
+	# replace \ with / in photo - should have been done with the database call!
 	$photoid =~ s/\\/\//g;
 
 	if ($photoid ne "") {
@@ -1463,53 +1474,75 @@ sub write_bookingHeader {
 # get all the booking header details
 #
 sub get_bookingHeader {
-	my($inmate,$bookingid)=@_;
-	my(@bookings);
-	dbconnect("pbso2");
+	my $inmate = shift;
+	my $bookingid = shift;
+	my $dbh = shift;
+	
+	if (!defined($dbh)) {
+		$dbh = dbConnect("pbso2");
+	}
+	
 	# get all the pbso data for this inmate
 	# This should have returned with the photolocation always using forward
 	# slash, but didn't. Probably because it's in the string... so, for Firefox,
 	# will have to fix in line...
 
-	my $query =qq {select
-		distinct InmateId,
-		convert(varchar(10),bookingdate,101) as fbd,
-		convert(varchar(10),releasedate,101) as releasedate,
-		substring(convert(varchar,HeightFeet),1,1)as heightfeet,
-		heightinches,weight,ageatbooking,
-		datediff(d,BookingDate,ReleaseDate),
-		datediff(d,BookingDate,getdate()),
-		race,inmatestatus,
-	        isnull((select top 1 'http:' + REPLACE(photolocation, '\','/')
-		    from
-		      $ipview
-		    where
-	  	      bookingid = $view.bookingid
-		      and inmateid = $view.inmateid
-		      and front=1
-		      and activephoto=1),
-		'http://www.pbso.org/bkimages/star/star.jpg') as inmatephoto,
-		assignedcellid
-	      from
-		$view
-	      where
-		InmateId='$inmate' and
-		Bookingid='$bookingid'
+	my $query = qq {
+		select
+			distinct InmateId,
+			convert(varchar(10),bookingdate,101) as FBD,
+			convert(varchar(10),releasedate,101) as ReleaseDate,
+			substring(convert(varchar,HeightFeet),1,1)as HeightFeet,
+			HeightInches,
+			Weight,
+			AgeAtBooking,
+			datediff(d,BookingDate,ReleaseDate) as DaysServed,
+			datediff(d,BookingDate,getdate()) as DaysSoFar,
+			Race,
+			InmateStatus,
+	        isnull(
+				(select
+					top 1 'http:' + REPLACE(photolocation, '\','/')
+				from
+					$ipview
+				where
+					bookingid = $view.bookingid
+					and inmateid = $view.inmateid
+					and front=1
+					and activephoto=1),
+					'http://www.pbso.org/bkimages/star/star.jpg'
+			) as InmatePhoto,
+			AssignedCellID
+		from
+			$view
+		where
+			InmateId = ?
+			and Bookingid = ?
 		};
-
-  @bookings = sqllist($query);
-
-  dbdisconnect();
-  return @bookings;
+		
+	my @args = ($inmate, $bookingid);
+	
+	my @bookings;
+	getData(\@bookings, $query, $dbh, { valref => \@args });
+	
+	return @bookings;
 }
 
 #
 # Write Arrest Information Section - by booking id
 #
 sub write_bookingArrestInformation {
-  my($jacket,$bookingid)=@_;
-  my @data=get_bookingArrestInformation($jacket,$bookingid);
-  print qq {
+    my $jacket = shift;
+    my $bookingid = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
+    
+    my @data = get_bookingArrestInformation($jacket,$bookingid, $dbh);
+    
+    print qq {
 	<table class="summary" cellspacing="5">
 		<tr>
 			<td colspan="8" class="title">
@@ -1543,46 +1576,86 @@ sub write_bookingArrestInformation {
 			</td>
 		</tr>
 	};
-  foreach (@data) {
-    my($im,$cn,$cardt,$aa,$ao,$ct,$cd,$ca,$cdt,$bd)=split '~';
-    # old data may not always have an arrest date.  if not, use the booking date.
-    if ($cardt eq '') {
-      $cardt=$bd;
+    
+    foreach my $row (@data) {
+        my $im = $row->{'InmateID'};
+        my $cn = $row->{'CaseNumber'};
+        my $cardt = $row->{'CArrestDate'};
+        my $aa = $row->{'ArrestingAgency'};
+        my $ao = $row->{'ArrestingOfficer'};
+        my $ct = $row->{'CaseType'};
+        my $cd = $row->{'CommitDocument'};
+        my $ca = $row->{'CommitAgency'};
+        my $cdt = $row->{'ConvictionDate'};
+        my $bd = $row->{'BookingDate'};
+        
+        # old data may not always have an arrest date.  if not, use the booking date.
+        if ($cardt eq '') {
+            $cardt=$bd;
+        }
+        
+        print "<tr><td>$cardt<td>$cn<td>$aa<td>$ao<td>$ct";
+        print "<td>$cd<td>$ca<td>$cdt";
     }
-    print "<tr><td>$cardt<td>$cn<td>$aa<td>$ao<td>$ct";
-    print "<td>$cd<td>$ca<td>$cdt";
-  }
-  print "</table>";
+    print "</table>";
 }
 
 #
 # Get all the Arrest Information for this booking.
 #
 sub get_bookingArrestInformation {
-	my($inmate,$bookingid)=@_;
-	my(@data);
-	dbconnect("pbso2");
-	my $query = "select distinct InmateId,
-		       casenumber,convert(varchar(10),carrestdate,101) as carrestdate,
-			   arrestingagency,arrestingofficer,casetype,commitdocument,commitagency,
-			   convert(varchar(10),convictiondate,101) as convictiondate,
-			   convert(varchar(10),bookingdate,101) as bookingdate
-			  from $view
-			  where inmateid='$inmate'
-			  and bookingid='$bookingid'
-			  order by carrestdate desc";
-  @data = sqllist($query);
-  dbdisconnect();
-  return @data;
+	my $inmate = shift;
+	my $bookingid = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
+	
+	my @data;
+	my $query = qq {
+        select
+            distinct InmateID,
+            CaseNumber,
+            convert(varchar(10),carrestdate,101) as CArrestDate,
+            ArrestingAgency,
+            ArrestingOfficer,
+            CaseType,
+            CommitDocument,
+            CommitAgency,
+            convert(varchar(10),convictiondate,101) as ConvictionDate,
+            convert(varchar(10),bookingdate,101) as BookingDate
+        from
+            $view
+        where
+            InmateID = ?
+            and BookingID = ?
+        order by
+            CArrestDate desc
+    };
+    
+    my @args = ($inmate, $bookingid);
+    
+    getData(\@data, $query, $dbh, {valref => \@args});
+    
+    return @data;
 }
 
 #
 # Write Charge/Bond Information Section - by booking id
 #
 sub write_bookingChargeBondInformation {
-  my($jacket,$bookingid)=@_;
-  my @data=get_bookingChargeBondInformation($jacket,$bookingid);
-  print qq {
+    my $jacket = shift;
+    my $bookingid = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
+    
+    my @data = get_bookingChargeBondInformation($jacket,$bookingid, $dbh);
+    
+    print qq {
 	<table class="summary" cellspacing="5">
 		<tr>
 			<td colspan="13" class="title">
@@ -1629,24 +1702,42 @@ sub write_bookingChargeBondInformation {
 			</td>
 		</tr>
 	};
-  # get the first case number
-  my($im,$bd,$cn,$cardt,$cs,$cdt,$cc,$cdesc,$cddt,$cddesc,$ba,$baw,$cbra,$bt,$brdt,$cb)=split '~',$data[0];
-  my $thiscn = $cn;
-  foreach (@data) {
-    my($im,$bd,$cn,$cardt,$cs,$cdt,$cc,$cdesc,$cddt,$cddesc,$ba,$baw,$cbra,$bt,$brdt,$cb)=split '~';
-    if ($cn != $thiscn) {
-      print "<tr><td colspan=13 align=center>";
-      print "<hr>";
-      #print "--------------------------------------------------------------------------------";
-      $thiscn = $cn;
+    
+    # get the first case number
+    my $thiscn = $data[0]->{'CaseNumber'};
+    
+    foreach my $row (@data) {
+        my $im = $row->{'InmateID'};
+        my $bd = $row->{'BookingDate'};
+        my $cn = $row->{'CaseNumber'};
+        my $cardt = $row->{'CArrestDate'};
+        my $cs = $row->{'ChargeSequence'};
+        my $cdt = $row->{'ChargeDate'};
+        my $cc = $row->{'ChargeCode'};
+        my $cdesc = $row->{'ChargeDescription'};
+        my $cddt = $row->{'ChargeDispositionDate'};
+        my $cddesc = $row->{'ChargeDispositionDesc'};
+        my $ba = $row->{'BondAmount'};
+        my $baw = $row->{'BondAmountWritten'};
+        my $cbra = $row->{'ChargeBondRequiredAmt'};
+        my $bt = $row->{'BondType'};
+        my $brdt = $row->{'BondReturnDate'};
+        my $cb = $row->{'CurrentBond'};
+        
+        if ($cn != $thiscn) {
+            print "<tr><td colspan=13 align=center>";
+            print "<hr>";
+            $thiscn = $cn;
+        }
+        
+        if ($cardt eq '') {
+            $cardt = $bd;
+        }
+        
+        print "<tr><td>$cardt<td>$cn<td>$cdt<td>$cc<td>$cdesc<td>$cddt<td>$cddesc";
+        print "<td align=right>$ba<td align=right>$baw<td align=right>$cbra<td>$bt<td>$brdt<td align=right>$cb";
     }
-    if ($cardt eq '') {
-      $cardt = $bd;
-    }
-    print "<tr><td>$cardt<td>$cn<td>$cdt<td>$cc<td>$cdesc<td>$cddt<td>$cddesc";
-    print "<td align=right>$ba<td align=right>$baw<td align=right>$cbra<td>$bt<td>$brdt<td align=right>$cb";
-  }
-  print "</table>";
+    print "</table>";
 }
 
 #
@@ -1655,44 +1746,49 @@ sub write_bookingChargeBondInformation {
 sub get_bookingChargeBondInformation {
 	my $inmate = shift;
 	my $bookingid = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
 
 	my @data;
 
-	my $pbsodbh = dbconnect("pbso2");
+	my $pbsodbh = dbConnect("pbso2");
 	# get all the pbso data for this inmate
 	my $query = qq {
 		select
-			distinct InmateId,
-			convert(varchar(10),bookingdate,101) as bookingdate,
-			casenumber,
-			convert(varchar(10),carrestdate,101) as carrestdate,
-			chargesequence,
-			convert(varchar(10),chargedate,101) as chargedate,
-			chargecode,
-			chargedescription,
-			convert(varchar(10),chargedispositiondate,101) as chargedispositiondate,
-			chargedispositiondesc,
-			bondamount,
-			bondamountwritten,
-			chargebondrequiredamt,
-			bondtype,
-			convert(varchar(10),bondreturndate,101) as bondreturndate,
-			currentbond
-		from
-			$view
-		where
-			InmateId='$inmate'
-			and bookingid='$bookingid'
-		order by
-			bookingdate desc,
-			casenumber desc,
-			chargesequence asc
-	};
+			distinct InmateID,
+            convert(varchar(10),bookingdate,101) as BookingDate,
+            CaseNumber,
+            convert(varchar(10),carrestdate,101) as CArrestDate,
+            ChargeSequence,
+            convert(varchar(10),chargedate,101) as ChargeDate,
+            ChargeCode,
+            ChargeDescription,
+            convert(varchar(10),chargedispositiondate,101) as ChargeDispositionDate,
+            ChargeDispositionDesc,
+            BondAmount,
+            BondAmountWritten,
+            ChargeBondRequiredAmt,
+            BondType,
+            convert(varchar(10),bondreturndate,101) as BondReturnDate,
+            CurrentBond
+        from
+            $view
+        where
+            InmateId = ?
+            and bookingid = ?
+        order by
+            BookingDate desc,
+            CaseNumber desc,
+            ChargeSequence asc
+    };
+    
+    my @args = ($inmate, $bookingid);
 
-	# Don't really think this is necessary - rlh, 3/29/2012
-	#@bookings = sqllist($query,undef,$pbsodbh);
-	@data = sqllist($query,undef,$pbsodbh);
-	dbdisconnect($pbsodbh);
+    getData(\@data, $query, $dbh, {valref => \@args});
+    
 	return @data;
 }
 
@@ -1700,8 +1796,15 @@ sub get_bookingChargeBondInformation {
 # Write Sentencing Information for this booking
 #
 sub write_bookingSentencing {
-	my($jacket,$bookingid)=@_;
-	my @data=get_bookingSentencing($jacket,$bookingid);
+    my $jacket = shift;
+    my $bookingid = shift;
+    my $dbh = shift;;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
+    
+	my @data = get_bookingSentencing($jacket,$bookingid,$dbh);
 
 	print qq {
 		<table class="summary" cellspacing="5"
@@ -1758,14 +1861,32 @@ sub write_bookingSentencing {
 				</td>
 			</tr>
 	};
-  foreach (@data) {
-    #print "<tr><td colspan=14>data: ".$_."<br>";
-    my($im,$complete,$consec,$ccd,$date,$days,$deduct,$desc,$end,$gain,$j,$net,$order,$revd,$revn,$start,$orig,$scd)=split '~';
-    print "<tr><td>$date<td>$j<td>$start<td>$orig<td>$end";
-    print "<td>$complete<td>$desc<td align=right>$days<td align=right>$ccd<td align=right>$scd";
-    print "<td align=right>$deduct<td align=right>$gain<td align=right>$net<td>$revd<td align=right>$revn";
-  }
-  print "</table>";
+    
+    foreach my $row (@data) {
+        my $im = $row->{'InmateID'};
+        my $complete = $row->{'SentenceCompleteDate'};
+        my $consec = $row->{'SentenceConsecutive'};
+        my $ccd = $row->{'SentenceCourtCreditDays'};
+        my $date = $row->{'SentenceDate'};
+        my $days = $row->{'SentenceDays'};
+        my $deduct = $row->{'SentenceDeductDays'};
+        my $desc = $row->{'SentenceDescription'};
+        my $end = $row->{'SentenceEndDate'};
+        my $gain = $row->{'SentenceGainDays'};
+        my $j = $row->{'SentenceJudge'};
+        my $net = $row->{'SentenceNetDays'};
+        my $order = $row-{'SentenceOrder'};
+        my $revd = $row->{'SentenceRevisionDate'};
+        my $revn = $row->{'SentenceRevisionNumber'};
+        my $start = $row->{'SentenceStartDate'};
+        my $orig = $row->{'SentenceStartOriginal'};
+        my $scd = $row->{'SentenceStateCreditDays'};
+        
+        print "<tr><td>$date<td>$j<td>$start<td>$orig<td>$end";
+        print "<td>$complete<td>$desc<td align=right>$days<td align=right>$ccd<td align=right>$scd";
+        print "<td align=right>$deduct<td align=right>$gain<td align=right>$net<td>$revd<td align=right>$revn";
+    }
+    print "</table>";
 }
 
 #
@@ -1775,36 +1896,52 @@ sub write_bookingSentencing {
 #
 #
 sub get_bookingSentencing {
-	my($inmate,$bookingid)=@_;
-	my(@sentences);
-	dbconnect("pbso2");
+    my $inmate = shift;
+    my $bookingid = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect("pbso2");
+    }
+    
+	my @sentences;
+    
 	# get all the pbso data for this inmate
-	my $query = "select distinct InmateId,
-		      convert(varchar(10),sentencecompletedate,101) as sentencecompletedate,
-			   sentenceconsecutive,
-			   sentencecourtcreditdays,
-			   convert(varchar(10),sentencedate,101) as sentencedate,
-			   sentencedays,
-			   sentencedeductdays,
-			   sentencedescription,
-			   convert(varchar(10),sentenceenddate,101) as sentenceenddate,
-			   sentencegaindays,
-			   sentencejudge,
-			   sentencenetdays,
-			   sentenceorder,
-			   convert(varchar(10),sentencerevisiondate,101) as sentencerevisiondate,
-			   sentencerevisionnumber,
-			   convert(varchar(10),sentencestartdate,101) as sentencestartdate,
-			   convert(varchar(10),sentencestartoriginal,101) as sentencestartoriginal,
-			   sentencestatecreditdays
-			  from $view
-			  where inmateid='$inmate'
-			  and bookingid='$bookingid'
-			  and sentencedate is not null
-			  order by sentencestartdate desc";
-  @sentences = sqllist($query);
-  dbdisconnect();
-  return @sentences;
+	my $query = qq {
+        select
+            distinct InmateID,
+            convert(varchar(10),sentencecompletedate,101) as SentenceCompleteDate,
+            SentenceConsecutive,
+            SentenceCourtCreditDays,
+            convert(varchar(10),sentencedate,101) as SentenceDate,
+            SentenceDays,
+            SentenceDeductDays,
+            SentenceDescription,
+            convert(varchar(10),sentenceenddate,101) as SentenceEndDate,
+            SentenceGainDays,
+            SentenceJudge,
+            SentenceNetDays,
+            SentenceOrder,
+            convert(varchar(10),sentencerevisiondate,101) as SentenceRevisionDate,
+            SentenceRevisionNumber,
+            convert(varchar(10),sentencestartdate,101) as SentenceStartDate,
+            convert(varchar(10),sentencestartoriginal,101) as SentenceStartOriginal,
+            SentenceStateCreditDays
+        from
+            $view
+        where
+            inmateid = ?
+            and bookingid = ?
+            and sentencedate is not null
+        order by
+            sentencestartdate desc
+    };
+    
+    my @args = ($inmate, $bookingid);
+    
+    getData(\@sentences, $query, $dbh, { valref => \@args });
+    
+    return @sentences;
 }
 
 
@@ -1852,32 +1989,73 @@ sub casenumtoucn {
 
 # get distinct names for an inmate, given the inmateid
 sub get_pbsonames {
-  my($inmate)=@_;
-  dbconnect("pbso2");
-  my $query = "select distinct inmatename from $view where InmateId='$inmate'";
-  my(@names) = sqllist($query);
-  dbdisconnect();
-  return @names;
+	my $nameref = shift;
+	my $inmate = shift;
+	my $dbh = shift;
+	if (!defined($dbh)) {
+		$dbh = dbConnect("pbso2");
+	}
+	
+	my $query = qq{
+		select
+			distinct (inmatename) as InmateName
+		from
+			$view
+		where
+			InmateId = ?
+	};
+	
+	my @args = ($inmate);
+	
+	getData($nameref, $query, $dbh, { valref => \@args });
 }
 
 # get distinct maiden names for an inmate, given the inmateid
 sub get_pbsomnames {
-  my($inmate)=@_;
-  dbconnect("pbso2");
-  my $query = "select distinct maidenname from $view where InmateId='$inmate'";
-  my(@mnames) = sqllist($query);
-  dbdisconnect();
-  return @mnames;
+	my $nameref = shift;
+	my $inmate = shift;
+	my $dbh = shift;
+	
+	if (!defined($dbh)) {
+		dbConnect("pbso2");
+	};
+	
+	my $query = qq{
+		select
+			distinct maidenname as MaidenName
+		from
+			$view
+		where
+			InmateId = ?
+	};
+  
+  	my @args = ($inmate);
+	
+	getData($nameref, $query, $dbh, { valref => \@args });
 }
 
 #get distinct dobs for an inmate, given the inmateid
 sub get_pbsodobs {
-  my($inmate)=@_;
-  dbconnect("pbso2");
-  my $query = "select distinct convert(varchar(10),birthdate,101) from $view where InmateId='$inmate'";
-  my(@dobs) = sqllist($query);
-  dbdisconnect();
-  return @dobs;
+	my $dbref = shift;
+	my $inmate = shift;
+	my $dbh = shift;
+	
+	if (!defined($dbh)) {
+		$dbh = dbConnect("pbso2");
+	}
+	
+	my $query = qq{
+		select
+			distinct convert(varchar(10),birthdate,101) as DOB
+		from
+			$view
+		where
+			InmateId = ?
+	};
+	
+	my @args = ($inmate);
+	
+	getData($dbref, $query, $dbh, { valref => \@args });
 }
 
 # get all pbso booking case details (but no charge info)
@@ -2305,7 +2483,7 @@ sub getBookingPhoto {
 		return "/images/star.jpg";
 	}
 
-	my $imagebase = "$ENV{'DOCUMENT_ROOT'}/bookingimages";
+	my $imagebase = "$ENV{'JVS_DOCROOT'}/bookingimages";
 
 	my @pieces = split(/Imacs_Images_5/,$photopath);
 
@@ -2344,7 +2522,6 @@ sub getBookingPhoto {
 		return "/bookingimages" . $pieces[1];
 	}
 }
-
 
 sub getInmateIds {
 	my $inmateids = shift;

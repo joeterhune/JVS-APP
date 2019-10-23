@@ -42,7 +42,7 @@ function get_all_emails_easy($ucn,$icmsdb,$emailhost) {
    $id=find_case_id($icmsdb,$dbh,$ucn,$dbtype);
    # was 
    $ccisucn=sqlgetonep($icmsdb,"select ucn_src from search where ucn=? top 1",array($ucn));
-   $schedb=db_connect("ols");
+   $schedb=db_connect("eservice");
    $parties=get_parties($dbh,$schedb,$id,$dbtype,$unused);
    if (count($parties)>0) {
       foreach ($parties as $party) {

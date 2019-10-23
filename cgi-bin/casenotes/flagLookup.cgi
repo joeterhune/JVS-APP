@@ -5,7 +5,7 @@
 #			Search Function
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 };
 
 use strict;
@@ -57,13 +57,12 @@ my $info=new CGI;
 # flag if this user is a SECRET group user - can see adoptions, termination of
 # parental rights, and tuberculosis cases
 my $ldap = ldapConnect();
-############### Added 11/6/2018 jmt security from conf 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
-my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
-my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
-
-my $secretuser = inGroup($info->remote_user(),$secGroup,$ldap);
-my $sealeduser = inGroup($info->remote_user(),$sealedGroup,$ldap);
+############### Added 04/17/2019 jmt security from conf 
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
+my $securegroup = $conf->{'ldapConfig'}->{'securegroup'};
+my $sealedgroup = $conf->{'ldapConfig'}->{'sealedgroup'};
+my $secretuser = inGroup($info->remote_user(),$securegroup,$ldap);
+my $sealeduser = inGroup($info->remote_user(),$sealedgroup,$ldap);
 
 print $info->header();
 
@@ -437,7 +436,7 @@ EOS
 
 	print <<EOF
 <script language="javascript">
-location.replace("/case/genlist.php?rpath=$tname.txt&lev=$lev&order=5");
+location.replace("/genlist.php?rpath=$tname.txt&lev=$lev&order=5");
 </script>
 EOF
 

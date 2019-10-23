@@ -1,11 +1,10 @@
 <?php
 # pickorder.php - pick an order for a case and fill in the values
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/caseinfo.php");
 require_once('Smarty/Smarty.class.php');
-
-include "../icmslib.php";
-include "../caseinfo.php";
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -123,14 +122,14 @@ function OrderHandleView() {
     }
     var formid=$("select#formid option:selected").val();
     var formdata=$("#formdiv").serialize();
-    $.post("/case/orders/ordersave.php",formdata,function (data) {
+    $.post("/orders/ordersave.php",formdata,function (data) {
         if (data!="OK") {
             alert('xmlsave: '+data);
         }
     });
     
     $("#xmlstatus").html('<i>Re-generating...please wait...</i>');
-    window.location.replace("/case/orders/index.php?ucn="+ucn+"&formid="+formid+"&docid="+docid);
+    window.location.replace("/orders/index.php?ucn="+ucn+"&formid="+formid+"&docid="+docid);
 }
 
 
@@ -138,7 +137,7 @@ function OrderDisplayFields() {
     var formsel=$("select#formid option:selected").val();
     if (formsel!="") {
         var t=new Date().getTime();
-        $("#formdiv").load("/case/orders/orderfields.php?ucn="+ucn+"&formid="+formsel+'&docid='+docid+'&t='+t,OrderHandleFormLoading);
+        $("#formdiv").load("/orders/orderfields.php?ucn="+ucn+"&formid="+formsel+'&docid='+docid+'&t='+t,OrderHandleFormLoading);
     } else {
         $("#formdiv").html('');
     }

@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-	use lib $ENV{'PERL5LIB'};
+	use lib "$ENV{'JVS_PERL5LIB'}";
 };
 
 use strict;
@@ -49,10 +49,10 @@ use Data::Dumper qw(Dumper);
 
 use MIME::Lite;
 
-use Mail::RFC822::Address qw(valid validlist);
+use Email::Valid;
 
 my $info = new CGI;
-print $info->header;
+print $info->header();
 
 my %params = $info->Vars;
 
@@ -156,7 +156,7 @@ if ((defined($params{'emergency'}) && ($params{'emergency'} == 1))) {
 my @goodRecipients;
 my @badRecipients;
 foreach my $r (@recipients) {
-	if (valid($r->{'email_addr'})) {
+	if (Email::Valid->address($r->{'email_addr'})) {
 		push(@goodRecipients, $r);
 	}
 	else{
@@ -194,7 +194,7 @@ if (defined($params{'clerkFile'})) {
         $casenum = sanitizeCaseNumber($casenum);
     
         my $ucn = $casenum;
-        if ($casenum =~ /^50/) {
+        if ($casenum =~ /^58/) {
             $ucn =~ s/-//g;
         } 
 
@@ -237,10 +237,9 @@ if (defined($params{'clerkFile'})) {
             chomp $filetime;   
         }
         
-        my $fileXml = createFilingXml(\@sends, $user, $casenum, $ucn, $pdbh, $eFileInfo, $caseInfo, $filetime, $params{'filingid'});
-        
-        my $filing = `/usr/bin/php /var/jvs/icms/bin/portal/fileTemplate.php -f $fileXml`;
-    
+        my $fileXml = createFilingXml(\@sends, $user, $casenum, $ucn, $pdbh, $eFileInfo, $caseInfo, $filetime, $params{'filingid'});    
+        my $filing = `export JVS_ROOT=$ENV{'JVS_ROOT'} && /usr/bin/php $ENV{'JVS_ROOT'}/bin/portal/fileTemplate.php -f $fileXml`;
+		
         my $xs = XML::Simple->new();
 		
 		my $ref;
@@ -250,12 +249,12 @@ if (defined($params{'clerkFile'})) {
 		
 		# If there was an error, let's wait a few seconds and try it one more time before we send an error e-mail
 		if ($@) {
+			print $@; exit;
 			sleep 3;
-			$filing = `/usr/bin/php var/jvs/icms/bin/portal/fileTemplate.php -f $fileXml`;
+			$filing = `export JVS_ROOT=$ENV{'JVS_ROOT'} && /usr/bin/php $ENV{'JVS_ROOT'}/bin/portal/fileTemplate.php -f $fileXml`;
     
 	        $xs = XML::Simple->new();
 			
-			$ref;
 			eval {
 	            $ref = $xs->XMLin($filing);
 			};
@@ -433,7 +432,8 @@ sub notifyGeeks {
     move($fileXml, "/var/www/portalRetries/");
     
     my @recipients = (
-        { email_addr => 'WebHelp@jud12.flcourts.org' }
+        { email_addr => 'lkries@pbcgov.org' },
+        { email_addr => 'rhaney@pbcgov.org' }
     );
     
     my $subject = "IMPORTANT!! Portal e-Filing Error!";
@@ -447,56 +447,6 @@ sub notifyGeeks {
     sendMessage(\@recipients,$sender,undef,$subject,$msgBody,undef,1,0);
 }
 
-sub sendClerkFiles {
-    my $casenum = shift;
-    my $sender = shift;
-    my $docs = shift;
-    
-    my $ucn = $casenum;
-    $casenum =~ s/-//g;
-    
-    my $clerkEmail;
-    my $caseType;
-    if ($casenum =~ /^(\d{1,6})(\D\D)(\d{0,6})(.*)/) {
-        $caseType = $2;
-    } else {
-        return 0;
-    }
-    
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
-    my $clerkEmails = $config->{'clerkEmail'};
-    my $clerkAddr;
-    
-    foreach my $type (keys %{$clerkEmails}) {
-        my $courtTypes = $clerkEmails->{$type}->{'CourtTypes'};
-        my @temp = split(",", $courtTypes);
-        if (inArray(\@temp, $caseType)) {
-            $clerkAddr = $clerkEmails->{$type}->{'EmailAddr'};
-            last;
-        }
-    }
-    
-    my %recip = ('email_addr' => $clerkAddr);
-    
-    my @recipients = (\%recip);
-    
-    foreach my $doc (@{$docs}) {
-        # Because sendMessage wants the attachments as an array ref
-        my $tmparr = [];
-        my $subject = "$doc->{'filedesc'}, CASE $casenum, $doc->{'pages'} pages";
-        
-        push(@{$tmparr}, $doc);
-        
-        my %data;
-        $data{'orders'} = $tmparr;
-        $data{'casenum'} = $ucn;
-        
-        my $msgBody = doTemplate(\%data,"$templateDir/eservice","eservice-clerkmail.tt",0);
-        
-        sendMessage(\@recipients,$sender,undef,$subject,$msgBody,$tmparr);    
-    }
-}
-
 sub getRecipients {
 	my $recipIds = shift;
 	my $recipref = shift;
@@ -505,7 +455,7 @@ sub getRecipients {
 	my $newRecips = shift;
 	my $store = shift;
 
-	my $dbh = dbConnect("ols");
+	my $dbh = dbConnect("eservice");
 	
 	$casenum =~ s/^50-//g;
 	$casenum =~ s/-//g;
@@ -551,7 +501,7 @@ sub getRecipients {
 	foreach my $address(@{$recipref}) {
 		my @temp = split(/[;,\ ]+/, $address->{'email_addr'});
 		foreach my $piece (@temp) {
-			if (valid($piece)) {
+			if (Email::Valid->address($piece)) {
 				$address->{'email_addr'} = $piece;
 				last;
 			}
@@ -724,7 +674,7 @@ sub doFileUploads {
 	        # Calculate the number of pages if it's a PDF; we need this info to send to the Clerk
 	        if (!-e $targetFile) {
 	            # Try looking in /var/www/html
-	            $targetFile = sprintf("/var/www/html%s", $targetFile);
+	            $targetFile = sprintf("%s/%s", $ENV{'JVS_DOCROOT'}, $targetFile);
 	        }
 	        
 	        my $pdfinfo = pdf_info($targetFile);
@@ -754,7 +704,7 @@ sub doFileUploads {
 		}
 		elsif($param eq 'genPdf'){
 			#my $targetFile = $params{'genPdf'};
-        	my $targetFile = sprintf("/var/www/html%s", $params{'genPdf'});
+        	my $targetFile = sprintf("%s/%s", $ENV{'JVS_DOCROOT'}, $params{'genPdf'});
         
 	        $targetFile =~ s/\'/\\\'/g;
 	        

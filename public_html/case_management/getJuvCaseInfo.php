@@ -1,7 +1,7 @@
 <?php 
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 require_once("Smarty/Smarty.class.php");
 
 $smarty = new Smarty;
@@ -9,9 +9,9 @@ $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
-$case_number = $_REQUEST['case_number'];
+$case_number = getReqVal('case_number');
 
-$config = simplexml_load_file($icmsXml);
+$config = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
 $sc_db = (string)$config->{'showCaseDb'};
 
 $dbh = dbConnect($sc_db);

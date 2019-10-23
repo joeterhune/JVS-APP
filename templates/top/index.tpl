@@ -372,7 +372,7 @@
                     arr = selOpt.split("~");
                     tabname = "divRpt_" + arr[0];
                     tabtitle = "Division " + arr[0];
-                    rpath = "/Sarasota/" + arr[1] + "/div" + arr[0];
+                    rpath = "/Palm/" + arr[1] + "/div" + arr[0];
                     url = "/gensumm.php";
                     postData = {rpath: rpath, tabname: tabname, divName: arr[0]};
                 }
@@ -1476,7 +1476,7 @@
 			Problems?
 		</div>
 
-		Please e-mail <a href="mailto:cad-web@jud12.flcourts.com">cad-web@jud12.flcourts.com</a>
+		Please e-mail <a href="mailto:cad-web@pbcgov.com">cad-web@pbcgov.com</a>
 		to report any problems with this system.
 	</div>
 
@@ -1494,7 +1494,7 @@
 	</div>
 
 	<div style="font-size:50%">
-		Court Technology Department, Twelfth Judicial
+		Court Technology Department, Fifteenth Judicial
 		Circuit of Florida
     </div>
 	

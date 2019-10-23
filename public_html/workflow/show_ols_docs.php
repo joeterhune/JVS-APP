@@ -1,9 +1,9 @@
 <?php
-include "../php-lib/common.php";
-include "../php-lib/db_functions.php";
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
 require_once('Smarty/Smarty.class.php');
-require_once("wfcommon.php");
-require_once "../icmslib.php";
 
 checkLoggedIn();
 
@@ -12,15 +12,15 @@ $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
-$conf = simplexml_load_file($icmsXml);
-$xml = $conf;
+$xml = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
+
 foreach($xml->dbConfig as $dbc){
 	if ($dbc->name == "vrb2") {
 		$vrb_db = $dbc->dbName;
 	}
 }
 
-$user = $_SESSION['user'];
+$user = getSessVal('user');
 $dbh = dbConnect("icms");
 
 extract($_REQUEST);
@@ -144,7 +144,7 @@ else{
 
 createTab("OLS e-Courtesy - " . $division, "/workflow/show_ols_docs.php?division=" . $division, 1, 1, "workflow");
 
-$xml = simplexml_load_file($icmsXml);
+$xml = simplexml_load_file($_SERVER['JVS_ROOT'] . "/conf/ICMS.xml");
 $smarty->assign('olsURL', $xml->olsURL);
 $smarty->assign('documents', $documents);
 $smarty->assign('wfCount', $wfcount);

@@ -1,8 +1,8 @@
 <?php
 # transfer.php - transfers a given document to someone else's workflow queue
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-include "../icmslib.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/common.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php";
+require_once $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
 
 $ts=date("m/d/Y h:i:s A");
 
@@ -20,7 +20,8 @@ $icms = dbConnect("icms");
 
 $query = "
     select
-        queue
+        queue,
+		ucn
     from
         workflow
     where
@@ -28,6 +29,7 @@ $query = "
 ";
 $rec = getDataOne($query, $dbh, array('docid' => $docid));
 $fromqueue = $rec['queue'];
+$ucn = $rec['ucn'];
 
 $query = "
     update
@@ -66,35 +68,34 @@ $cqQuery = "
 $cqRow = getDataOne($cqQuery, $jdbh, array("toqueue" => $toqueue));
 
 if(!empty($cqRow) && !empty($cqRow['email_address'])){
-	
 	if(strpos($cqRow['queue_type'], "Emergency") !== false){
-		$recips = $cqRow['email_address'];
-		$uid = md5(uniqid(time()));
-		$text = "An emergency filing has been received for review. Please follow the instructions below:<br/>";
+        $recips = $cqRow['email_address'];
+        $uid = md5(uniqid(time()));
+        $text = "An emergency filing has been received for review. Please follow the instructions below:<br/>";
 		$text .= "<ul>";
 		$text .= "<li><strong>PLEASE NOTE:</strong>You must be connected to the County network (either at a courthouse, or by VPN) <u>to access the emergency filing in Step 3 below</u>.</li>";
 		$text .= "<li>If you are away from a courthouse, you will be required to log into your VPN to access JVS.</li>";
 		$text .= "<ul>";
-		$text .= "<li>For instructions on how to log into your VPN from your Judicial iPad, click <a href=\"https://e-services.co.Sarasota-beach.fl.us/scheduling/style/images/ipad-vpn.png\" target=\"_blank\">here</a>.</li>";
-		$text .= "<li>If you are using a Windows-based desktop or laptop away from a courthouse, <a href=\"https://vpn.co.Sarasota-beach.fl.us/my.policy\" target=\"_blank\">click here to access the VPN login page</a>.</li>";
+		$text .= "<li>For instructions on how to log into your VPN from your Judicial iPad, click <a href=\"https://e-services.co.palm-beach.fl.us/scheduling/style/images/ipad-vpn.png\" target=\"_blank\">here</a>.</li>";
+		$text .= "<li>If you are using a Windows-based desktop or laptop away from a courthouse, <a href=\"https://vpn.co.palm-beach.fl.us/my.policy\" target=\"_blank\">click here to access the VPN login page</a>.</li>";
 		$text .= "</ul>";
 		$text .= "</ul>";
 		$text .= "<u>To access the <span style=\"color:red\"><strong>" . $cqRow['queue_type'] . " Queue</strong></span></u>:";
 		$text .= "<ol>";
-		$text .= "<li>(Once connected to the County network) <a href=\"https://jvs.15thcircuit.com/case/workflow.php?queueName=" . $cqRow['queue_name'] . "\" target=\"_blank\">Click here to access the " . $cqRow['queue_type'] . " Queue in JVS</a>.</li>";
+		$text .= "<li>(Once connected to the County network) <a href=\"https://jvs.jud12.org/workflow.php?queueName=" . $cqRow['queue_name'] . "\" target=\"_blank\">Click here to access the " . $cqRow['queue_type'] . " Queue in JVS</a>.</li>";
 		$text .= "<li>You will be prompted to log into JVS.</li>";
 		$text .= "<li>Once logged in, view the " . $cqRow['queue_type'] . " Queue to access and review the filing. </li>";
 		$text .= "<li>After review, e-sign and e-file/e-serve the pleading.</li>";
 		$text .= "</ol>";
-		$text .= "<em>If you have any questions or require assistance (including after-hours), please e-mail <a href=\"mailto:CAD-HELP@jud12.flcourts.org\">CAD-HELP@jud12.flcourts.org</a> or call 561-318-1012.</em>";
+		$text .= "<em>If you have any questions or require assistance (including after-hours), please e-mail <a href=\"mailto:webhelp@jud12.flcourts.org\">webhelp@jud12.flcourts.org</a> or call 561-318-1012.</em>";
 		
 		$plaintext = str_replace("<br>", "\r\n", $text);
 	
-		//$from_mail = $fromqueue . "@jud12.flcourts.org";
+		//$from_mail = $fromqueue . "@pbcgov.org";
 		$from_mail = $cqRow['email_address'];
 		
 		$header = "From: ".$from_mail."\r\n";
-		//$header .= "cc: nchessman@jud12.flcourts.org\r\n";
+		//$header .= "cc: nchessman@pbcgov.org\r\n";
 		$header .= "MIME-Version: 1.0\r\n";
 		$header .= "X-Priority: 1 (Highest)\r\n";
 		$header .= "X-MSMail-Priority: High\r\n";
@@ -128,6 +129,23 @@ $result['message'] = "Document ID $docid was moved from queue '$fromqueue' to qu
 
 // Unset all this stuff - we're done with the order
 unsetQueueVars();
+
+//And remove the Order Creation tab if we transferred this from within the order
+foreach($_SESSION['tabs'] as $key1 => $t){
+	if($t['name'] == $ucn){
+		foreach($t['tabs'] as $key2 => $t2){
+			if($t2['name'] == "Order Creation"){
+				if(count($_SESSION['tabs'][$key1]['tabs']) > 1){
+					unset($_SESSION['tabs'][$key1]['tabs'][$key2]);
+					$_SESSION['tabs'][$key1]['href'] = "/cgi-bin/search.cgi?name=" . $ucn;
+				}
+				else{
+					unset($_SESSION['tabs'][$key1]);
+				}
+			}
+		}
+	}
+}
 
 header("Content-type: application/json");
 print json_encode($result);

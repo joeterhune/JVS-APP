@@ -1,15 +1,16 @@
 <?php
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once('Smarty/Smarty.class.php');
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+include $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+include $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
 
-include "../icmslib.php";
-include "../caseinfo.php";
+require_once('Smarty/Smarty.class.php');
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
+$smarty->error_reporting = E_ALL & ~E_NOTICE;
 
 #
 # generate_form_fields creates the HTML form elements for filling in 
@@ -18,9 +19,10 @@ $smarty->setCacheDir($cacheDir);
 
 function generate_form_fields($dbh,$formid,$FORMDATA,$chaddress,$countynum,$division,$ucn,$casetype) {
     $gff = new Smarty;
-    $gff->setTemplateDir($templateDir);
-    $gff->setCompileDir($compileDir);
-    $gff->setCacheDir($cacheDir);
+    $gff->setTemplateDir($GLOBALS['templateDir']);
+    $gff->setCompileDir($GLOBALS['compileDir']);
+    $gff->setCacheDir($GLOBALS['cacheDir']);
+    $gff->error_reporting = E_ALL & ~E_NOTICE & ~E_WARNING;
     
     $gff->assign('chaddress',$chaddress);
     $gff->assign('formid', $formid);
@@ -41,6 +43,13 @@ function generate_form_fields($dbh,$formid,$FORMDATA,$chaddress,$countynum,$divi
     $gff->assign('formname',$formname);
     
     $orderfields=json_decode($orderfieldsjson,true);
+    
+    if(isset($_SESSION['saved_form_data']) && !empty($_SESSION['saved_form_data'])){
+        $gff->assign('saved_form_data', $_SESSION['saved_form_data']);
+    }
+    else{
+        $gff->assign('saved_form_data', "");
+    }
     
     # get event types for dropdown below
     $query = "
@@ -93,8 +102,7 @@ function generate_form_fields($dbh,$formid,$FORMDATA,$chaddress,$countynum,$divi
 # generate_builtin_fields creates the hidden values for the built-in variables
 
 function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMDATA,$divisioncode,$docid, $signName) {
-    
-    $config = simplexml_load_file($_SERVER['APP_ROOT'] . "/conf/ICMS.xml");
+    global $config;
     
     $url = sprintf("%s/divInfo", (string) $config->{'icmsWebService'});
     
@@ -114,14 +122,10 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
     $row = getDataOne($query, $dbh, array("form_id" => $docid));
     $form_name = $row['form_name'];
 
-    //fb($fields,"FIELDS");
-    //fb($url,"URL");
-    //fb($json,"JSON");
-    
-    if (is_conf_file("Divisions.$countynum.json")) {
-        $divconf = load_conf_file("Divisions.$countynum.json");
+    if (file_exists("Divisions.$countynum.json")) {
+        $divconf = load_conf_file($_SERVER['JVS_ROOT'] . "/conf/Divisions.$countynum.json");
     } else {
-        $divconf = load_conf_file("Divisions.Default.json");
+        $divconf = load_conf_file($_SERVER['JVS_ROOT'] . "/conf/Divisions.Default.json");
     }
     
     $casetype = getDivType($divisioncode);
@@ -131,10 +135,11 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
     }
     
     $gbi = new Smarty;
-    $gbi->setTemplateDir($templateDir);
-    $gbi->setCompileDir($compileDir);
-    $gbi->setCacheDir($cacheDir);
-    
+    $gbi->setTemplateDir($GLOBALS['templateDir']);
+    $gbi->setCompileDir($GLOBALS['compileDir']);
+    $gbi->setCacheDir($GLOBALS['cacheDir']);
+    $gbi->error_reporting = E_ALL & ~E_NOTICE;
+
     //$divname = getCaseDiv($ucn);
     $divname = $divisioncode;
     $caseid = getCaseID($ucn);
@@ -163,38 +168,27 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
         } # skip unused built-ins...
         
         switch($code) {
-			
-			/*case "ListVars":
-				$val = "<p><strong>Courtroom:</strong> ".$divInfo['Courtroom']."</p>";
-				$val.= "<p><strong>City: </strong>".$divInfo['City']."</p>";
-				$val.= "<p><strong>JudgeTitle: </strong>".$divInfo['JudgeTitle']."</p>";
-				$val .=  implode(",",array_keys($divInfo));
-				$val .= "<ul>";
-				
-			foreach($divInfo as $x)
-				{
-						$val .= "<li>".$x."</li>";
-				}
-			$val .= "</ul>";
-				break;*/
             case "ADACoordinator":
                 $val = (string) $config->{'ADACoordinator'};
                 break;
             case "ADAText":
             	$val = getADAText();
-            	break;    
+            	break;
+            case "ADAText_short":
+                $val = getADATextShort();
+                break;
             case "InterpreterText":
-            	$val = getInterpreterText();
-            	break;
+                $val = getInterpreterText();
+                break;
            	case "TranslatorText":
-            	$val = getTranslatorText();
-            	break;
+                $val = getTranslatorText();
+                break;
             case "GMvacate_text":
-            	$val = getGMVacateText();
-            	break;
+                $val = getGMVacateText();
+                break;
             case "FileExp_text":
-            	$val = getFileExpText();
-            	break;
+                $val = getFileExpText();
+                break;
             case "casetype":
                 $val = strtoupper($casetype);
                 break;
@@ -203,16 +197,16 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 break;
             case "case_number":
             	list($ucn, $db_type) = sanitizeCaseNumber($ucn);
-            	if ($db_type == 'banner') {
-            		$ucn = getBannerExtendedCaseId($ucn);
-            	}
+                if ($db_type == 'banner') {
+                    $ucn = getBannerExtendedCaseId($ucn);
+                }
                 $val = $ucn;
                 break;
             case "isCircuit":
                 $val = isCircuit($ucn);
                 break;
             case "cc_list":
-					break;
+                break;
             case "case_caption":
                 // continue; # set by Parties tab
                 break;
@@ -220,7 +214,7 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 $val = strtoupper($counties->{$countynum}->{'circuit'});
                 break;
             case "circuit":
-				  $val = $counties->{$countynum}->{'circuit'};
+                $val = $counties->{$countynum}->{'circuit'};
                 break;
             case "Circuit":
                 $val = $counties->{$countynum}->{'circuit'};
@@ -235,7 +229,7 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 $val=strtoupper($counties->{$countynum}->{'name'});
                 break;
             case "county":
-			 $val = $counties->{$countynum}->{'name'};
+                $val = $counties->{$countynum}->{'name'};
                 break;
             case "County":
                 $val = $counties->{$countynum}->{'name'};
@@ -248,14 +242,14 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
             case "courthouse_name":
                 $val = $divInfo['CourthouseName'];
                 break;
-           case "courthouse_location":
-           		$c_arr = explode(" ", $divInfo['CourthouseName']);
+            case "courthouse_location":
+                $c_arr = explode(" ", $divInfo['CourthouseName']);
                 $val = $c_arr[0];
                 break;
 			case "ddallcities":
             case "courthouse_city":
                 $val = $divInfo['City'];
-				if($val=="") $val = "West Sarasota"; // default to west Sarasota if not found
+				if($val=="") $val = "West Sarasota"; // default to west palm if not found
                 break;
             case "courthouse_state":
                 $val = $divInfo['State'];
@@ -267,8 +261,6 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 $val = $divInfo['CourthouseAddress'];
                 break;
             case "judge_name":
-				//$sigVars = getTitle($signName,$docid);
-				//$val = "<span class='sig-name'>".$sigVars['FullName']."</span>";
 				$val = $divInfo['FullName'];
                 break;
             case "courtroom":
@@ -287,18 +279,11 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 $val = $divInfo['Suffix'];
                 break;
 			case "judge_title":
-				 $sigVars = getTitle($signName,$docid);
+                $sigVars = getTitle($signName,$docid);
+                $jTitle = key_exists('Title', $sigVars) ? $sigVars['Title'] : '&nbsp;';
 				//get the signature user title from AD lookup
-				$val = "<span class='sig-title'>".$sigVars['Title']."</span>";
+				$val = "<span class='sig-title'>$jTitle</span>";
 				break;
-			
-            //    break;
-            # if array, we handled in generate_form_fields above
-            //case "courthouse_address_only":
-            //case "courthouse_mail_address":
-            //case "courthouse_name":
-            //    $val=""; # set by JavaScript
-            //    break;
             case "DivisionID":
                 $val=$divname;
                 break;
@@ -313,7 +298,7 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
                 $val = date('F');
                 break;
             case "Day":
-            	$val = date('d');
+                $val = date('d');
                 break;
             case "Year":
                 $val = date('Y');
@@ -325,23 +310,23 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
 				}
 				break;
 			case "LinkedCaseList":
-				//This takes a while so I'm not calling it if it's not required
-				if($form_name == "DCM Case Management Order"){
-					$val = getLinkedCases($caseid, false, true);
-				}
-				break;
+                //This takes a while so I'm not calling it if it's not required
+                if($form_name == "DCM Case Management Order"){
+                    $val = getLinkedCases($caseid, false, true);
+                }
+                break;
 			case "LinkedCaseAndStatusList":
-				//This takes a while so I'm not calling it if it's not required
-				if($form_name == "DCM Case Management Order"){
-					$val = getLinkedCases($caseid, false, false, true);
-				}
-				break;
+                //This takes a while so I'm not calling it if it's not required
+                if($form_name == "DCM Case Management Order"){
+                    $val = getLinkedCases($caseid, false, false, true);
+                }
+                break;
             case "ucn":
             	list($ucn, $db_type) = sanitizeCaseNumber($ucn);
-            	if ($db_type == 'banner') {
-            		$ucn = getBannerExtendedCaseId($ucn);
-            	}
-            	$val = $ucn;
+                if ($db_type == 'banner') {
+                    $ucn = getBannerExtendedCaseId($ucn);
+                }
+                $val = $ucn;
                 break;
             case "PRAttorneyAddress":
             	//This takes a while so I'm not calling it if it's not required
@@ -350,23 +335,33 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
             	}
             	break;   
             case "RespAttorneyAddress":
-            	//This takes a while so I'm not calling it if it's not required
-            	if($casetype == "Probate"){
-            		$val = getRespondentAttorneyAddress($caseid);
-            	}
-            	break;
+                //This takes a while so I'm not calling it if it's not required
+                if($casetype == "Probate"){
+                    $val = getRespondentAttorneyAddress($caseid);
+                }
+                break;
             case "caseTypeDesc":
-            	$val = getCaseTypeDescription($caseid);
-            	break;
+                $val = getCaseTypeDescription($caseid);
+                break;
             case "CourtTypeDesc":
-            	$val = getCourtTypeDescription($caseid);
-            	break;
+                $val = getCourtTypeDescription($caseid);
+                break;
             case "FileDate":
             	$val = getCaseFileDate($caseid);
             	break;	
+            case "DV_next_date":
+                if($casetype == "Family"){
+                    $val = getDVNext($divname, "date");
+        		}
+                break;
+            case "DV_next_time":
+                if($casetype == "Family"){
+                    $val = getDVNext($divname, "time");
+                }
+                break;
             case "petAttorney":
             	if($casetype == "Family" || ($casetype == "Probate")){
-            		$val = getPetitionerAttorney($caseid);
+                    $val = getPetitionerAttorney($caseid);
             	}
             	break;
             case "respAttorney":
@@ -375,59 +370,108 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
             	}
             	break;
             case "RespAttorneyBarNo":
-            	if($casetype == "Family" || ($casetype == "Probate")){
-            		$val = getRespondentAttorneyBarNumber($caseid);
-            	}
-            	break;
+                if($casetype == "Family" || ($casetype == "Probate")){
+                    $val = getRespondentAttorneyBarNumber($caseid);
+                }
+                break;
             case "petName":
-            	if($casetype == "Family" || ($casetype == "Probate")){
-	            	$val = getPetitionerName($caseid);
+                if($casetype == "Family" || ($casetype == "Probate")){
+                    $val = getPetitionerName($caseid);
             	}
-            	break;
+                break;
             case "respName":
-            	if($casetype == "Family" || ($casetype == "Probate")){
-	            	$val = getRespondentName($caseid);
-            	}
+                if($casetype == "Family" || ($casetype == "Probate")){
+                    $val = getRespondentName($caseid);
+                }
             	break;
+            case "algIncpName":
+                if($casetype == "Probate"){
+                    $val = getAllegedIncapacitatedName($caseid);
+                }
+                break;
             case "pltName":
-            	if($casetype == "Circuit Civil" || ($casetype == "County Civil")){
-            		$val = getPlaintiffName($caseid);
-            	}	
+                if($casetype == "Circuit Civil" || ($casetype == "County Civil")){
+                    $val = getPlaintiffName($caseid);
+                }	
             	break;
             case "dftName":
-            	if($casetype == "Circuit Civil" || ($casetype == "County Civil")){
-            		$val = getDefendantName($caseid);
-            	}
+                if($casetype == "Circuit Civil" || ($casetype == "County Civil")){
+                    $val = getDefendantName($caseid);
+                }
             	break;
             case "pltNameAndAddress":
-            	if($casetype == "Circuit Civil" || ($casetype == "County Civil")){
-            		$val = getPlaintiffNameAndAddress($caseid);
-            	}
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getPlaintiffNameAndAddress($caseid);
+            		
+            		if($casetype == "Felony" || ($casetype == "Misdemeanor") || ($casetype == "Traffic")){
+            		    $val = "STATE OF FLORIDA";
+                    }
+                }
             	break;
+            case "dftNameAndAddress":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getDefendantNameAndAddress($caseid);
+                }
+                break;
+            case "pltcontact":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getPlaintiffPhone($caseid);
+                }
+                break;
+            case "dftcontact":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getDefendantPhone($caseid);
+                }
+                break;
+            case "pltAttorneyNameAndAddress":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getAttorneyInfo($caseid, "address", "plaintiff", $casetype);
+                }
+                break;
+            case "dftAttorneyNameAndAddress":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getAttorneyInfo($caseid, "address", "defendant", $casetype);
+                }
+                break;
+            case "pltAttorneycontact":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getAttorneyInfo($caseid, "phone", "plaintiff", $casetype);
+                }
+                break;
+            case "dftAttorneycontact":
+                if($casetype != "Juvenile" && ($casetype != "Family")){
+                    $val = getAttorneyInfo($caseid, "phone", "defendant", $casetype);
+                }
+                break;
             case "propertyAddress":
-            	if($casetype == "County Civil"){
-            		$val = getPropertyAddress($caseid);
-            	}
-            	break;
+                if($casetype == "County Civil"){
+                    $val = getPropertyAddress($caseid);
+                }
+                break;
             case "MostRecentDocketDate":
-            	if($casetype == "Family" || ($casetype == "Probate")){
-            		$val = getMostRecentDocketDate($caseid);
-            	}	
+                if($casetype == "Family" || ($casetype == "Probate")){
+                    $val = getMostRecentDocketDate($caseid);
+                }	
             	break;
             case "childrenAndDOBs":
-            	if($casetype == "Family" || ($casetype == "Juvenile")){
-            		$val = getChildrenAndDOBs($caseid);
-            	}	
+                if($casetype == "Family" || ($casetype == "Juvenile")){
+                    $val = getChildrenAndDOBs($caseid);
+                }	
             	break;
+            case "childNames":
+                if($casetype == "Family" || ($casetype == "Juvenile")){
+                    $val = getChildNamesOnly($caseid);
+                }
+                break;
             case "PDNames":
-            	if($casetype == "Felony" || ($casetype == "Misdemeanor")){
-	            	$val = getPDNames($caseid);
-            	}
+                if($casetype == "Felony" || ($casetype == "Misdemeanor")){
+                    $val = getPDNames($caseid);
+                }
             	break;
             case "childCount":
-            	if($casetype == "Family" || ($casetype == "Juvenile") || ($casetype == "Probate")){
-            		$val = getChildCount($caseid);
-            	}	
+                if($casetype == "Family" || ($casetype == "Juvenile") || ($casetype == "Probate")){
+                    $val = getChildCount($caseid);
+                }	
             	break;
             case "mediatorRoom":
             	$c_arr = explode(" ", $divInfo['CourthouseName']);
@@ -437,47 +481,47 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
             	$val = getCurrentUserName();
             	break; 
             case "child_dob":
-            	if($casetype == "Juvenile"){
-            		$val = getChildDob($caseid);
-            	}
+                if($casetype == "Juvenile"){
+                    $val = getChildDob($caseid);
+                }
             	break;
             case "respDOB":
-            	if($casetype == "Family"){
-            		$val = getRespDOB($caseid);
-            	}
-            	break;
+                if($casetype == "Family"){
+                    $val = getRespDOB($caseid);
+                }
+                break;
             case "petDOB":
-            	if($casetype == "Family"){
-            		$val = getPetDOB($caseid);
-            	}
-            	break;
+                if($casetype == "Family"){
+                    $val = getPetDOB($caseid);
+                }
+                break;
             case "respAddress":
-            	if($casetype == "Family"){
-            		$val = getAllPetRespAddresses($caseid, "'RESPONDENT', 'DEFENDANT/RESPONDENT'");
-            	}
-            	break;
+                if($casetype == "Family"){
+                    $val = getAllPetRespAddresses($caseid, "'RESPONDENT', 'DEFENDANT/RESPONDENT'");
+                }
+                break;
             case "petAddress":
-            	if($casetype == "Family"){
-            		$val = getAllPetRespAddresses($caseid, "'PETITIONER', 'PLAINTIFF/PETITIONER'");
-            	}
-            	break;
+                if($casetype == "Family"){
+                    $val = getAllPetRespAddresses($caseid, "'PETITIONER', 'PLAINTIFF/PETITIONER'");
+                }
+                break;
             case "juv_mag":
-            	if($casetype == "Juvenile"){
-            		$juvMag = getJuvMagInfo($divname);
-            		$val = $juvMag['name'];
-            	}	
-            	break;
+                if($casetype == "Juvenile"){
+                    $juvMag = getJuvMagInfo($divname);
+                    $val = $juvMag['name'];
+                }
+                break;
             case "juv_mag_room":
-            	if($casetype == "Juvenile"){
-            		$juvMag = getJuvMagInfo($divname);
-            		$val = $juvMag['room'];
-            	}
+                if($casetype == "Juvenile"){
+                    $juvMag = getJuvMagInfo($divname);
+                    $val = $juvMag['room'];
+                }
             	break;
             case "juv_mag_address":
-            	if($casetype == "Juvenile"){
-            		$juvMag = getJuvMagInfo($divname);
-            		$val = $juvMag['address'];
-            	}
+                if($casetype == "Juvenile"){
+                    $juvMag = getJuvMagInfo($divname);
+                    $val = $juvMag['address'];
+                }
             	break;
             case "petitioner":
             case "respondent":
@@ -499,7 +543,6 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
         //echo "<input type=hidden id=$code name=$code value=\"$val\">\n";
         $val="";
     }
-    
     $gbi->assign('data', $data);
     return $gbi->fetch('orders/generate_builtin_fields.tpl');
 }
@@ -512,9 +555,10 @@ function generate_builtin_fields($dbh,$countynum,$ucn,$counties,$SETTINGS,$FORMD
 
 function generate_esig_fields($dbh,$formid,$FORMDATA) {
     $esigtpl = new Smarty;
-    $esigtpl->setTemplateDir($templateDir);
-    $esigtpl->setCompileDir($compileDir);
-    $esigtpl->setCacheDir($cacheDir);
+    $esigtpl->setTemplateDir($GLOBALS['templateDir']);
+    $esigtpl->setCompileDir($GLOBALS['compileDir']);
+    $esigtpl->setCacheDir($GLOBALS['cacheDir']);
+    $esigtpl->error_reporting = E_ALL & ~E_NOTICE;
     
     # make a hash table of e-sig-related types...
     $query = "
@@ -596,6 +640,9 @@ function generate_esig_fields($dbh,$formid,$FORMDATA) {
 #
 #  MAIN PROGRAM
 #
+
+$config = simplexml_load_file($icmsXml);
+
 $ucn = getReqVal('ucn');
 $formid = getReqVal('formid');
 $docid = getReqVal('docid');
@@ -634,8 +681,8 @@ if ($docid!="" && $ucn=="") {
 $smarty->assign('ucn',$ucn);
 
 
-$countynum = 50;
-$counties=load_conf_file("county_db_info.json");
+$countynum = 58;
+$counties=load_conf_file($_SERVER['JVS_ROOT'] . "/conf/county_db_info.json");
 
 $chaddress=$counties->{$countynum}->{'courthouse_address'};
 $charray = array();
@@ -660,8 +707,8 @@ if ($docid != "") {  # an existing order in workflow, pull form data
 }
 
 if ($debug) {
-  echo " <script src='/javascript/jquery/jquery.min.js'></script>";
-  echo "<script src='/javascript/jquery/ui/js/jquery-ui.js'></script>";
+  echo " <script src='/icms/javascript/jquery/jquery.min.js'></script>";
+  echo "<script src='../javascript/jquery/ui/js/jquery-ui.js'></script>";
 }
 #
 # now generate all the visible and hidden form fields...
@@ -788,7 +835,7 @@ function GetFieldValue(varname) {
 $().ready(function () {
     $(".datepick").datepicker({
        showOn:"button",
-       buttonImage: "/case/style/images/calendar.gif",
+       buttonImage: "/style/images/calendar.gif",
        buttonImageOnly: true
     });
     $(".chaddress").change(HandleAddressChange);

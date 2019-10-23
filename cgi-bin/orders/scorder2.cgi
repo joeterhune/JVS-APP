@@ -3,7 +3,7 @@
 #  orders2.cgi - generates PDF form orders from data
 #
 
-use lib "$ENV{'PERL5LIB'}";
+use lib "$ENV{'JVS_PERL5LIB'}";
 use strict;
 use DBI;
 use CGI;
@@ -44,8 +44,8 @@ my ($penvelopes,$pcopies,$paddresses,$usees);
 
 my $returnAddress = $info->param('returnAddr');
 
-my $DPATH="/usr/local/icms/cgi-bin/orders/forms";
-my $SIGS="/usr/local/icms/cgi-bin/orders/sigs/";
+my $DPATH="$ENV{'JVS_ROOT'}/cgi-bin/orders/forms";
+my $SIGS="$ENV{'JVS_ROOT'}/cgi-bin/orders/sigs/";
 my $FLAGS="";
 my $FFEXT=".form";  # form file extension
 
@@ -61,8 +61,8 @@ my ($esfound,$espage,$escnt,$esy);
 my @esstamps=();
 # used to determine if esignature files exist
 my ($essigexists,$esstampexists);
-my $essigfn = "/usr/local/icms/cgi-bin/orders/sigs/".$username."_sig.tif";
-my $esstampfn = "/usr/local/icms/cgi-bin/orders/sigs/".$username."_stamp.tif";
+my $essigfn = "$ENV{'JVS_ROOT'}/cgi-bin/orders/sigs/".$username."_sig.tif";
+my $esstampfn = "$ENV{'JVS_ROOT'}/cgi-bin/orders/sigs/".$username."_stamp.tif";
 $essigexists=$esstampexists=0;
 if (-e $essigfn) {$essigexists = 1;}
 if (-e $esstampfn) {$esstampexists = 1;}
@@ -246,7 +246,7 @@ sub check_time {
     return $time;
     }
 
-# modified for 12th - - 8th had addr parts on separate lines.  we want just
+# modified for 15th - - 8th had addr parts on separate lines.  we want just
 #one line for all parts, separated by commas.
 sub buildaddrlist {
     my($i,$addrline,$x,$realcount,$ta);
@@ -296,7 +296,7 @@ sub buildaddrlist {
     }
 }
 
-# new for 12th - extra cc list - built from user entry on the form
+# new for 15th - extra cc list - built from user entry on the form
 # - - /copystart, /copyend in DFIELDS section to define and using %copylist%
 # in form text
 sub buildextracc {
@@ -312,7 +312,7 @@ sub buildextracc {
     }
 }
 
-# new for 12th - selectable children list (for ufc) - built from user entry
+# new for 15th - selectable children list (for ufc) - built from user entry
 # on the form - - /selectkids section to define and using %selectkids% in
 # form text
 sub buildkids {
@@ -423,7 +423,7 @@ sub varsub {
 	} elsif ($vars{$varname}) {
 	    $vv=$vars{$varname};
 	    $vv=trim($vv);
-	    # for 12th, we won't bold all variables - - put bold in forms, where desired
+	    # for 15th, we won't bold all variables - - put bold in forms, where desired
 	    $line=~s/%$varname%/$vv/g;
 	} else {
 	    # was "UNKNOWN" - lms changed this to underscores
@@ -485,8 +485,8 @@ sub rpt {
     my $boxbottom=36;
     my $leading=15; # was 13
     my $fontsize=12; # was 14 for 8th
-    my $regfont=12;  # regular font size - new for 12th
-    my $adafont=18;  # ada font size - new for 12th
+    my $regfont=12;  # regular font size - new for 15th
+    my $adafont=18;  # ada font size - new for 15th
     my $border=8;
     my $hangmode=0;
     my $bullet;
@@ -712,7 +712,7 @@ sub rpt {
     }
 
     #
-    # 	Requires changes for Sarasota County
+    # 	Requires changes for Palm Beach County
     #
     sub getinfo_pbc {
 	my $ucn = shift;
@@ -1040,7 +1040,7 @@ sub rpt {
 		    }
 		} elsif ($line=~/^%selectkids%/) {
 		    # another special case--multi-line field
-		    # new for 12th circuit - to show selected children is a
+		    # new for 15th circuit - to show selected children is a
 		    # specified format
 		    # no block tags allowed!
 		    $parastart=$linenum;
@@ -1147,7 +1147,7 @@ sub rpt {
     }
 
     #
-    # Address list page (new, for 12th)
+    # Address list page (new, for 15th)
     #
     if ($paddresses eq "on") {
 	# write the 1st (up to) 40 addresses on a page

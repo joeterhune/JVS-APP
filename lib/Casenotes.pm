@@ -27,6 +27,9 @@ use Common qw (
     today
     ISO_date
     getUser
+    sanitizeCaseNumber
+    readJsonFile
+    writeJsonFile
 );
 
 use DB_Functions qw (
@@ -47,6 +50,8 @@ use Showcase qw (
 );
 use XML::Simple;
 use Date::Calc qw (:all Parse_Date);
+
+use Data::Dumper qw(Dumper);
 
 sub getFlags {
     my $casenum = shift;
@@ -140,7 +145,7 @@ sub casenotes {
     my $div = shift;
     my $ldap = shift;
   ############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $notesgroup = $conf->{'ldapConfig'}->{'notesgroup'};
   
     my $notesuser = inGroup(getUser(),$notesgroup,$ldap);
@@ -202,7 +207,7 @@ sub casenotes {
         foreach my $flag (@flaglist) {
             print qq{
                 <tr class="note">
-                    <td style="height: 25px"><img src="/case/images/$flag->{'Image'}" alt="flag"/></td>
+                    <td style="height: 25px"><img src="/images/$flag->{'Image'}" alt="flag"/></td>
                     <td>$flag->{'FlagDate'}</td>
                     <td>$flag->{'FlagUser'}</td>
                     <td><b>$flag->{'FlagDesc'}</b><br/></td>
@@ -360,29 +365,28 @@ sub mergeNotesAndFlags {
     my $flagtypes = shift;
     my $merged = shift;
     
+    my $dbh = dbConnect('showcase-rpt');
+    my $schema = 'dbo';
+    
+    # Ideally, this bit should be unnecessary - the case numbers should already be in the correct format - but
+    # just in case they're not...
     foreach my $casenum (keys %{$notes}) {
-        # Stopgap to fix improperly-formatted case numbers from Showcase (which use UCN instead of CaseNumber)
-        if ($casenum =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
-            $casenum = sprintf("%02d-%04d-%s-%06d-%s-%s", $1, $2, $3, $4, $5, $6);
-        }
-        elsif($casenum =~ /(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)/){
-        	my $newCaseNum = $casenum; 
-        	$newCaseNum =~ s/-//g;
-        	$casenum = getSCCaseNumber($newCaseNum);
+        if ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
+            # Nothing to see here. The case number is correct.
+        } else {
+            print "Got one!! $casenum\n";
+            $casenum = sanitizeCaseNumber($casenum);
         }
         
         $merged->{$casenum}=$notes->{$casenum}->[0]->{'CaseNote'}; # just the note
     }
     
     foreach my $casenum (sort(keys %{$flags})) {
-        # Stopgap to fix improperly-formatted case numbers from Showcase (which use UCN instead of CaseNumber)
-        if ($casenum =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
-            $casenum = sprintf("%02d-%04d-%s-%06d-%s-%s", $1, $2, $3, $4, $5, $6);
-        }
-        elsif($casenum =~ /(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)/){
-        	my $newCaseNum = $casenum; 
-        	$newCaseNum =~ s/-//g;
-        	$casenum = getSCCaseNumber($newCaseNum);
+        if ($casenum =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
+            # Nothing to see here. The case number is correct.
+        } else {
+            print "Got one!! $casenum\n";
+            $casenum = sanitizeCaseNumber($casenum);
         }
         
         my $caseflags = $flags->{$casenum}; # An array ref
@@ -649,10 +653,16 @@ sub buildnotes {
 	my $casetypes = shift;
 	my $outpath = shift;
 	my $DEBUG = shift;
+    my $MSGS = shift;
 
-    if ($DEBUG) {
-        print "DEBUG: Reading icmsmerged.txt\n";
-		readHash("$outpath/icmsmerged.txt", $merged);
+    my $icmsmerged = "$outpath/mergedNotesFlags.json";
+    
+    if ($DEBUG && (-f $icmsmerged)) {
+        print "DEBUG: Reading $icmsmerged\n";
+        
+        readJsonFile($merged, $icmsmerged);
+        
+		#readHash("$outpath/icmsmerged.txt", $merged);
     } else {
 		my $icmsconn = dbConnect("icms");
 		if(!defined($icmsconn)){
@@ -703,8 +713,17 @@ sub buildnotes {
 			getData(\%flagtypes,$query,$icmsconn,{hashkey => "FlagType"});
 
 			mergeNotesAndFlags(\%notes,$flags,\%flagtypes,$merged);
-
-			writehash("$outpath/icmsmerged.txt",$merged);
+            
+            if ($MSGS) {
+                print "Writing Merged Notes/Cases File $icmsmerged.\n";
+            }
+            
+            writeJsonFile($merged, $icmsmerged);
+            
+            if ($MSGS) {
+                print "Done writing Merged Notes/Cases File $icmsmerged.\n";
+            }
+            
 	    	$icmsconn->disconnect;
 		}
     }

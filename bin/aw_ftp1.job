@@ -1,0 +1,21 @@
+#!/bin/sh
+
+cat /var/www/Palm/civ/partylist.txt /var/www/Palm/civ/dummy.txt /var/www/Palm/juv/partylist.txt /var/www/Palm/pro/partylist.txt > /var/tmp/partylist.txt
+cat /var/www/Palm/civ/styles.txt /var/www/Palm/pro/styles.txt /var/www/Palm/juv/styles.txt > /var/tmp/styles.txt
+
+# Push out reports files to other ICMS boxen
+for HOST in icms-dev icms-gcc
+do
+	rsync -avz --delete /var/www/Palm $HOST:/var/www/
+done
+
+# Copy divcs.txt files into place
+for DIV in AA AB AE AF AG AH AI AJ AN AW
+do
+	LCDIV=`echo $DIV | tr '[A-Z]' '[a-z]'`
+	for HOST in 151.132.50.80 151.132.51.80
+	do
+		scp -p /var/www/html/Palm/civ/div$DIV/divcs.txt $HOST:/var/www/html/scheduling/div$LCDIV/data/
+	done
+    scp -p /var/www/html/Palm/civ/div$DIV/divcs.txt 151.132.36.155:/var/www/rich/scheduling/div$LCDIV/data/
+done

@@ -17,7 +17,7 @@ our @EXPORT_OK = qw(
     insertChartData
     );
 
-our $chartConfDir = "/usr/local/icms/etc/reportconfigs";
+our $chartConfDir = "$ENV{'JVS_ROOT'}/conf/reportconfigs";
 
 sub createChart{
     my $config = shift;
@@ -39,7 +39,7 @@ sub createChart{
 
     # Strip the HTTP DocumentRoot from chartTmpDir
     my $docTmpDir = $config->{'chartTmpDir'};
-    $docTmpDir =~ s/^$ENV{'DOCUMENT_ROOT'}//g;
+    $docTmpDir =~ s/^$ENV{'JVS_DOCROOT'}//g;
 
     if (!checkRequired($config, \@requiredElements)) {
         return undef;

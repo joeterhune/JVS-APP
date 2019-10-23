@@ -30,10 +30,10 @@ use Common qw (
     getArrayPieces
     returnJson
     getShowcaseDb
+	logToFile
     createTab
     getUser
     getSession
-    $templateDir
 );
 
 use DB_Functions qw(
@@ -61,10 +61,9 @@ use EService qw(
 );
 
 use PBSO2 qw (
-    getMugshotWithJacketId
-    getInmateIdFromBooking
+   getMugshotWithJacketId
+   getInmateIdFromBooking
 );
-use CGI;
 
 use JSON;
 
@@ -141,6 +140,8 @@ our @EXPORT_OK=qw(
 );
 
 our $proSeString = qq {<span style="font-size: smaller; color: blue">(Pro Se)&nbsp;&nbsp;</span>};
+
+my $SKIPPBSO = 0;
 
 #
 # not sure about this.... casestatus can be:
@@ -329,7 +330,7 @@ my $showpSealed = "((c.Sealed = 'N') OR (c.Sealed = 'Y' AND c.CourtType in ('GA'
 my $excludeSecret = " and (c.CaseType not in (" . join(",", @SECRETTYPES) . ") or c.CaseType is null)";
 my $criminalPhrase = " and c.CourtType in (" . join(",", @SCCODES, "'AP'") . ") ";
 
-# expecting:  58yyyyXXxxxxxxXXXAMB format
+# expecting:  58-yyyy-XX-xxxxxx-AXXX-MB format
 # case numbers are preceded by '58' in showcase...
 # sc done
 sub convertCaseNumToDisplay {
@@ -380,8 +381,13 @@ sub citationSearch {
 
         $query = qq {
             select
-                (vd.LastName + ', ' + vd.FirstName + ' ' + vd.MiddleName)
-                    as FullName,
+            	CASE
+            		WHEN vd.NameSuffixCode IS NOT NULL AND vd.NameSuffixCode <> ''
+            		THEN
+            			(vd.LastName + ' ' + vd.NameSuffixCode + ', ' + vd.FirstName + ' ' + vd.MiddleName)
+            		ELSE
+            			(vd.LastName + ', ' + vd.FirstName + ' ' + vd.MiddleName)
+            	END AS FullName,
                 CONVERT(varchar,FileDate,101) as FileDate,
                 vc.CaseNumber,
                 vc.DivisionID,
@@ -472,7 +478,13 @@ sub getDefendantAndAddress {
             PartyTypeDescription,
             FirstName,
             MiddleName,
-            LastName,
+            CASE
+            	WHEN NameSuffixCode IS NOT NULL AND NameSuffixCode <> ''
+            	THEN
+            		(LastName + ' ' + NameSuffixCode)
+            	ELSE
+            		LastName
+            END AS LastName,
             CONVERT(varchar(10),DOB,101) as DOB,
             CONVERT(varchar(10),DOD,101) as DOD,
             Race,
@@ -697,6 +709,7 @@ sub showcaseNameSearch{
     my $nameQuery = qq {
             select
                 p.LastName,
+                p.NameSuffixCode as Suffix,
                 p.FirstName,
                 p.MiddleName,
                 p.PartyTypeDescription,
@@ -728,14 +741,7 @@ sub showcaseNameSearch{
         $from .= qq {
             and p.PartyType in ($pts)
         }
-    } 
-    # LK - 1/9/17 - taking this out to search all party types?
-    #else {
-    #    $from .= qq {
-    #        and p.PartyTypeDescription in (} .
-    #        join(",", @partyTypes) . qq{)
-    #    };
-	#}
+    }
     
     if (defined($fieldref->{'DOB'})) {
         if ((defined($fieldref->{'fuzzyDOB'})) && ($fieldref->{'fuzzyDOB'})) {
@@ -816,7 +822,10 @@ sub showcaseNameSearch{
 				} else {
 					$query = qq{
                         $from
-                        and p.LastName = '$fieldref->{last}' and p.FirstName like '$fieldref->{first}%' 
+                        and ( 
+                        		p.LastName = '$fieldref->{last}' and p.FirstName like '$fieldref->{first}%' 
+                        		or p.LastName = '$fieldref->{first} $fieldref->{last}'
+                        	)
                     };
                         
                 	if (defined($fieldref->{'middle'})) {
@@ -953,6 +962,7 @@ sub showcaseNameSearch{
 	            		$tempHash->{'LastName'} = $partyTemp{$case}->[0]->{'LastName'};
 	            		$tempHash->{'FirstName'} = $partyTemp{$case}->[0]->{'FirstName'};
 	            		$tempHash->{'MiddleName'} = $partyTemp{$case}->[0]->{'MiddleName'};
+	            		$tempHash->{'Suffix'} = $partyTemp{$case}->[0]->{'Suffix'};
 	            		$tempHash->{'PartyTypeDescription'} = $partyTemp{$case}->[0]->{'PartyTypeDescription'};
 	            		$tempHash->{'DOB'} = $partyTemp{$case}->[0]->{'DOB'};
 	            		push(@{$temp}, $tempHash);
@@ -1071,16 +1081,15 @@ sub showcaseNameSearch{
 
 
 sub showcaseSearch {
-   my $fieldref = shift;
-   my $caseref = shift;
-   
+    my $fieldref = shift;
+	my $caseref = shift;
+    
 	my @charges;
 	my $query;
-   
-   my $sancasenum = sanitizeCaseNumber($fieldref->{'name'});
-	
+
+    my $sancasenum = sanitizeCaseNumber($fieldref->{'name'});
 	my $dbh = dbConnect($db);
-   my $schema = getDbSchema($db);
+    my $schema = getDbSchema($db);
 
 	# Temp storage for data
 	my $temp = [];
@@ -1108,18 +1117,19 @@ sub showcaseSearch {
 		# looking for exact match.
 
 		#my $casenum=$fieldref->{'name'};
-      my $casenum = sanitizeCaseNumber($fieldref->{'name'});
+        my $casenum = sanitizeCaseNumber($fieldref->{'name'});
 		$casenum =~ s/-//g;
 		if ($casenum !~ /^58/) {
 			$casenum="58".$casenum;
 		}
-      
+
 		$query = qq {
 			select
 				NULL as CaseStyle,
                 p.LastName,
 				p.FirstName,
 				p.MiddleName,
+				p.NameSuffixCode as Suffix,
 				c.UCN,
 				c.CaseNumber,
 				CONVERT(varchar,c.FileDate,101) as FileDate,
@@ -1182,15 +1192,24 @@ sub showcaseSearch {
 		}
 
 		getData($temp,$query,$dbh);
-      
+
 		if (scalar(@{$temp}) == 1) {
-         # We have a single match.  Redirect to scview.
-         my $c = $temp->[0]->{'CaseNumber'};
-         my $d = $temp->[0]->{'CaseID'};
-         my $output = getScCaseInfo($c, $d);
-         my $info = new CGI;
-         print $info->header;
-         print $output;
+			# We have a single match.  Redirect to scview.
+			my $c = $temp->[0]->{'CaseNumber'};
+			my $d = $temp->[0]->{'CaseID'};
+			my $output = getScCaseInfo($c, $d);
+            #my %result;
+            #$result{'status'} = 'Success';
+            #$result{'tab'} = sprintf('case-%s', $c);
+            #$result{'html'} = $output;
+            #$result{'tabname'} = $c;
+            #print "Content-type: text/html\n\n";
+            #my $json = JSON->new->allow_nonref;
+            #print $json->encode(\%result);
+            my $info = new CGI;
+            print $info->header;
+            print $output;
+			exit;
 		}
 	} elsif ($fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\*)/ ||
 			 $fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\D+){0,3}/ ) {        
@@ -1230,6 +1249,7 @@ sub showcaseSearch {
                 p.LastName,
 				p.FirstName,
 				p.MiddleName,
+				p.NameSuffixCode as Suffix,
 				c.UCN,
 				c.CaseNumber,
 				CONVERT(varchar,c.FileDate,101) as FileDate,
@@ -1298,13 +1318,12 @@ sub showcaseSearch {
             exit;
         }
     } else {
-            print "Content-type: text/html\n\n";
-            print "Wrong format used for the name or case number - couldn't ".
-            "understand '$fieldref->{name}'.<p>\n";
-            exit;
+                            print "Content-type: text/html\n\n";
+		print "Wrong format used for the name or case number - couldn't ".
+			"understand '$fieldref->{name}'.<p>\n";
+		exit;
 	}
 
-   
 	my $pbsodbh = undef;
 	my %inmates;
 	if (($fieldref->{'photos'} == 1) && (!$SKIPPBSO)) {
@@ -1485,7 +1504,7 @@ sub getDocketItems {
             CaseNumber,
             UCN,
             LegacyCaseNumber,
-            SeqPos,
+            DocketNumber as SeqPos,
             DocketDescription,
             CONVERT(varchar(10),EffectiveDate,101) as EffectiveDate,
             ObjectId
@@ -1878,7 +1897,7 @@ sub getCharges {
     
     my $query = qq {
         select
-            ChargeCount,
+            c.ChargeCount,
             SACourtStatuteDescription AS CourtStatuteDescription,
             CourtStatuteLevel,
             CourtStatuteNumber,
@@ -1906,11 +1925,22 @@ sub getCharges {
             CONVERT(varchar,CourtDecisionDate,101) as CourtDecisionDate,
             Sentence,
             SentenceStatus,
-            CONVERT(varchar,SentenceEffectiveDate,101) as SentenceEffectiveDate
+            CONVERT(varchar,SentenceEffectiveDate,101) as SentenceEffectiveDate,
+            d.CaseNumber,
+            d.DocketCode,
+            d.CaseID,
+            d.DocketDescription,
+            d.ObjectId,
+            d.UCN
         from
-            $schema.vCharge with(nolock)
+            $schema.vCharge c with(nolock)
+        left outer join
+        	$schema.vDocket d with(nolock)
+        		on d.CaseID = c.CaseID
+        		AND c.ChargeID = d.ChargeID
+				AND d.Image = 'Y'
         where
-            CaseID = ?
+            c.CaseID = ?
         order by
             ChargeCount asc
     };
@@ -2035,6 +2065,7 @@ sub getCourtEvents {
         push(@args, $startDate);
     }
 
+	my @tempEvs;
     my $query = qq {
         select
             CONVERT(varchar,CourtEventDate,101) as EventDate,
@@ -2058,9 +2089,9 @@ sub getCourtEvents {
             CourtEventDate desc
     };
 
-    getData($events,$query,$dbh,{valref => \@args});
+    getData(\@tempEvs,$query,$dbh,{valref => \@args});
     
-    foreach my $event (@{$events}) {
+    foreach my $event (@tempEvs) {
         $event->{'JudgeName'} =~ s/,\s+JUDGE/, /ig;
         my $time = (split(/\s+/,$event->{'CourtEventTime'}))[3];
         #my ($hour,$min,$sec,$mil) = split(":", $time);
@@ -2070,6 +2101,35 @@ sub getCourtEvents {
         } else {
             $event->{'RowClass'} = '';
         }
+    }
+    
+    if(scalar(@{$events}) > 0){
+    	foreach my $newEvent (@tempEvs) {
+    		my $found = 0;
+    		foreach my $oldEvent (@{$events}) {
+    		
+    			$oldEvent->{'CourtEventTime'} =~ s/^0+//;
+    			$oldEvent->{'CourtEventTime'} =~ s/ //;
+    		
+    			if($oldEvent->{'EventDate'} eq $newEvent->{'EventDate'} && ($oldEvent->{'CourtEventTime'} eq $newEvent->{'CourtEventTime'}) && ($oldEvent->{'Canceled'} eq $newEvent->{'Canceled'})){
+    				$found = 1;
+    			}
+    		}
+    		
+    		if($found eq "0"){
+    			push(@{$events}, $newEvent);
+    		}
+    	}
+    }
+    else{
+    	if(scalar(@tempEvs) > 0){
+    		@{$events} = @tempEvs;    
+    	}
+    }
+    
+    if(scalar(@{$events}) > 0){
+	    my @ordered = sort { join('', (split '/', $b->{'EventDate'})[2,0,1]) <=> join('', (split '/', $a->{'EventDate'})[2,0,1]) } @{$events};    
+	    @{$events} = @ordered;
     }
 }
 
@@ -2124,7 +2184,7 @@ sub getDockets {
                 DocketDescription,
                 LegacyDocketText as DocketText,
                 Image,
-                SeqPos,
+                DocketNumber as SeqPos,
                 (UCN + '|' + CONVERT(varchar(10),ObjectID)) as UCNObj,
                 ObjectID,
                 CASE
@@ -2158,7 +2218,7 @@ sub getDockets {
                 DocketDescription,
                 LegacyDocketText as DocketText,
                 Image,
-                SeqPos,
+                DocketNumber as SeqPos,
                 (UCN + '|' + CONVERT(varchar(10),ObjectID)) as UCNObj,
                 ObjectID,
                 CASE
@@ -2309,7 +2369,8 @@ sub getOtherCases {
                 CaseType,
                 NULL AS CaseStyle,
                 CourtType,
-                CaseID
+                CaseID,
+                DivisionID
             from
                 $schema.vCase with(nolock)
             where
@@ -2577,6 +2638,7 @@ sub getParties {
             FirstName,
             MiddleName,
             LastName,
+            NameSuffixCode as Suffix,
             CONVERT(varchar,DOB,101) as DOB,
             Race,
             Sex,
@@ -2718,25 +2780,25 @@ sub getAppellantAddresses {
 
 
 sub getScCaseInfo {
-   my $inUCN = shift;
-   my $caseid = shift;
-   
-   my $crimflag=0;
-   my $ucn=convertCaseNumToDisplay(clean($inUCN));
-   my $casenum = $ucn;
-   
-   my $referer_host = (split("\/",$ENV{'HTTP_REFERER'}))[2];
-   
-   my %data;
-   $data{'ucn'} = $ucn;
+    my $inUCN = shift;
+    my $caseid = shift;
+
+    my $crimflag=0;
+    my $ucn=convertCaseNumToDisplay(clean($inUCN));
+    my $casenum = $ucn;
+
+    my $referer_host = (split("\/",$ENV{'HTTP_REFERER'}))[2];
     
-   my $icmsuser = getUser();
+    my %data;
+    $data{'ucn'} = $ucn;
     
-   log_this('JVS', 'caselookup', 'User ' . $icmsuser . ' viewed case ' . $inUCN, $ENV{'REMOTE_ADDR'});
+    my $icmsuser = getUser();
     
-   my $ldap = ldapConnect();
+    log_this('JVS', 'caselookup', 'User ' . $icmsuser . ' viewed case ' . $inUCN, $ENV{'REMOTE_ADDR'});
+    
+    my $ldap = ldapConnect();
 	############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
@@ -2752,57 +2814,87 @@ sub getScCaseInfo {
    $data{'odpuser'} = inGroup($icmsuser,$odpsgroup,$ldap);
    $data{'notesuser'} = inGroup($icmsuser,$notesgroup,$ldap);
     
-   my $dbh = dbConnect($db);
-   my $schema = getDbSchema($db);
+
+
+    my $dbh = dbConnect($db);
+    my $schema = getDbSchema($db);
     
-   my $pbsoconn;
-   my $pbsoFailed = 0;
+    my $pbsoconn;
+    my $pbsoFailed = 0;
     
-   if (!$SKIPPBSO) {
-      eval {
-         local $SIG{ALRM} = sub { die "timeout\n" };
-         alarm 2;
-         $pbsoconn = dbConnect("pbso2",undef,1);
-         alarm 0;
-      };
-      
-      if ($@) {
-         if ($@ eq 'timeout') {
-            $pbsoconn = undef;
-            $pbsoFailed = 1;
-         }
-      }
-      
-      if (!defined($pbsoconn)) {
-         $pbsoFailed = 1;
-      }
-   }
-   
-   my @defendants;
-   
-   if (!$SKIPPBSO) {
-      $pbsoFailed = 1;
-   }
-   
-   getDefendantAndAddress($caseid, $dbh, \@defendants, $pbsoconn,$pbsoFailed, $schema);
-   
-   $data{'defendants'} = \@defendants;
-   
-   # TEMPORARY FIX UNTIL CLERK FIXES THIS ISSUE
-   ########
-   if ((defined($defendants[0]->{'CountyID'})) && ($defendants[0]->{'CountyID'} eq '0000000')) {
-      $defendants[0]->{'CountyID'} = undef;
-   }
-   ########
-   
-   my $defjacket = $defendants[0]->{'CountyID'};
-   $data{'MJID'} = $defjacket;
-   
-   $data{'parties'} = [];
-   
-   getParties($caseid,$dbh,$data{'parties'},$schema);
-   
-   my $query = qq {
+    if (!$SKIPPBSO) {
+	eval {
+	    local $SIG{ALRM} = sub { die "timeout\n" };
+	    alarm 2;
+	    $pbsoconn = dbConnect("pbso2",undef,1);
+	    alarm 0;
+	};
+	
+	if ($@) {
+	    if ($@ eq 'timeout') {
+		$pbsoconn = undef;
+		$pbsoFailed = 1;
+	    }
+	}
+	if (!defined($pbsoconn)) {
+	    $pbsoFailed = 1;
+	}
+    }
+
+    #my $sccasenum="58-".$ucn;
+
+    #my $scucn=$sccasenum;
+    #$scucn=~s#-##g;
+
+    #my $sclcn=$ucn;
+    #$sclcn=~s#-##g;
+    #$sclcn=substr($sclcn,0,13)."XX";
+
+    #$ucn=$scucn;
+    #my $casenum=$sccasenum;
+
+    # Because there is a new format (CaseNumber extension), we might not be
+    # able to find the 'old' cases using that number.
+    # If the case can't be found using the CaseNumber, try the LegacyCaseFormat.
+    
+    #my $cucn = getCaseUsingUCN($ucn,$sclcn,$dbh,$schema);
+    
+    #if (!defined($cucn)) {
+    #    print "Content-type: text/html\n\n";
+    #    print "<br/>No information was found for case number $ucn.\n";
+    #    $dbh->disconnect;
+    #    exit(1);
+    #}
+    
+    #$sccasenum = $casenum = $cucn->{'CaseNumber'};
+    #$sclcn = $cucn->{'LegacyCaseFormat'};
+    #$scucn = $ucn = $cucn->{'UCN'};
+
+    # get party data
+
+    my @defendants;
+    if (!$SKIPPBSO) {
+	$pbsoFailed = 1;
+    }
+    
+    getDefendantAndAddress($caseid, $dbh, \@defendants, $pbsoconn,$pbsoFailed, $schema);
+    
+    $data{'defendants'} = \@defendants;
+
+    # TEMPORARY FIX UNTIL CLERK FIXES THIS ISSUE
+    ########
+    if ((defined($defendants[0]->{'CountyID'})) && ($defendants[0]->{'CountyID'} eq '0000000')) {
+		$defendants[0]->{'CountyID'} = undef;
+    }
+    ########
+    my $defjacket = $defendants[0]->{'CountyID'};
+    $data{'MJID'} = $defjacket;
+
+    $data{'parties'} = [];
+    
+    getParties($caseid,$dbh,$data{'parties'},$schema);
+    
+    my $query = qq {
         select
             CaseNumber,
             FileDate,
@@ -2985,22 +3077,23 @@ sub getScCaseInfo {
     $data{'events'} = [];
     
     my $vdbh = dbConnect("vrb2");
-    getVrbEventsByCase($data{'events'},$casenum,$vdbh);
-    
+    getVrbEventsByCase($data{'events'}, $casenum, $vdbh);
+    getCourtEvents($caseid, $dbh, $data{'events'}, $schema);
+
     $data{'showTif'} = (($ENV{'HTTP_USER_AGENT'} !~ /mobile/i) && (inGroup(getUser(), "CAD-ICMS-TIF", $ldap)));
 
     $data{'appellants'} = [];
     # We've already looked up the parties.  Get the appellants from that list
     foreach my $party (@{$data{'parties'}}) {
-      if ($party->{PartyTypeDescription} eq "APPELLANT") {
-         push(@{$data{'appellants'}},$party);
-      }
-   }
+	if ($party->{PartyTypeDescription} eq "APPELLANT") {
+	    push(@{$data{'appellants'}},$party);
+	}
+    }
     # And look up the addresses
     getAppellantAddresses($caseid,$dbh,$data{'appellants'},$schema);
     
     $data{'reopens'} = [];
-    getReopenHistory($caseid,$dbh,$data{'reopens'},$schema);
+    getReopenHistory($caseid, $dbh, $data{'reopens'}, $schema);
     
     $data{'bookingHistory'} = {};
     $data{'bookingNums'} = [];
@@ -3044,10 +3137,9 @@ sub getScCaseInfo {
 	$data{'wfCount'} = $wfcount;
 	$data{'active'} = "cases";
 	$data{'tabs'} = $session->get('tabs');
-   
-   my $output = doTemplate(\%data,"$templateDir","casedetails/scCaseDetails.tt",0);
-   
-   return $output;
+    my $output = doTemplate(\%data,"$templateDir","casedetails/scCaseDetails.tt",0);
+    
+    return $output;
 }
 
 sub showcaseCivilSearch {
@@ -3058,10 +3150,9 @@ sub showcaseCivilSearch {
 	my $query;
     
     my $sancasenum = sanitizeCaseNumber($fieldref->{'name'});
-	
 	my $dbh = dbConnect($db);
     my $schema = getDbSchema($db);
-    
+
     my $divLimitSearch;
     if (defined($fieldref->{'limitdiv'})) {
         my $inString = join(",", @{$fieldref->{'limitdiv'}});
@@ -3077,6 +3168,7 @@ sub showcaseCivilSearch {
 		my $inString = join(",", @{$fieldref->{'causetype'}});
         $divLimitSearch = "and CaseType in ($inString) ";
     }
+
 	# Temp storage for data
 	my $temp = [];
 	
@@ -3084,6 +3176,7 @@ sub showcaseCivilSearch {
         #
 		# Case Number Search
 		#
+
 		my $casenum = sanitizeCaseNumber($fieldref->{'name'});
         
         # If we can determine that this is a criminal case, short-circuit this
@@ -3109,8 +3202,18 @@ sub showcaseCivilSearch {
 
         $query = qq {
 			select
-				DISTINCT c.UCN,
-				c.CaseID
+				CaseStyle AS LastName,
+				'' as first,
+				'' as mi,
+				'' as pidm,
+				CaseNumber,
+				CONVERT(varchar,c.FileDate,101) as FileDate,
+				CaseType,
+				CaseStatus,
+				'' as pdesc,
+				'' as DOB,
+				DivisionID,
+				CaseID
 			from
                 $schema.vCase c with(nolock) 
 			where
@@ -3124,7 +3227,6 @@ sub showcaseCivilSearch {
 				c.UCN like '$casenum%'
 			};
 		}
-		
 		$query .= " AND c.Expunged = 'N' ";
 
 		if ($fieldref->{'active'} == 1) {
@@ -3165,8 +3267,7 @@ sub showcaseCivilSearch {
 		if (scalar(@{$temp}) == 1) {
          
 			# We have a single match.  Redirect to scview.
-			my $c = $temp->[0]->{'UCN'};
-			$c =~ s/ //g; 
+			my $c = $temp->[0]->{'CaseNumber'};
 			my $d = $temp->[0]->{'CaseID'};
 			my $output = getScCivilCaseInfo($c, $d);
             #my %result;
@@ -3183,14 +3284,8 @@ sub showcaseCivilSearch {
             print $output;
 			exit;
 		}
-		if (scalar(@{$temp}) == 0) {
-			            my $info = new CGI;
-            print $info->header;
-			print "<h1>No Records Found. Please try again.</h1>";
-		}
 	} elsif ($fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\*)/ ||
-			 $fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\D+){0,3}/ ) 
-	{        
+			 $fieldref->{'name'}=~/(\d+)(\D+)(\d+)(\D+){0,3}/ ) {        
 		my ($year, $type, $seq, $suffix);
 
 		my $casenum;
@@ -3315,20 +3410,18 @@ sub showcaseCivilSearch {
 
 		if (scalar(@{$temp}) == 1) {
             my $c = $temp->[0]->{'CaseNumber'};
-			######## Added 11/6/2018 strip spaces
-			$c =~ s/ //g;
             $c = substr($c,3);
             my $d = $temp->[0]->{'CaseID'};
             # We have a single match.  Redirect to scview.
             print "Location: view.cgi?ucn=$c&caseid=$d&lev=2\n\n";
             exit;
         }
-	} else {
-		print "Content-type: text/html\n\n";
-		print "Wrong format used for the name or case number - couldn't ".
-		"understand '$fieldref->{name}'.<p>\n";
-		exit;
-	}
+      } else {
+               print "Content-type: text/html\n\n";
+               print "Wrong format used for the name or case number - couldn't ".
+               "understand '$fieldref->{name}'.<p>\n";
+               exit;
+      }
 
     foreach my $case (@{$temp}) {
 		$case->{'AGE'} = getageinyears($case->{'DOB'});
@@ -3352,6 +3445,9 @@ sub showcaseCivilSearch {
 			#if ($case->{'MiddleName'} ne "") {
 			#	$case->{'Name'} .= " $case->{MiddleName}";
 			#}
+		}
+		else{
+			$case->{'Name'} = $case->{'LastName'};
 		}
 
 		# Get the last activity date for the case
@@ -3395,7 +3491,6 @@ sub showcaseCivilSearch {
 
 		# And add it to the "final" array
 		$case->{'CaseNumber'} =~ s/^58-//g;
-		$case->{'CaseNumber'} =~ s/ //g;
 		push(@{$caseref}, $case);
 	}
 }
@@ -3406,7 +3501,7 @@ sub getScCivilCaseInfo {
     
     my $icmsuser = getUser();
 	############### Added 11/6/2018 jmt security from conf 
-	my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 	my $secGroup = $conf->{'ldapConfig'}->{'securegroup'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
 	my $sealedProbateGroup = $conf->{'ldapConfig'}->{'sealedprobategroup'};
@@ -3474,6 +3569,7 @@ sub getScCivilCaseInfo {
             DivisionID,
 			Sealed,
             CaseNumber,
+			UCN,
             CaseStatus,
 			CONVERT(varchar,FileDate,101) as FileDate,
 			CaseTypeDescription as CaseTypeDesc,
@@ -3598,7 +3694,8 @@ sub getScCivilCaseInfo {
     
     my $vdbh = dbConnect("vrb2");
     $data{'events'} = [];
-    getVrbEventsByCase($data{'events'}, $casenum, $vdbh);
+    getVrbEventsByCase($data{'events'}, $casenum, $vdbh);    
+    getCourtEvents($caseid, $dbh, $data{'events'}, $schema);
     
     # Check to see if any of these events have specified motions
     $data{'hasMotions'} = 0;
@@ -3696,13 +3793,13 @@ sub getScCivilCaseInfo {
 }
 
 sub getPropertyAddress {
-	my $caseid = shift;
-	my $dbh = shift;
-    my $returnHtml = shift;
-    
-    if (!defined($returnHtml)) {
-        $returnHtml = 1;
-    }
+   my $caseid = shift;
+   my $dbh = shift;
+   my $returnHtml = shift;
+   
+   if (!defined($returnHtml)) {
+      $returnHtml = 1;
+   }
     
    $dbh = dbConnect($db);
    my $schema = getDbSchema($db);
@@ -3762,18 +3859,22 @@ sub getPropertyAddress {
 }
 
 sub getParties_civil {
-    my $caseid = shift;
-    my $dbh = shift;
-    my $partyRef = shift;
-    my $attorneyRef = shift;
-    my $case = shift;
-    
+   my $caseid = shift;
+   my $dbh = shift;
+   my $partyRef = shift;
+   my $attorneyRef = shift;
+   my $case = shift;
+   
    $dbh = dbConnect($db);
    my $schema = getDbSchema($db);
 
     my $query = qq {
         SELECT
             CASE
+               WHEN p.PartyType = 'INCP'
+               	  THEN 0
+               WHEN p.PartyType = 'AINC'
+               	  THEN 0	  
                WHEN p.PartyTypeDescription = 'PLAINTIFF/PETITIONER'
                   THEN 1
                WHEN p.PartyType = 'PLT'
@@ -3808,6 +3909,7 @@ sub getParties_civil {
             p.LastName,
             p.FirstName,
             p.MiddleName,
+            p.NameSuffixCode as Suffix,
             p.PartyTypeDescription AS PartyTypeDesc,
             CASE when p.DOB is NULL
                     THEN '&nbsp;'
@@ -3851,9 +3953,11 @@ sub getParties_civil {
 			            pa.LastName,
 			            pa.FirstName,
 			            pa.MiddleName,
+			            pa.NameSuffixCode as Suffix,
 			            p.LastName AS Rep_PartyLastName,
 			            p.FirstName as Rep_PartyFirstName,
 			            p.MiddleName as Rep_PartyMiddleName,
+			            p.NameSuffixCode as Rep_PartySuffix,
 			            pa.PartyTypeDescription AS PartyTypeDesc,
 			            p.PartyTypeDescription AS Rep_PartyTypeDesc,
 			            CASE when pa.DOB is NULL
@@ -3888,7 +3992,6 @@ sub getParties_civil {
 							AND a.Represented_PersonID = p1.PersonID
 						WHERE a.CaseID = ?";
 						
-
 	my @attorneys;
 	getData(\@attorneys, $attQuery, $dbh, {valref => [$caseid]});
 	
@@ -3900,6 +4003,7 @@ sub getParties_civil {
 		$attRep{'FirstName'} = $att->{'Rep_PartyFirstName'};
 		$attRep{'LastName'} = $att->{'Rep_PartyLastName'};
 		$attRep{'MiddleName'} = $att->{'Rep_PartyMiddleName'};
+		$attRep{'Suffix'} = $att->{'Rep_PartySuffix'};
 		$att->{'Represents'} = {
 	 		'PartyTypeDesc' => $att->{'Rep_PartyTypeDesc'},
 	        'FullName' => buildName(\%attRep, 1)
@@ -3982,7 +4086,7 @@ sub getParties_civil {
 }
 
 sub getOtherCases_civil {
-	my $caseid = shift;
+   my $caseid = shift;
 	my $case = shift;
 	my $parties = shift;
 	my @partyRef;
@@ -4003,8 +4107,8 @@ sub getOtherCases_civil {
 
 	my $inString = join(",", @partyIds);
 
-#	$dbh = dbConnect($db);
-#   $schema = getDbSchema($db);
+	$dbh = dbConnect($db);
+   $schema = getDbSchema($db);
 
 	# First, find the number of cases for each party
 	my $query = qq {
@@ -4154,8 +4258,8 @@ sub lookupMailingAddress {
 	# If $addressRef is a hash ref, then it will build the appropriate string and populate the hashj
 	# element (based on the PIDM) with that string.  If it's an array ref, then it will simply
 	# push all of the addresses onto the array and allow the caller to deal with it.
-	my $addressRef = shift;
-	my $pidm = shift;
+   my $addressRef = shift;
+   my $pidm = shift;
    my $caseid = shift;
 	my $dbh = shift;
 	my $addressType = shift;
@@ -4289,7 +4393,7 @@ sub lookupMailingAddress {
 # get the judge name for this particular division
 sub getjudgedivfromdiv {
    my $thisdiv = shift;
-	my $dbh = shift;
+   my $dbh = shift;
    
    $dbh = dbConnect($db);
    my $schema = getDbSchema($db);
@@ -4310,19 +4414,17 @@ sub getjudgedivfromdiv {
 	};
 
 	my $judgename = getDataOne($query,$dbh,[$thisdiv]);
-    #my @list2 = sqllist($query);
-    #my($div,$last,$first,$mi,$newid)=split '~',$list2[0];
-    $judgename->{'FirstName'} =~ s/JUDGE/HON./;
+   $judgename->{'FirstName'} =~ s/JUDGE/HON./;
 
 	# Strip leading/trailing whitespace from name pieces
-	foreach my $field (['FirstName','MiddleName','LastName']) {
-        next if (!defined($judgename->{$field}));
-		$judgename->{$field} =~ s/^\s+//g;
-		$judgename->{$field} =~ s/\s+$//g;
+   foreach my $field (['FirstName','MiddleName','LastName']) {
+      next if (!defined($judgename->{$field}));
+      $judgename->{$field} =~ s/^\s+//g;
+      $judgename->{$field} =~ s/\s+$//g;
 	}
 	my $name;
-	if ((defined($judgename->{'MiddleName'})) && ($judgename->{'MiddleName'} ne '')) {
-		$name = sprintf("%s %s %s", $judgename->{'FirstName'}, $judgename->{'MiddleName'},$judgename->{'LastName'});
+   if ((defined($judgename->{'MiddleName'})) && ($judgename->{'MiddleName'} ne '')) {
+      $name = sprintf("%s %s %s", $judgename->{'FirstName'}, $judgename->{'MiddleName'},$judgename->{'LastName'});
 	} else {
 		$name = sprintf("%s %s", $judgename->{'FirstName'}, $judgename->{'LastName'});
 	}
@@ -4330,38 +4432,45 @@ sub getjudgedivfromdiv {
 }
 
 sub getSCCaseNumber {
-	my $case = shift;
-	
-	my $dbh = dbConnect($db);
+    my $case = shift;
+    my $dbh = shift;
+    
+    if (!defined($dbh)) {
+        $dbh = dbConnect($db);
+    }
+    
     my $schema = getDbSchema($db);
     my $where;
     
-    if ($case =~ /^58/) {
-    	if ($case =~ /(\d\d)(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)(\D\D\D\D)(\D\D)/) {
-    		$where = " ucn = '$case' ";
-    	}
-    	else{
+    if ($case =~ /^58-/) {
+        if ($case =~ /(\d\d)-(\d\d\d\d)-(\D\D)-(\d\d\d\d\d\d)-(\D\D\D\D)-(\D\D)/) {
+            $where = " CaseNumber = '$case' ";
+        }
+        else {
     		$where = " CaseNumber LIKE '%$case%' ";
     	}
     }
-    else{
-    	$case =~ s/ //g;
+    else {
+    	$case =~ s/-//g;
+        $case =~ s/^58//g;
+      
 	    if ($case =~ /(\d\d\d\d)(\D\D)(\d\d\d\d\d\d)/) {
 	    	$where = " LegacyCaseNumber = '$case' OR UCN LIKE '58$case%'";
 	    }
-	    else{
+	    else {
     		$where = " LegacyCaseNumber LIKE '%$case%' OR UCN LIKE '58$case%'";
     	}
     }
     
     my $query = qq {
-	    			 SELECT ucn
+	    			 SELECT CaseNumber
 	    			 FROM $schema.vCase
 	    			 WHERE $where
     			};
     			
     my $result = getDataOne($query, $dbh);
-    return $result->{'ucn'};
+    
+    return $result->{'CaseNumber'};
 }
 
 sub getCaseID {

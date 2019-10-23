@@ -1,13 +1,11 @@
 <?php
-// $Id$
 
-
-require_once("/var/jvs/public_html/php-lib/common.php");
-require_once("/var/jvs/public_html/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
 
 extract($_REQUEST);
 
-$user = $_SESSION['user'];
+$user = getSessVal('user');
 
 $dbh = dbConnect("icms");
 

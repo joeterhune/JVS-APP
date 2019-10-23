@@ -1,11 +1,14 @@
+
 <?php
 
-require_once("./icmslib.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/icmslib.php");
+
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+
 require_once('Smarty/Smarty.class.php');
-require_once("workflow/wfcommon.php");
-require_once("php-lib/common.php");
-require_once("php-lib/db_functions.php");
-//include 'icms.php';
+
 
 checkLoggedIn();
 
@@ -14,7 +17,7 @@ $smarty->setTemplateDir($templateDir);
 $smarty->setCompileDir($compileDir);
 $smarty->setCacheDir($cacheDir);
 
-$user = $_SESSION['user'];
+$user = getSessVal('user');
 $fdbh = dbConnect("icms");
 
 $myqueues = array($user);
@@ -74,25 +77,24 @@ function getval($varname,$infile) {
 	return($val);
 }
 
-
 function prettydate($date) {
-	list($month,$day,$year)=explode('/',$date);
-	return "As of ".date('l, F jS, Y',mktime(0,0,0,$month,$day,$year));
+	return date_format(date_create($date), 'l, F jS, Y');
 }
 
 
-function loaddata($rpath, $smarty) {
+function loaddata($rpath, $smarty, $reportPath) {
 	global $rptdate,$title1,$title2,$res,$path,$multvalues,$htlp;
     
     //$dpath = "$rpath/index.txt";
-    $dpath = $rpath;
-    
-    if (!file_exists("/var/www/html/$dpath")) {
+    $dpath = "$reportPath/$rpath";
+	
+    if (!file_exists("$dpath")) {
 		return;
 	}
-	$infile=fopen("/var/www/html/$dpath","r");
+	
+	$infile=fopen("$dpath","r");
 	if (!$infile) {
-		echo "Couldn't open /var/www/html/$dpath";
+		echo "Couldn't open $dpath";
 		return;
 	}
 
@@ -105,9 +107,9 @@ function loaddata($rpath, $smarty) {
     // echo $flag;
     fclose($infile);
 
-	$infile=fopen("/var/www/html/$dpath","r");
+	$infile=fopen("$dpath","r");
 	if (!$infile) {
-		echo "Couldn't open /var/www/html/$dpath";
+		echo "Couldn't open $dpath";
 		return;
 	}
 
@@ -117,6 +119,7 @@ function loaddata($rpath, $smarty) {
 	if (empty($yearMonth)) {
 		$yearMonth = date('Y-m');
 	}
+	
 	$smarty->assign('yearMonth', $yearMonth);
 	
 	$rptdate=prettydate($rptdate);
@@ -146,71 +149,25 @@ function loaddata($rpath, $smarty) {
 #
 # show is the main function of the report
 #
-function show($rpath,$older,$div,$smarty) {
-	global $res,$path,$multvalues,$title2,$htlp;
+function show($rpath,$older,$div,$smarty,$reportPath) {
+	global $res,$path,$multvalues,$title2,$htlp,$county;
+	
+	$jsonSrc = "$reportPath/$rpath";
+	
+	$data = array();
+	
+	readJsonFile($data, $jsonSrc);
+	
+	//print "<pre>"; var_dump($data); exit;
+	
+	$smarty->assign('yearMonth', substr($data['ReportDate'],0,7));
+	$smarty->assign('prettyDate', prettydate($data['ReportDate']));
     
-    loaddata($rpath, $smarty);
+	$smarty->assign('title1', $data['Title']);
+	$smarty->assign('title2', $data['Subtitle']);
     
-	$smarty->assign('title2', $title2);
-    
-    $caseTypes = array();
-    
-    if($multvalues != NULL) {
-		$fields = array();
-		$fields = explode(',',$multvalues);
-		for($i=0;$i<count($fields);$i++) {
-			//echo "<td id=rptname bgcolor=#D0FFD0><div class=h2>$fields[$i]</div>";
-		}
-
-		//print "</tr>";
-		for ($i=0;$i<count($res);$i++) {
-			list($heading,$count_0,$count_1,$level,$xpath)=$res[$i];
-			if ($heading=="BLANK") {
-				//print "<tr><td id=label1 colspan=2>&nbsp";
-			} else {
-				if ($level==1) {
-					$tot=$count_0;
-				} else {
-					if ($tot>0) {
-						$pct=sprintf("%5.2f%%",$count_0/$tot*100);
-					} else {
-						$pct="";
-					}
-				}
-			}
-		}
-	} else if($multvalues == NULL){
-		for ($i=0;$i<count($res);$i++) {
-            $thisType = array();
-			if ($res[$i][0] == "BLANK") {
-                $thisType['blank'] = 1;
-				//print "<tr>\n<td id=label1 colspan=2>\n&nbsp;\n</td>\n</tr>\n";
-			} else {
-				list($heading,$count,$level,$xpath)=$res[$i];
-                $thisType['path'] = $path;
-                $thisType['xpath'] = $xpath;
-                $thisType['desc'] = $heading;
-                $thisType['count'] = $count;
-                
-                if ($level==1) {
-					$tot=$count;
-					//echo "<a href=\"genlist.php?rpath=$path$xpath.txt&order=5\" />\n$heading\n</a>\n</td>\n";
-					//echo "<td id=data$level>\n$count\n</td>\n</tr>\n";
-				} else {
-					if ($tot>0) {
-						$pct=sprintf("%5.2f%%",$count/$tot*100);
-					} else {
-						$pct="";
-					}
-					//echo "<tr>\n<td id=label$level>\n";
-					//echo "<a href=\"genlist.php?rpath=$path$xpath.txt&order=5\" />\n$heading\n</a>\n</td>\n";
-					//echo "<td id=data$level>\n$count\n</td>\n<td id=data2>\n&nbsp;&nbsp;\n$pct\n</td>\n</tr>\n";
-				}
-			}
-            array_push($caseTypes, $thisType);
-		}
-		//echo "</table><td>";
-	}
+    $caseTypes = $data['CaseCounts'];
+		
     $divDesc = "";
 	if (hasCalendar($div,$title2,$divDesc)) {
         $smarty->assign('hasCalendar', 1);
@@ -218,6 +175,7 @@ function show($rpath,$older,$div,$smarty) {
     
     $smarty->assign('divDesc', $divDesc);
     $smarty->assign('caseTypes', $caseTypes);
+	$smarty->assign('county', $county);
     
     return $smarty->fetch("reports/genSumm.tpl");
 }
@@ -227,32 +185,49 @@ function show($rpath,$older,$div,$smarty) {
 
 // Main body
 
-$rpath = getReqVal('rpath');
-$divName = getReqVal('divName');
+$config = simplexml_load_file($icmsXml);
 
-//P in Sarasota was causing issues with division P....
+// Set a default value, in case there is no reportPath element defined
+$reportPath = isset($config->{'reportPath'}) ? (string) $config->{'reportPath'} : "/var/www/Sarasota";
+$divName = getReqVal('divName');
+$type = getReqVal('type');
+
+$county = $config->{'county'};
+
+//P in Palm was causing issues with division P....
 if($divName != "P"){
-	$archPath = substr($rpath, 0, strpos($rpath, $divName)) . $divName;
+	$archPath = substr($reportPath, 0, strpos($reportPath, $divName)) . $divName;
 }
 else{
-	$archPath = substr($rpath, 0, strpos($rpath, "/index.txt"));
+	$archPath = substr($reportPath, 0, strpos($reportPath, "/index.json"));
 }
 
 $yearMonth = getReqVal('yearmonth');
 
 if(!empty($yearMonth)){
-	$rpath = $archPath . "/" . $yearMonth . "/index.txt";
+	$rptMonth = "&month=" . $yearMonth;
+} else {
+	$rptMonth = "";
 }
 
-createTab("Division " . $divName, "/case/gensumm.php?rpath=" . $rpath . "&divName=" . $divName, 1, 1, "cases");
+createTab("Division " . $divName, "/gensumm.php?divName=$divName&type=$type" . $rptMonth, 1, 1, "cases");
 
-if (isset($_REQUEST['divxy'])) {
-    list($div,$type) = explode("~",$_POST['divxy']);
-    $rpath = "case/Sarasota/$type/div$div/index.txt";
-} else if (isset($_REQUEST['flagxy'])) {
-    list($num,$type) = explode("~", $_POST['flagxy']);
-    $rpath = "case/Sarasota/flags/$num/index.txt";
+$divxy = getReqVal('divxy');
+$flagxy = getReqVal('flagxy');
+
+if ($divxy != null) {
+    list($div,$type) = explode("~",$divxy);
+    $rpath = "$type/div$div";
+} else if ($flagxy != null) {
+    list($num,$type) = explode("~", $flagxy);
+    $rpath = "flags/$num";
     $older="no";
+} else {
+	if ($rptMonth != "") {
+		$rpath = sprintf("%s/div%s/%s", $type, $divName, $rptMonth);
+	} else {
+		$rpath = sprintf("%s/div%s", $type, $divName);
+	}
 }
 
 $older = getReqVal('older');
@@ -262,9 +237,10 @@ $smarty->assign('rpath',$rpath);
 $smarty->assign('archPath', $archPath);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "cases");
-$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->assign('tabs', getSessVal('tabs'));
+$smarty->assign('courttype',$type);
 
-$output = show($rpath,$older,$divName,$smarty);
+$output = show("$rpath/index.json",$older,$divName,$smarty,$reportPath);
 
 $result = array();
 

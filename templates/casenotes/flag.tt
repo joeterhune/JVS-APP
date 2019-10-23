@@ -86,7 +86,6 @@
                     </div>
 
             <div>
-                <input type="hidden" class="division" name="division" value="[% data.division %]"/>
 
                 <button class="flagSubmit">Submit Flags</button>&nbsp;&nbsp;&nbsp;
                 <!--<button class="flagCancel">Cancel</button>-->

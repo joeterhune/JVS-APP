@@ -1,12 +1,12 @@
 function popup(x,y) {
-    var wx=screen.width
+    var wx=screen.width;
     wx=wx-450;
     MyWindow=window.open('/'+x,y,'toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=500,top=0,left='+wx);
     return false;
 }
 
 function loadcty() {
-	var theform=document.forms['mainSearchForm'];
+    var theform=document.forms['mainSearchForm'];
     var x=theform.countyxx.options[theform.countyxx.selectedIndex].value;
     window.location=x+"/index.php";
     return false;
@@ -44,10 +44,11 @@ function gomag() {
 }
 
 function godiv(type) {
-	var theform=document.forms['mainSearchForm'];
+    //var theform=document.forms['mainSearchForm'];
 	var x = $("select[name=divxy_" + type + "] option:selected").val();
     var arr=x.split("~");
-    window.location="/gensumm.php?rpath=/Sarasota/"+arr[1]+"/div"+arr[0]+"/index.txt&divName=" + arr[0];
+    window.location="/reports/div_summ.php?divName=" + arr[0] + "&type=" + arr[1];
+    //window.location="/gensumm.php?divName=" + arr[0] + "&type=" + arr[1];
     return false;
 }
 

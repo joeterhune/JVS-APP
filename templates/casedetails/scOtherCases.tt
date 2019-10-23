@@ -14,6 +14,7 @@
                                                     <tr class="title">
                                                         <th>Case Number</th>
                                                         <th style="min-width: 75px">Case<br/>Type</th>
+                                                        <th style="min-width: 75px">Division</th>
                                                         <th style="min-width: 75px">Status</th>
                                                         <th style="min-width: 8em">Select<br/>
                                                             Select
@@ -26,10 +27,11 @@
                                                 [% FOREACH other IN data.otherCases %]
                                                     <tr class="[% other.RowClass %]">
                                                         <td style="text-align: center">
-                                                            <a class="caseLink" data-casenum="[% other.CaseNumber %]">[% other.CaseNumber %]</a>
+                                                            <a href="/cgi-bin/search.cgi?name=[% other.CaseNumber %]" class="caseLink" data-casenum="[% other.CaseNumber %]">[% other.CaseNumber %]</a>
 															<input type="hidden" class="hiddenCase" value="[% other.CaseNumber %]"/>
                                                         </td>
                                                         <td style="text-align: center">[% other.CaseType %]</td>
+                                                        <td style="text-align: center">[% other.DivisionID %]</td>
                                                         <td style="text-align: center">[% other.CaseStatus %]</td>
                                                         <td style="text-align: center">
                                                             <input class="otherCaseCheck" type="checkbox" name="ocselected" value="[% other.CaseNumber %];[% other.CaseID %]"/>

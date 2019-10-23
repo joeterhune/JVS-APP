@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -64,13 +64,13 @@ foreach my $doctCode (keys %items) {
     push(@images, $sorted[0]);
 }
 
-my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+my $conf = XMLin("$ENV{'JVS_ROOT'}/conf/ICMS.xml");
 my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 
 my $ucn = $casenum;
 $ucn =~ s/-//g;
-my $workPath = sprintf("%s/casefiles/%s", $ENV{'DOCUMENT_ROOT'}, $ucn);
+my $workPath = sprintf("/var/www/html/casefiles/%s", $ucn);
 
 my @documents;
 

@@ -5,11 +5,11 @@
    <meta name="GENERATOR" content="Mozilla/4.72 [en] (Windows NT 5.0; I) [Netscape]">
    <meta name="Author" content="Default">
    <title>Sarasota County Jail Inmate Lookup - connection test</title>
-   <link rel="stylesheet" type="text/css" name="stylin" href="/case/icms1.css">  
+   <link rel="stylesheet" type="text/css" name="stylin" href="/icms1.css">  
 </head>
 <?php $backlev=$lev-1; ?>
 <body>
-<a href=/case/index.php><img src=/case/icmslogo.jpg border=0></a><p>
+<a href=/index.php><img src=/icmslogo.jpg border=0></a><p>
 
 <form name="theform" method=post action=/cgi-bin/testpbsosearch.cgi>
 
@@ -30,7 +30,7 @@ Enter exact Jacket number.  This is not a 'like' search!
 
 <br/><br/>
 <hr>
-<i><font size=-1>Court Technology Department, 12th Judicial Circuit of Florida</font></i>
+<i><font size=-1>Court Technology Department, 15th Judicial Circuit of Florida</font></i>
 </body>
 </html>
 

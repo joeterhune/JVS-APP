@@ -54,7 +54,7 @@ $docref = getReqVal('nt_docref');
 $attachment = "";
 if ($docref != "") {
     $baseAttachment = preg_replace("/^$casenum\./", "", $docref);
-    $attachment = sprintf("/var/www/html/case/pdfs/%s", $baseAttachment);
+    $attachment = sprintf("/var/www/html/pdfs/%s", $baseAttachment);
 }
 if ($attachment != "") {
     if (file_exists($attachment)) {

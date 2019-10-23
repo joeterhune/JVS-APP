@@ -56,7 +56,7 @@
 						'height:' + element.outerHeight() + 'px;' +
 						'z-index:' + calculateZIndex(element) + ';">' +
             '<div class="pleasewait-content" style="text-align: center; color: #FFF; padding-top: ' + element.outerHeight() * 0.35 +'px; font-size: 1.2em;">' +
-              '<img src=/icons/pleasewait-loader.gif class="spinner" />' +
+              '<img src=/jvsicons/pleasewait-loader.gif class="spinner" />' +
               '<p>Please wait...</p>' +
             '</div>' +
           '</div>';

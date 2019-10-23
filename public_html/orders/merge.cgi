@@ -2,7 +2,7 @@
 
 # merge.cgi - merges the .tt form with JSON data, creating an html document for viewing/editing/printing
 BEGIN {
-    use lib "$ENV{'PERL5LIB'}";
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use CGI;
@@ -20,6 +20,7 @@ use DB_Functions qw (
 use Common qw (
     dumpVar
     returnJson
+    inArray
 );
 
 use MIME::Base64;
@@ -106,38 +107,19 @@ sub getFinalDispoStamp{
 	my $stampType = shift;
 	my $raw_string;
 	my $image;
-	
-	if($stampType eq "Dismissed After Hearing") { 
-    	open(IMAGE, "/usr/local/icms-web/case/images/dismissed-after-hearing.jpg") or die "$!";
-   		$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-   	}
-    elsif($stampType eq "Dismissed Before Hearing") { 
-    	open(IMAGE, "/usr/local/icms-web/case/images/dismissed-before-hearing.jpg") or die "$!";
-    	$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-    }
-    elsif($stampType eq "Dismissed by Default") { 
-    	open(IMAGE, "/usr/local/icms-web/case/images/dismissed-by-default.jpg") or die "$!";
-    	$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-    }
-    elsif($stampType eq "Disposed by Judge") { 
-    	open(IMAGE, "/usr/local/icms-web/case/images/disposed-by-judge.jpg") or die "$!";
-    	$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-   	}
- 	elsif($stampType eq "Disposed by Non-Jury Trial") { 
-    	open(IMAGE, "/usr/local/icms-web/case/images/disposed-by-nonjury-trial.jpg") or die "$!";
-    	$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-    }
-    elsif($stampType eq "Disposed by Jury Trial") {
-    	open(IMAGE, "/usr/local/icms-web/case/images/disposed-by-jury-trial.jpg") or die "$!";
-    	$raw_string = do{ local $/ = undef; <IMAGE>; };
-		$image = encode_base64($raw_string);
-    }
-    else{
+    
+    my @stampTypes = (
+        "Dismissed After Hearing", "Dismissed Before Hearing", "Dismissed By Default",
+        "Disposed by Judge", "Disposed by Non-Jury Trial", "Disposed by Jury Trial"
+    );
+    
+    if (inArray(\@stampTypes, $stampType)) {
+        my $imgfile = lc($stampType);
+        $imgfile =~ s/\s+/-/g;
+        open(IMAGE, "$ENV{'JVS_DOCROOT'}/images/$imgfile") or die "$!";
+        $raw_string = do{ local $/ = undef; <IMAGE>; };        
+        $image = encode_base64($raw_string);
+    } else {
     	$image = "";
     }
 	
@@ -150,14 +132,7 @@ sub calculateTRDueDate{
 	my $dt = DateTime->now;
 	$dt->add(days => $days);
 	my $indate = $dt->mdy('/');
-	my $dt = DateTime::Format::DateParse->parse_datetime($indate);
-	
-	#(my $sec, my $min, my $hour, my $mday, my $mon, my $year, my $wday, my $yday, my $isdst) = localtime();
-	#my $cal = Date::Calendar->new($Profiles->{'US-FL'});
-	#$year += 1900;
-	#$mon += 1;
-	#my $new_d = $cal->add_delta_workdays($year, $mon, $mday, $days);
-	#my $dt = DateTime::Format::DateParse->parse_datetime($new_d);
+	$dt = DateTime::Format::DateParse->parse_datetime($indate);
 	
     my $outdate=$dt->strftime('%B %e, %Y');
     return $outdate;
@@ -195,6 +170,10 @@ if ($info->param('formjson')) { # json object being passed
     	$formdata->{'ADAText'} = decode_base64($formdata->{'ADAText'});
     }
     
+    if(defined($formdata->{'ADAText_short'})){
+    	$formdata->{'ADAText_short'} = decode_base64($formdata->{'ADAText_short'});
+    }
+    
     if(defined($formdata->{'InterpreterText'})){
     	$formdata->{'InterpreterText'} = decode_base64($formdata->{'InterpreterText'});
     }
@@ -221,8 +200,10 @@ if ($info->param('formjson')) { # json object being passed
     foreach my $ptype (keys %partyTypes) {
         $formdata->{$ptype} = [];
         foreach my $party (@{$cclist->{'Parties'}}) {
-            if ($party->{'PartyType'} eq $ptype) {
-                push(@{$formdata->{$ptype}}, $party->{'FullName'});
+        	if(defined($party->{'PartyType'})){
+	            if ($party->{'PartyType'} eq $ptype) {
+	                push(@{$formdata->{$ptype}}, $party->{'FullName'});
+	            }
             }
         }
     }
@@ -235,10 +216,12 @@ if ($info->param('formjson')) { # json object being passed
     $formdata->{'case_caption'} = uri_unescape($info->param('case_caption'));
     $formdata->{'case_caption'} =~ s/\t/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/g;
     
-    if($formdata->{'docket_line_text'} eq "FCM General Magistrate Disposition Form" || 
-    	($formdata->{'docket_line_text'} eq "FCM Notice of Assignment to General Magistrate")){
-    	$formdata->{'case_caption'} =~ s/Plaintiff\/Petitioner/$formdata->{'petTitle'}/;
-    	$formdata->{'case_caption'} =~ s/Defendant\/Respondent/$formdata->{'respTitle'}/;
+    if(defined($formdata->{'docket_line_text'})){
+	    if($formdata->{'docket_line_text'} eq "FCM General Magistrate Disposition Form" || 
+	    	($formdata->{'docket_line_text'} eq "FCM Notice of Assignment to General Magistrate")){
+	    	$formdata->{'case_caption'} =~ s/Plaintiff\/Petitioner/$formdata->{'petTitle'}/;
+	    	$formdata->{'case_caption'} =~ s/Defendant\/Respondent/$formdata->{'respTitle'}/;
+	    }
     }
     
     if(defined($formdata->{'magistrate'})){
@@ -358,9 +341,12 @@ if ((defined($cclist->{'Attorneys'}) && (scalar(@{$cclist->{'Attorneys'}}))) || 
             next if (!$party->{'check'});
             my $name = $party->{'FullName'};
             my $address = $party->{'FullAddress'};
-            $address =~ s/\n/\<br\/\>/g;
+            
             if ($address eq "") {
                 $address = "No Address Available";
+            }
+            else{
+            	$address =~ s/\n/\<br\/\>/g;
             }
             my $svcList;
             if ($party->{'ServiceList'} eq "" || !defined($party->{'ServiceList'})) {

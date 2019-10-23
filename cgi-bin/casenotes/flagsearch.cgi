@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -38,7 +38,7 @@ my $fdbh = dbConnect("icms");
 my @myqueues = ($user);
 my @sharedqueues;
 
-my $url = "/cgi-bin/case/casenotes/flagsearch.cgi";
+my $url = "/cgi-bin/casenotes/flagsearch.cgi";
 my $count = 0;
 foreach my $p(keys %params){
 	if($count < 1){

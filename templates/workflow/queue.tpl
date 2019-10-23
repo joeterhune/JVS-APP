@@ -16,13 +16,14 @@
 		{* count the number that need signatures or efiling *}
         {$needsig = 0}
         {$needefile = 0}
-        {if $item.esigned == 'N'}
+        {if $items.esigned == 'N'}
             {$needsig = $needsig + 1}
         {/if}
-        {if $item.efiled == 'N'}
+        {if $items.efiled == 'N'}
         	{$needefile = $needefile + 1}
         {/if}
 	{/foreach}
+	{if is_array($items)}
 	{if $items|@count == 0}
     	{if $queueName == "my"}
         	{$msg = "No items in your Workflow Queue at this time."}
@@ -65,6 +66,7 @@
 			<a id="ESignedLink" class="hideCol" data-colname="ESigned">E-Signed</a>&nbsp;
 			<!--<a id="EFiledLink" class="hideCol" data-colname="EFiled">E-Filed</a>&nbsp;-->
 			<a id="TransferLink" class="hideCol" data-colname="Transfer">Transfer</a>&nbsp;
+			<a id="DeleteLink" class="hideCol" data-colname="Delete">Delete</a>&nbsp;
 			<a id="ActionsLink" class="hideCol" data-colname="Actions">Actions</a>&nbsp;
 			<a id="CommentsLink" class="hideCol" data-colname="Comments">Comments</a>
 		</div>
@@ -121,6 +123,13 @@
 						<button class="bulkxfer" data-queue="{$queueName}">Transfer All Checked</button>
 						<br/>
 						<a class="wfAllCheck" data-targetclass="xferCheck">Check All</a>
+					</th>
+					<th class="Delete cbCol filter-select" data-placeholder="Select">
+						Delete
+						<br/>
+						<button class="bulkdelete" data-queue="{$queueName}">Delete All Checked</button>
+						<br/>
+						<a class="wfAllCheck" data-targetclass="deleteCheck">Check All</a>
 					</th>
 					<th class="Actions actions filter-false">Actions</th>
 					<th class="Comments comments filter-match" data-placeholder="Part of comment">Comment</th>
@@ -200,6 +209,7 @@
 			                {/if}
 						</td>-->
 						<td class="Transfer {$item.doc_type}"><input type="checkbox" class="xferCheck" value="{$item.doc_id}"/></td>
+						<td class="Delete {$item.doc_type}"><input type="checkbox" class="deleteCheck" value="{$item.doc_id}"/></td>
 						<td class="Actions {$item.doc_type}">
 							{if $item.esigned == 'N'}
 			                    {if $cansign && ($item.doc_type == "IGO" || ($item.doc_type == "DVI"))}
@@ -230,5 +240,6 @@
 				{/foreach}
 			</tbody>
 		</table>
+	{/if}
 	{/if}
 </div>

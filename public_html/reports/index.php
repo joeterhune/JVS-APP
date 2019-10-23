@@ -1,13 +1,50 @@
 <?php
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once("../workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
 
 checkLoggedIn();
 
+$config = simplexml_load_file($icmsXml);
+
+// Set a default value, in case there is no reportPath element defined
+$reportPath = isset($config->{'reportPath'}) ? (string) $config->{'reportPath'} : "/var/www/Palm";
+
 $courtTypeGraphs = array (
     'Circuit Civil' => array(
-        'dataPath' => '/var/www/Sarasota/civ',
+        'dataPath' => "$reportPath/civ",
+        'graphTypes' => array(
+            'pend' => array (
+                'template' => 'pend.tpl',
+                'data_file' => 'pend-rpt.json',
+                'caption' => 'Pending Cases',
+                'xAxisName' => 'Case Age (Days)',
+                'yAxisName' => '# Cases'
+            ),
+            'pend_juryTrials' => array (
+                'template' => 'pend.tpl',
+                'data_file' => 'pend_juryTrials-rpt.json',
+                'caption' => 'Jury Cases',
+                'xAxisName' => 'Case Age (Months)',
+                'yAxisName' => '# Cases'
+            ),
+            'ro' => array (
+                'template' => 'pend.tpl',
+                'data_file' => 'ro-rpt.json',
+                'caption' => 'Reopen Cases',
+                'xAxisName' => 'Case Age (Days)',
+                'yAxisName' => '# Cases'
+            )  ,
+            'pend_crit' => array (
+                'template' => 'pend.tpl',
+                'data_file' => 'pend_crit-rpt.json',
+                'caption' => 'Critical Cases',
+                'yAxisName' => '# Cases'
+            )  
+        )
+    ),
+	'Foreclosure' => array(
+        'dataPath' => "$reportPath/civ",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -16,62 +53,23 @@ $courtTypeGraphs = array (
                 'xAxisName' => 'Case Age (Days)',
                 'yAxisName' => '# Cases'
             ),
-            'pend_juryTrials' => array (
-                'template' => 'pend.tpl',
-                'data_file' => 'pend_juryTrials.json',
-                'caption' => 'Jury Cases',
-                'xAxisName' => 'Case Age (Months)',
-                'yAxisName' => '# Cases'
-            ),
             'ro' => array (
                 'template' => 'pend.tpl',
                 'data_file' => 'ro.json',
                 'caption' => 'Reopen Cases',
                 'xAxisName' => 'Case Age (Days)',
                 'yAxisName' => '# Cases'
-            )  ,
+            ),
             'pend_crit' => array (
                 'template' => 'pend.tpl',
                 'data_file' => 'pend_crit.json',
                 'caption' => 'Critical Cases',
                 'yAxisName' => '# Cases'
-            )  
+            )
         )
     ),
-	'Foreclosure' => array(
-		'dataPath' => '/var/www/Sarasota/civ',
-		'graphTypes' => array(
-			'pend' => array (
-				'template' => 'pend.tpl',
-				'data_file' => 'pend.json',
-				'caption' => 'Pending Cases',
-				'xAxisName' => 'Case Age (Days)',
-				'yAxisName' => '# Cases'
-			),
-			/*'pend_juryTrials' => array (
-				'template' => 'pend.tpl',
-				'data_file' => 'pend_juryTrials.json',
-				'caption' => 'Jury Cases',
-				'xAxisName' => 'Case Age (Months)',
-				'yAxisName' => '# Cases'
-			),*/
-			'ro' => array (
-				'template' => 'pend.tpl',
-				'data_file' => 'ro.json',
-				'caption' => 'Reopen Cases',
-				'xAxisName' => 'Case Age (Days)',
-				'yAxisName' => '# Cases'
-			)  ,
-			'pend_crit' => array (
-				'template' => 'pend.tpl',
-				'data_file' => 'pend_crit.json',
-				'caption' => 'Critical Cases',
-				'yAxisName' => '# Cases'
-			)
-		)
-	),
     'County Civil' => array(
-        'dataPath' => '/var/www/Sarasota/civ',
+        'dataPath' => "$reportPath/civ",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -96,7 +94,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Felony' => array(
-        'dataPath' => '/var/www/Sarasota/crim',
+        'dataPath' => "$reportPath/crim",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -115,7 +113,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Misdemeanor' => array(
-        'dataPath' => '/var/www/Sarasota/crim',
+        'dataPath' => "$reportPath/crim",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -134,7 +132,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Family' => array(
-        'dataPath' => '/var/www/Sarasota/civ',
+        'dataPath' => "$reportPath/civ",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -167,7 +165,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Juvenile' => array(
-        'dataPath' => '/var/www/Sarasota/juv',
+        'dataPath' => "$reportPath/juv",
         'graphTypes' => array(
             'penddep' => array (
                 'template' => 'pend.tpl',
@@ -200,7 +198,7 @@ $courtTypeGraphs = array (
         )
     ),
     'Probate' => array(
-        'dataPath' => '/var/www/Sarasota/pro',
+        'dataPath' => "$reportPath/pro",
         'graphTypes' => array(
             'pend' => array (
                 'template' => 'pend.tpl',
@@ -235,7 +233,7 @@ $courtTypeGraphs = array (
 );
 
 $dbh = dbConnect("icms");
-$user = $_SESSION['user'];
+$user =getSessVal('user');
 
 $myqueues = array($user);
 $sharedqueues = array();
@@ -306,13 +304,21 @@ foreach ($reportDivs as $div) {
     $graphs = array('divType' => $divs[$div]['DivisionType'], 'div' => $div, 'graphArr' => array());
     
     foreach ($divGraphs as $graph => $info) {
-        $jsonFile = sprintf("%s/%s.json", $rptPath, $graph);
+        $jsonFile = sprintf("%s/%s", $rptPath, $info['data_file']);
+        
+        //print "<pre>"; var_dump($jsonFile); exit;
+        
         if (!file_exists($jsonFile)) {
             continue;
         }
+        
         $rptJson = file_get_contents($jsonFile);
         
-        $smarty = initSmarty();
+        $smarty = new Smarty;
+        $smarty->setTemplateDir($templateDir);
+        $smarty->setCompileDir($compileDir);
+        $smarty->setCacheDir($cacheDir);
+        
         $smarty->assign('courtType', $pathPieces[4]);
         $smarty->assign('function_month', $month);
         $smarty->assign('division',$div);
@@ -338,12 +344,18 @@ foreach ($reportDivs as $div) {
         array_push($dataArray,array('seriesname' => $set['seriesname'], 'data' => array_slice($set['data'], -($inOutMonths))));
     }
     
-    $smarty = initSmarty();
+    $smarty = new Smarty;
+    $smarty->setTemplateDir($templateDir);
+    $smarty->setCompileDir($compileDir);
+    $smarty->setCacheDir($cacheDir);
+    
     $smarty->assign('division',$div);
     $smarty->assign('month',$USMonth);
     $smarty->assign('inOutCategories', json_encode($catArray));
     $smarty->assign('inOutDataSet', json_encode($dataArray));
+
     $thisGraph = $smarty->fetch('reports/inOut.tpl');
+    
     $graphs['graphArr']['inOut'] = $thisGraph;
     
     if (file_exists("$divPath/ttd.json")) {
@@ -357,8 +369,12 @@ foreach ($reportDivs as $div) {
         foreach ($ttdJson['dataset'] as $set) {
             array_push($dataArray,array('seriesname' => $set['seriesname'], 'data' => array_slice($set['data'], -($inOutMonths))));
         }
-    
-        $smarty = initSmarty();
+        
+        $smarty = new Smarty;
+        $smarty->setTemplateDir($templateDir);
+        $smarty->setCompileDir($compileDir);
+        $smarty->setCacheDir($cacheDir);
+        
         $smarty->assign('division',$div);
         $smarty->assign('month',$USMonth);
         $smarty->assign('ttdCategories', json_encode($catArray));
@@ -369,10 +385,15 @@ foreach ($reportDivs as $div) {
     array_push($allGraphs, $graphs);
 }
 
-$smarty = initSmarty();
+$smarty = new Smarty;
+$smarty->setTemplateDir($templateDir);
+$smarty->setCompileDir($compileDir);
+$smarty->setCacheDir($cacheDir);
+
 $smarty->assign('allGraphs', $allGraphs);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "reports");
+$smarty->assign('tabs', getSessVal('tabs'));
 
 $smarty->display('top/header.tpl');
 echo $smarty->fetch("reports/index.tpl");

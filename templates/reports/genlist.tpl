@@ -1,3 +1,4 @@
+{debug}
 <style type="text/css">
 	td.tablesorter-pager{
 		background-color:#FFFFFE !important;
@@ -34,7 +35,7 @@
 	            pager_size: 100,
 	            pager_savePages: true,
 	            pager_storageKey: 'tablesorter-pager-genlist',
-	            pager_ajaxUrl: '/genlist.php?rpath={$rpath}&divname={$divname}&rpttype={$rpttype}&yearmonth={$yearmonth}&ajax=1&pagenum={literal}{page}{/literal}&{literal}{filterList:filter}{/literal}&{literal}{sortList:column}{/literal}&pagesize={literal}{size}{/literal}',
+	            pager_ajaxUrl: '/genlist.php?type={$courttype}&divname={$divname}&rpttype={$rpttype}&yearmonth={$yearmonth}&ajax=1&pagenum={literal}{page}{/literal}&{literal}{filterList:filter}{/literal}&{literal}{sortList:column}{/literal}&pagesize={literal}{size}{/literal}',
 	            pager_customAjaxUrl:  function(table, url) {
 		            // manipulate the url string as you desire
 		            // url += '&currPage=' + window.location.pathname;

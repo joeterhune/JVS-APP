@@ -120,7 +120,7 @@
 			{if $editable}
 				if('{$sign}' == 'Y'){
 				    	
-					{if !$isOrder}
+					{if !$isOrder && !$sigBlockFound}
 					    $('.cke_contents iframe').contents().one( "click", function() {
 							selectSign();
 						});
@@ -441,7 +441,7 @@
 	{/if}
 	{if empty($signature_html) || empty($signature_img)}
 		{if $sign == 'Y'}
-			{if !$isOrder}
+			{if !$isOrder && !$sigBlockFound}
 				<br class="clear"/>
 				<div id="sigNotice" style="color:#FFFFFE">
 					Click on the location of the document where you want the signature to be placed.  If you have access to multiple signatures, a dropdown list will appear above this message when you click on the document.  Once you select the signature, it will be placed in the location of your initial click.
@@ -461,6 +461,7 @@
 		<input type="hidden" name="docid" id="docid" value="{$docid}"/>
 		<input type="hidden" name="ucn" id="ucn" value="{$ucn}"/>
 		<input type="hidden" class="isOrder" name="isOrder" id="isOrder" value="{$isOrder}"/>
+		<input type="hidden" name="sigBlockFound" id="sigBlockFound" value="{$sigBlockFound}"/>
 		<input type="hidden" name="form_name" id="form_name" value="{$form_name}"/>
 		<input type="hidden" name="form_id" id="form_id" value="{$form_id}"/>
 		

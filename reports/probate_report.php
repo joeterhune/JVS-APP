@@ -1,0 +1,600 @@
+<?php
+
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/report_functions.php");
+
+require_once('Smarty/Smarty.class.php');
+
+$datefmt = "Y-m-d H:i:s";
+
+$scriptName = $argv[0];
+
+$options = getopt("qD");
+
+$DEBUG = key_exists('D', $options);
+$MSGS = !(key_exists('q', $options));
+
+$config = simplexml_load_file($icmsXml);
+
+$today = date('Y-m-d');
+
+// ***** IMPORTANT *****
+// Useful for shortcutting queries, to get a smaller subset for testing.
+// In production, this should be an empty string.
+//$DIVLIMIT = "and c.DivisionID in ('IB')";
+$DIVLIMIT = '';
+
+$casetypes = array('GA','CP','MH');
+
+$casetypesString = sprintf("('%s')", implode("','", $casetypes));
+
+$stattypes="('Open', 'Reopen')";
+
+// The outpath path for reports
+$outpath = $config->{'reportPath'} . "/pro";
+
+// Make sure it exists
+if (!file_exists($outpath)) {
+    mkdir($outpath, 0755, true);
+}
+
+// For report generation
+$county = $config->{'county'};
+
+$resultDir = sprintf("%s/%s", $_SERVER['JVS_ROOT'], $resultSubDir);
+
+if (!file_exists($resultDir)) {
+    mkdir($resultDir,0700,true);
+}
+
+// Get an exclusive lock on the lock file, to ensure that only one instance
+// of this script is running
+$lockfile = sprintf("%s/reports/results/%s.lock", $_SERVER['JVS_ROOT'], $scriptName);
+$lfp = fopen($lockfile, "w");
+if (!getFileLock($lfp, 5)) {
+    print "I was unable to obtain the file lock. Another process is probably running.\n\n";
+    exit(CANNOT_OBTAIN_LOCK);
+}
+
+// The column names (from $caselist) that will actually be used in the report. This will be stored
+// with the JSON file as the reportCols element. Order matters here!!
+$reportCols = array('CaseNumber','CaseStyle','DivisionID','FileDate','CaseAge','CaseType','CaseStatus',
+                    'LastActivity','LastDocketCode','FarthestEventType','FarthestEventDate','MergedNotesFlags');
+
+
+// Structures used throughout the program
+$caseList  = array();
+$reopened = array();
+$divList = array();
+$los = array();
+$noHearings = array();
+$lastDocket = array();
+$lastDockets = array();
+$lastActivity = array();
+$trialCases = array();
+
+// Ranking for the CourtStatuteDegree - so we can determine the highest degree
+// of charge for a case.
+$csDegrees = array(
+    'C' => array('val' => 0, 'desc' => 'C - Capital'),
+    'L' => array('val' => 1, 'desc' => 'L - Life'),
+    'P' => array('val' => 2, 'desc' => 'P - 1st Punishable by Life'),
+    'F' => array('val' => 3, 'desc' => 'F - 1st'),
+    'S' => array('val' => 4, 'desc' => 'S - 2nd'),
+    'T' => array('val' => 5, 'desc' => 'T - 3rd'),
+    'N' => array('val' => 6, 'desc' => 'N = Not Applicable')
+);
+
+$schema = getDbSchema('showcase-rpt');
+
+$dbh = dbConnect("showcase-rpt", 600);
+
+if (!$dbh) {
+    print "Error connecting to database 'showcase-rpt'. Exiting.\n\n";
+    exit(DB_CONNECT_ERROR);
+}
+
+if ($MSGS) {
+    print "Starting criminal report generation at " . date($datefmt) . "...\n";
+}
+
+if ($MSGS) {
+    print "Starting buildCaseList() " . date($datefmt) . "\n";
+}
+
+buildCaseList($dbh, $caseList, $reopened, $divList);
+
+// An array of the case numbers from $caselist
+$justCases = array_keys($caseList);
+
+if ($MSGS) {
+    print "Starting buildLOS " . date($datefmt) . "\n";
+}
+
+buildLOS($los, $caseList, $dbh);
+
+if($MSGS) {
+    print "starting buildCAJuryCaseList " . date($datefmt) . "\n";
+}
+
+$jCount = buildCAJuryCaseList($caseList, $dbh);
+
+if ($MSGS) {
+    print "There were $jCount cases with Jury Trials identified.\n";
+}
+
+if($MSGS) {
+    print "starting buildNoHearings " . date($datefmt) . "\n";
+}
+
+buildNoHearings($dbh, $noHearings, $caseList);
+
+if ($MSGS) {
+    print "starting buildLastDocket " . date($datefmt) . "\n";
+}
+
+buildLastDocket($dbh, $caseList);
+
+if ($MSGS) {
+    print "starting buildEvents " . date($datefmt) . "\n";
+}
+
+buildEvents($caseList);
+
+if ($MSGS) {
+    print "starting buildNotes " . date($datefmt) . "\n";
+}
+
+buildNotes($caseList);
+
+if ($MSGS) {
+    print "starting report " . date($datefmt) . "\n";
+}
+
+if ($MSGS) {
+    print "Writing all case info to '$outpath/allCaseInfo.json'... " . date($datefmt) . "\n\n";
+}
+writeJsonFile($caseList, "$outpath/allCaseInfo.json");
+
+//print "There are " . count($caselist) . " total cases.\n"; exit;
+
+doReport($caseList);
+
+exit;
+
+
+// Functions below this line
+
+function buildCAJuryCaseList (&$caseList, $dbh) {
+    global $outpath, $DEBUG, $MSGS, $datefmt;
+    
+    $docketlist = array('OSJT');  # Order Setting Jury Trial
+    $juryTrials = array();
+    $cacases = array();
+    
+    // Only check CA cases - UFC and Circuit Civil don't apply here
+    foreach ($caseList as $casenum => $case) {
+        if (strpos($casenum, 'CA') != false) {
+            array_push($cacases, $casenum);
+        }
+    }
+    
+    if (count($cacases)) {
+        getLastDocketFromList($cacases, $docketlist, $juryTrials, $dbh);
+    }
+    
+    foreach ($juryTrials as $casenum => &$case) {
+        $caseList[$casenum]['JuryTrial'] = 1;
+    }
+    
+    return count(array_keys($juryTrials));
+}
+
+
+function buildLOS (&$los, &$caselist, $dbh) {
+    global $outpath, $DEBUG, $MSGS, $datefmt;
+    
+    $summonses = array();
+    $later = array();
+    
+    $count = 0;
+    $perQuery = 1000;
+    
+    $justCases = array_keys($caselist);
+    
+    while ($count < count($justCases)) {
+        $inString = sprintf("'%s'", implode("','", array_slice($justCases, $count, $perQuery)));
+        
+        $query = "
+            SELECT
+                cd.DocketCode,
+                CONVERT(VARCHAR(10), cd.EffectiveDate, 101) AS EffectiveDate,
+                cd.CaseNumber
+            FROM
+                vDocket cd
+            INNER JOIN vCase cc
+                ON cd.CaseID = cc.CaseID
+                AND cc.CaseNumber in ($inString)
+            where
+                cd.EffectiveDate <= DATEADD(day, -120, GETDATE())
+                AND cd.DocketCode = 'SMIS'
+            ORDER BY
+                cd.EffectiveDate desc
+        ";
+        
+        getData($summonses, $query, $dbh, null, 'CaseNumber', 1);
+        
+        $count += $perQuery;
+    }
+    
+    $queryCases = array_keys($summonses);
+    
+    $count = 0;
+    
+    while ($count < count($queryCases)) {
+        $inString = sprintf("'%s'", implode("','", array_slice($queryCases, $count, $perQuery)));
+        
+        $query = "
+            SELECT
+                DocketCode,
+                CONVERT(VARCHAR(10), EffectiveDate, 101) AS EffectiveDate,
+                CaseNumber
+            FROM
+                vDocket
+            WHERE
+                CaseNumber in ($inString)
+                AND DocketCode not in ('SMIS','NSRTN','ODS','SVNRE')
+            order by
+                EffectiveDate desc
+        ";
+        
+        getData($later, $query, $dbh, null, "CaseNumber", 1);
+        
+        $count += $perQuery;
+    }
+    
+    foreach ($queryCases as $casenum) {
+        if (!key_exists($casenum, $later)) {
+            $los[$casenum] = 1;
+            $caselist[$casenum]['LOS'] = 1;
+        } else {
+            if ($later[$casenum]['EffectiveDate'] < $summonses[$casenum]['EffectiveDate']) {
+                $los[$casenum] = 1;
+                $caselist[$casenum]['LOS'] = 1;
+            }
+        }
+    }
+}
+
+
+function doReport ($caselist) {
+    global $outpath, $DEBUG, $MSGS, $datefmt, $divList, $county, $today, $reportCols;
+    
+    foreach ($divList as $div => $casetype) {
+        if ($MSGS) {
+            print "Building reports for division '$div' ... " . date($datefmt) . "\n";
+        }
+        
+        $yearMonth = date('Y-m');
+        
+        $rptTitle = sprintf("%s County - %s Division %s", $county, $casetype, $div);
+        
+        $rptPath = "$outpath/div$div/$yearMonth";
+        
+        if (!file_exists($rptPath)) {
+            if ($MSGS) {
+                print "Creating report path '$rptPath'...\n";
+            }
+            mkdir($rptPath,0755,true);
+		}
+        
+        // Types of statuses - cases can be in multiple lists (such as pending, which will also be
+        // in either pendingWithEvents or pendingNoEvents)
+        // Include details (titles, date) etc. in the array so they're in the JSON file
+        $pending = array();
+        $pend_0_120 = array();
+        $pend_121_180 = array();
+        $pend_181 = array();
+        $pendingWithEvents = array();
+        $pendingNoEvents = array();
+        $pendingLOS = array();
+        $pend_trials = array();
+        $nopend_trials = array();
+        $pendevent_trials = array();
+        $reopened = array();
+        $ro_0_120 = array();
+        $ro_121_180 = array();
+        $ro_181 = array();
+        $ro_trials = array();
+        $rone_trials = array();
+        $rowe_trials = array();
+        $reopenedWithEvents = array();
+        $reopenedNoEvents = array();
+        $reopenedLOS = array();
+        $juryTrials = array();
+        $otherStatuses = array();
+        
+        // Now loop through the case list, once for each division
+        foreach ($caselist as $case) {
+            
+            if (!key_exists('DivisionID', $case)) {
+                var_dump($case); exit;
+            }
+            
+            if ($case['DivisionID'] != $div) {
+                continue;
+            }
+            
+            if ($case['Reopened']) {
+                // One of the Reopened statuses
+                array_push($reopened, $case);
+                
+                // Trial?
+                if ($case['JuryTrial']) {
+                    array_push($ro_trials, $case);
+                }
+                
+                // LOS?
+                if ($case['LOS']) {
+                    array_push($reop, $case);
+                }
+                
+                if ($case['FarthestEventType'] == '') {
+                    // No future events
+                    array_push($reopenedNoEvents, $case);
+                    // Trial?
+                    if ($case['JuryTrial']) {
+                        array_push($rone_trials, $case);
+                    }
+                } else {
+                    array_push($reopenedWithEvents, $case);
+                    if ($case['JuryTrial']) {
+                        array_push($rowe_trials, $case);
+                    }
+                }
+                
+                // And group by case age
+                if ($case['CaseAge'] >= 181) {
+                    array_push($ro_181, $case);
+                } elseif ($case['CaseAge'] >= 121) {
+                    array_push($ro_121_180, $case);
+                } else {
+                    array_push($ro_0_120, $case);
+                }
+                
+                // Any of them have trial events?
+            } elseif ($case['CaseStatus'] != 'Open') {
+                // Not matched above, but status is not 'Open'
+                array_push($otherStatuses, $case);
+            } else {
+                // A normal pending case
+                array_push($pending, $case);
+                
+                // Trial?
+                if ($case['JuryTrial']) {
+                    array_push($pend_trials, $case);
+                }
+                
+                // LOS?
+                if ($case['LOS']) {
+                    array_push($pendingLOS, $case);
+                }
+                
+                if ($case['FarthestEventType'] == '') {
+                    // No future events
+                    array_push($pendingNoEvents, $case);
+                    
+                    if ($case['JuryTrial']) {
+                        array_push($nopend_trials, $case);
+                    }
+                    
+                } else {
+                    array_push($pendingWithEvents, $case);
+                    
+                    if ($case['JuryTrial']) {
+                        array_push($pendevent_trials, $case);
+                    }
+                }
+                
+                // And group by case age
+                if ($case['CaseAge'] >= 181) {
+                    array_push($pend_181, $case);
+                } elseif ($case['CaseAge'] >= 121) {
+                    array_push($pend_121_180, $case);
+                } else {
+                    array_push($pend_0_120, $case);
+                }
+            }
+        }
+        
+        $indexPage = array(
+            'Division' => $div,
+            'ReportDate' => $today,
+            'Title' => "$county County",
+            'Subtitle' => "$casetype Division $div",
+            'CaseCounts' => array(
+                array(
+                      'type' => 'Pending Cases',
+                      'count' => count($pending),
+                      'rpttype' => 'pend'
+                ),
+                array(
+                      'type' => 'Reopened Cases',
+                      'count' => count($reopened),
+                      'rpttype' => 'reopened'
+                ),
+                array(
+                      'type' => 'Other Cases',
+                      'count' => count($otherStatuses),
+                      'rpttype' => 'other'
+                ),
+            )
+        );
+        
+        writeJsonFile($indexPage, "$rptPath/index.json");
+        
+        if (file_exists("$outpath/div$div/index.json")) {
+            // Make sure this symlink points to the correct directory
+            unlink("$outpath/div$div/index.json");
+        }
+        
+        symlink("$rptPath/index.json", "$outpath/div$div/index.json");
+        
+        writeReportFile($rptPath, $rptTitle, "Pending Cases", $pending, "pend.json");
+        writeReportFile($rptPath, $rptTitle, "Pending Cases - 0-120 Days", $pend_0_120, "pend_0-120.json");
+        writeReportFile($rptPath, $rptTitle, "Pending Cases - 121-180 Days", $pend_121_180, "pend_121-180.json");
+        writeReportFile($rptPath, $rptTitle, "Pending Cases - 181+ Days", $pend_181, "pend_181.json");
+        writeReportFile($rptPath, $rptTitle, "Reopened Cases", $reopened, "reopened.json");
+        writeReportFile($rptPath, $rptTitle, "Reopened Cases - 0-120 Days", $ro_0_120, "ro_0-120.json");
+        writeReportFile($rptPath, $rptTitle, "Reopened Cases - 121-180 Days", $ro_121_180, "ro_121-180.json");
+        writeReportFile($rptPath, $rptTitle, "Reopened Cases - 181+ Days", $ro_181, "ro_181.json");
+        writeReportFile($rptPath, $rptTitle, "Other Status", $otherStatuses, "other.json");
+        
+    }
+}
+
+function buildCaseList ($dbh, &$caselist, &$reopened, &$divList) {
+    global $outpath, $DEBUG, $JUVDIVS, $DIVLIMIT, $NOTACTIVE, $MSGS, $datefmt, $casetypesString, $casetypesString;
+    
+    // Not the global $today, because we want the date in a different format here
+    $today = date('m/d/Y');
+    
+    $divassign = array();
+    $rawcases = array();
+    
+    $rcFile = "$outpath/rawcase.json";
+    
+    $jdbh = dbConnect("judge-divs");
+    
+    $query = "
+        select
+            division_id as DivisionID,
+            division_type as DivisionType
+        from
+            divisions
+        where
+            division_type like '%Probate%'
+        order by
+            DivisionID
+    ";
+    
+    getData($divassign, $query, $jdbh, null, "DivisionID", 1);
+    
+    foreach ($divassign as $divID => $divinfo) {
+        $divList[$divID] = $divinfo['DivisionType'];
+    }
+    
+    # Now get the raw case listing
+    $doLookups = 1;
+    
+    if ($DEBUG && (file_exists($rcFile))) {
+        // Read divAssign from the JSON file if it exists
+		print "DEBUG: Reading $rcFile\n";
+        if (!(readJsonFile($rawcases, $rcFile))) {
+            if ($MSGS) {
+                print "Error reading data from '$rcFile'. Will perform lookups.\n";
+            }
+        } else {
+            $doLookups = 0;
+        }
+    }
+    
+    if ($doLookups) {
+        if ($MSGS) {
+            print "Starting rawcase query " . date($datefmt) . "\n";
+		}
+        
+        $query = "
+            select
+                c.UCN,
+                c.CaseNumber,
+                c.CaseStyle,
+                c.DivisionID,
+                c.CourtType,
+                c.CaseStatus,
+                CONVERT(varchar(10), DispositionDate, 101) AS DispositionDate,
+                CONVERT(varchar(10), FileDate, 101) AS FileDate,
+                CONVERT(varchar(10), ReopenDate, 101) AS ReopenDate,
+                CONVERT(varchar(10), ReopenCloseDate, 101) AS ReopenCloseDate,
+                c.CaseType
+            from
+                vCase c with(nolock)
+                    inner join vDivision_Judge j with(nolock) ON c.DivisionID = j.DivisionID
+            where
+                c.CaseStatus not in $NOTACTIVE
+                AND c.CourtType in $casetypesString
+                AND j.Division_Active = 'Yes'
+                AND j.EffectiveTo is null
+                AND Sealed = 'N'
+                AND Expunged = 'N'
+                $DIVLIMIT
+        ";
+        
+        getData($rawcases, $query, $dbh, null, "CaseNumber", 1);
+        
+        if ($MSGS) {
+			print "Got all the rawcase rows - " . count($rawcases) . " of them. " . date($datefmt) . "\n";
+		}
+        
+        if (!writeJsonFile($rawcases, $rcFile)) {
+            // Not a fatal error, but still say it failed if $MSGS on
+            if ($MSGS) {
+                print "Failure writing file '$rcFile'. Continuing.\n";
+            }
+        };
+    }
+    
+    if ($MSGS) {
+		print "Coursing through rawcase hash - filling caselist... " . date($datefmt) . "\n";
+	}
+    
+    foreach ($rawcases as $casenum => $case) {
+        $caselist[$casenum] = $case;
+                
+        // A few placeholders for items that may or may not be populated in
+        // later routines
+        $caselist[$casenum]['NoHearings'] = 0;
+        $caselist[$casenum]['LastActivity'] = '';
+        $caselist[$casenum]['LastDocketDate'] ='';
+        $caselist[$casenum]['LastDocketCode'] = '';
+        $caselist[$casenum]['MostRecentEventDate'] = '';
+        $caselist[$casenum]['MostRecentEventType'] = '';
+        $caselist[$casenum]['FarthestEventDate'] = '';
+        $caselist[$casenum]['FarthestEventType'] = '';
+        $caselist[$casenum]['MergedNotesFlags'] = '';
+        $caselist[$casenum]['Reopened'] = 0;
+        $caselist[$casenum]['LOS'] = 0;
+        $caselist[$casenum]['JuryTrial'] = 0;
+        
+        $caselist[$casenum]['CaseAge'] = getCaseAge($caselist[$casenum], $today);
+        // CaseType isn't always defined in ShowCase
+        //$caselist[$casenum]['CaseType'] = getSCcasetype($caselist[$casenum]['CaseType'],$caselist[$casenum]['CourtType']);
+        
+        if (in_array($case['CaseStatus'],array('Reopen','Reopen VOP'))) {
+			$reopened[$casenum]=1;
+            $caselist[$casenum]['Reopened'] = 1;
+		}
+    }
+    
+    if (!writeJsonFile($caselist, "$outpath/caselist.json")) {
+        // Not a fatal error, but still say it failed if $MSGS on
+        if ($MSGS) {
+            print "Failure writing file '$outpath/caselist.json'. Continuing.\n";
+        }
+    };
+    
+    if (!writeJsonFile($reopened, "$outpath/reopened.json")) {
+        // Not a fatal error, but still say it failed if $MSGS on
+        if ($MSGS) {
+            print "Failure writing file '$outpath/reopened.json'. Continuing.\n";
+        }
+    };
+    
+    if ($MSGS) {
+		print "Done building caselist. " . date($datefmt) . "\n";
+	}
+}
+
+
+?>

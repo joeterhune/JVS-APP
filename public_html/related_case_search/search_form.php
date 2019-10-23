@@ -1,14 +1,18 @@
 <?php
 
-require_once("../php-lib/common.php");
-require_once("../php-lib/db_functions.php");
-require_once("Smarty/Smarty.class.php");
-require_once("../workflow/wfcommon.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/common.php");
+require_once($_SERVER['JVS_DOCROOT'] . "/php-lib/db_functions.php");
+
+require_once($_SERVER['JVS_DOCROOT'] . "/workflow/wfcommon.php");
 
 checkLoggedIn();
 
-include "../icmslib.php";
-include "../caseinfo.php";
+include $_SERVER['JVS_DOCROOT'] . "/icmslib.php";
+include $_SERVER['JVS_DOCROOT'] . "/caseinfo.php";
+
+require_once("Smarty/Smarty.class.php");
+
+$config = simplexml_load_file($icmsXml);
 
 $smarty = new Smarty;
 $smarty->setTemplateDir($templateDir);
@@ -17,7 +21,7 @@ $smarty->setCacheDir($cacheDir);
 
 $dbh = dbConnect("icms");
 
-$user = $_SESSION['user'];
+$user = getSessVal('user');
 $myqueues = array($user);
 $queueItems = array();
 $sharedqueues = array();
@@ -45,7 +49,7 @@ createTab($ucn, "/cgi-bin/search.cgi?name=" . $ucn, 1, 1, "cases",
 $parties = array();
 	
 $dbh = dbConnect("showcase-prod");
-$schema = "dbo";
+$schema = "ShowCase.dbo";
 	
 $query = " SELECT
 			p.LastName,
@@ -89,6 +93,6 @@ $smarty->assign('ucn', $ucn);
 $smarty->assign('partyList', $parties);
 $smarty->assign('wfCount', $wfcount);
 $smarty->assign('active', "cases");
-$smarty->assign('tabs', $_SESSION['tabs']);
+$smarty->assign('tabs', getSessVal('tabs'));
 $smarty->display('top/header.tpl');
 echo $smarty->fetch('related_case_search/search_form.tpl');

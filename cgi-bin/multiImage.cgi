@@ -14,7 +14,7 @@
 # 07/15/11 lms new objid passed in
 
 BEGIN {
-    use lib $ENV{'PERL5LIB'};
+    use lib "$ENV{'JVS_PERL5LIB'}";
 }
 
 use strict;
@@ -67,7 +67,7 @@ sub doit {
 	my $ucn = $casenum;
     $casenum =~ s/^50//g;
 
-	my $workpath = sprintf("%s/casefiles/%s/", $ENV{'DOCUMENT_ROOT'}, $ucn);
+	my $workpath = sprintf("$ENV{'JVS_DOCROOT'}/casefiles/%s/", $ucn);
 	if (!-d $workpath) {
 		makePaths($workpath);
 	}
@@ -81,7 +81,7 @@ sub doit {
 		$showTif = 1;
 	}
 
-    my $conf = XMLin("$ENV{'APP_ROOT'}/conf/ICMS.xml");
+	my $conf = XMLin($ENV{'JVS_ROOT'} . '/conf/ICMS.xml');
 	my $TMPASS = $conf->{'TrakMan'}->{'nosealed'}->{'password'};
 	my $TMUSER = $conf->{'TrakMan'}->{'nosealed'}->{'userid'};
 	my $sealedGroup = $conf->{'ldapConfig'}->{'sealedgroup'};
@@ -169,7 +169,7 @@ sub doit {
 
     # Remove the TIFs (so subsequent users can't see them - in case the document is sealed)
     foreach my $tif (@images) {
-        my $tifname = sprintf("/tmp/%s.tif", $tif->{'object_id'});
+        my $tifname = sprintf("$ENV{'JVS_ROOT'}/tmp/%s.tif", $tif->{'object_id'});
         unlink ($tifname)
     }
 
@@ -179,7 +179,7 @@ sub doit {
 	} elsif (scalar(@documents) == 1) {
 		# Just a single file - don't do the GhostScript stuff
 		my $oldFile = $documents[0]->{'file'};
-		my $newFile = sprintf("%s/tmp/%s", $ENV{'DOCUMENT_ROOT'}, basename($oldFile));
+		my $newFile = sprintf("$ENV{'JVS_DOCROOT'}/tmp/%s", basename($oldFile));
 		if ((!-f $newFile) && (!-l $newFile)) {
 			symlink($oldFile, $newFile);
 		}
